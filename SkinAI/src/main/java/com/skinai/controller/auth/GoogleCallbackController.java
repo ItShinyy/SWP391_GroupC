@@ -80,6 +80,12 @@ public class GoogleCallbackController extends HttpServlet {
                     
                     // Audit log could go here...
 
+                    if ("ADMIN".equals(user.getRole())) {
+                        session.removeAttribute("redirectAfterLogin");
+                        resp.sendRedirect(req.getContextPath() + "/admin/dashboard");
+                        return;
+                    }
+
                     // Check if redirect was requested
                     String redirectAfterLogin = (String) session.getAttribute("redirectAfterLogin");
                     if (redirectAfterLogin != null) {
@@ -88,11 +94,8 @@ public class GoogleCallbackController extends HttpServlet {
                         return;
                     }
 
-                    if ("ADMIN".equals(user.getRole())) {
-                        resp.sendRedirect(req.getContextPath() + "/admin/dashboard");
-                    } else {
-                        resp.sendRedirect(req.getContextPath() + "/home");
-                    }
+                    // Default redirect based on role
+                    resp.sendRedirect(req.getContextPath() + "/home");
                     return;
                 }
             }

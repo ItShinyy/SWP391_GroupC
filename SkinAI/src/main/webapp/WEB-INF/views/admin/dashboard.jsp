@@ -271,38 +271,7 @@
             });
         }
 
-        // 3. Risk Chart
-        let riskData = data.riskLevelDistribution || {};
-        if (Object.keys(riskData).length === 0) {
-            document.getElementById('riskChart').classList.add('d-none');
-            document.getElementById('riskChart-empty').classList.remove('d-none');
-        } else {
-            document.getElementById('riskChart').classList.remove('d-none');
-            document.getElementById('riskChart-empty').classList.add('d-none');
-            
-            if (riskChartInstance) riskChartInstance.destroy();
-            riskChartInstance = new Chart(document.getElementById('riskChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(riskData),
-                    datasets: [{
-                        data: Object.values(riskData),
-                        backgroundColor: [themeSecondary, themeWarning, '#dc3545', '#6c757d'], // LOW, MEDIUM, HIGH, PENDING
-                        borderWidth: 3,
-                        borderColor: '#fff',
-                        hoverOffset: 6
-                    }]
-                },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    cutout: '75%',
-                    plugins: {
-                        legend: { display: true, position: 'bottom', labels: { padding: 20, usePointStyle: true } }
-                    }
-                }
-            });
-        }
+        // 3. Risk Chart logic removed because canvas does not exist in DOM
 
         // 4. Recent Scans Table
         const tbody = document.getElementById('recent-scans-tbody');

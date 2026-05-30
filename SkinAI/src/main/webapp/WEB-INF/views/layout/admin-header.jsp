@@ -57,6 +57,9 @@
                 <li class="nav-item">
                     <a class="nav-link ${pageContext.request.requestURI.contains('audit') ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/audit-logs">Audit Logs</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link ${pageContext.request.requestURI.contains('home') ? 'active' : ''}" href="${pageContext.request.contextPath}/home">Home Page</a>
+                </li>
             </ul>
             
             <!-- Profile Dropdown -->
@@ -66,19 +69,8 @@
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end dropdown-menu-custom mt-2">
                     <li>
-                        <a class="dropdown-item d-flex align-items-center" href="${pageContext.request.contextPath}/admin/dashboard">
-                            <i class="fa-solid fa-chart-line fa-fw me-2 text-muted"></i> Admin Portal
-                        </a>
-                    </li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li>
-                        <a class="dropdown-item d-flex align-items-center" href="${pageContext.request.contextPath}/profile">
+                        <a class="dropdown-item d-flex align-items-center" href="${pageContext.request.contextPath}/patient/profile">
                             <i class="fa-solid fa-user fa-fw me-2 text-muted"></i> Profile
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item d-flex align-items-center" href="${pageContext.request.contextPath}/home">
-                            <i class="fa-solid fa-house fa-fw me-2 text-muted"></i> Back to Home Page
                         </a>
                     </li>
                     <li><hr class="dropdown-divider"></li>

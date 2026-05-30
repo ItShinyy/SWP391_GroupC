@@ -6,7 +6,7 @@
 <div class="container-fluid">
     <div class="table-container bg-white shadow-sm rounded-4 p-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h4 class="text-primary font-weight-bold mb-0"><i class="fas fa-microscope mr-2"></i>Danh sách chẩn đoán của hệ thống</h4>
+            <h4 class="text-primary font-weight-bold mb-0"><i class="fas fa-microscope mr-2"></i>System Diagnosis Results</h4>
         </div>
         
         <!-- Search & Filter Bar -->
@@ -30,8 +30,9 @@
                             <option value="precision" ${param.sort == 'precision' ? 'selected' : ''}>Sort by Precision (Highest)</option>
                         </select>
                     </div>
-                    <div class="col-md-2 d-grid">
-                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass me-2"></i>Filter</button>
+                    <div class="col-md-2 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary flex-grow-1"><i class="fa-solid fa-magnifying-glass"></i></button>
+                        <a href="${pageContext.request.contextPath}/admin/ai-results" class="btn btn-outline-secondary" title="Clear Filters"><i class="fa-solid fa-xmark"></i></a>
                     </div>
                 </form>
             </div>
@@ -42,12 +43,12 @@
                 <thead class="table-dark">
                     <tr>
                         <th scope="col" style="width: 12%">ID</th>
-                        <th scope="col" style="width: 18%">Tên bệnh nhân</th>
-                        <th scope="col" style="width: 20%">Bệnh lý</th>
-                        <th scope="col" style="width: 12%">Độ tin cậy</th>
-                        <th scope="col" style="width: 13%">Mức độ</th>
-                        <th scope="col" style="width: 15%">Thời gian tạo</th>
-                        <th scope="col" style="width: 10%" class="text-center">Thao tác</th>
+                        <th scope="col" style="width: 18%">Patient Name</th>
+                        <th scope="col" style="width: 20%">Disease</th>
+                        <th scope="col" style="width: 12%">Confidence</th>
+                        <th scope="col" style="width: 13%">Risk Level</th>
+                        <th scope="col" style="width: 15%">Created At</th>
+                        <th scope="col" style="width: 10%" class="text-center">Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -108,7 +109,7 @@
                                     </td>
                                     <td class="text-center">
                                         <a href="${pageContext.request.contextPath}/admin/ai-results/detail?id=${r.id}" class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-eye"></i> Xem
+                                            <i class="fas fa-eye"></i> View Details
                                         </a>
                                     </td>
                                 </tr>

@@ -82,6 +82,12 @@ public class LoginController extends HttpServlet {
             HttpSession session = req.getSession(true);
             session.setAttribute("user", user);
 
+            if ("ADMIN".equals(user.getRole())) {
+                session.removeAttribute("redirectAfterLogin");
+                resp.sendRedirect(req.getContextPath() + "/admin/dashboard");
+                return;
+            }
+
             String redirectAfterLogin = (String) session.getAttribute("redirectAfterLogin");
             if (redirectAfterLogin != null) {
                 session.removeAttribute("redirectAfterLogin");
@@ -89,11 +95,7 @@ public class LoginController extends HttpServlet {
                 return;
             }
 
-            if ("ADMIN".equals(user.getRole())) {
-                resp.sendRedirect(req.getContextPath() + "/admin/dashboard");
-            } else {
-                resp.sendRedirect(req.getContextPath() + "/home");
-            }
+            resp.sendRedirect(req.getContextPath() + "/home");
         } else {
             resp.sendRedirect(req.getContextPath() + "/auth/login?error=auth_failed");
         }

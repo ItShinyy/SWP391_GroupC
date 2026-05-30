@@ -29,8 +29,9 @@
                         <option value="LOCKED" ${param.status == 'LOCKED' ? 'selected' : ''}>LOCKED</option>
                     </select>
                 </div>
-                <div class="col-md-2 d-grid">
-                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass me-2"></i>Filter</button>
+                <div class="col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-grow-1"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    <a href="${pageContext.request.contextPath}/admin/users" class="btn btn-outline-secondary" title="Clear Filters"><i class="fa-solid fa-xmark"></i></a>
                 </div>
             </form>
         </div>

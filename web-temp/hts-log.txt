@@ -1,0 +1,54 @@
+HTTrack3.49-2+htsswf+htsjava launched on Wed, 27 May 2026 22:10:06 at https://rre-project.site/dermify/ +*.png +*.gif +*.jpg +*.jpeg +*.css +*.js -ad.doubleclick.net/* -mime:application/foobar
+(winhttrack -qwC2%Ps2u1%s%uN0%I0p3DaK0H0%kf2A25000%f#f -F "Mozilla/4.5 (compatible; HTTrack 3.0x; Windows 98)" -%F "<!-- Mirrored from %s%s by HTTrack Website Copier/3.x [XR&CO'2014], %s -->" -%l "en, *" https://rre-project.site/dermify/ -O1 "C:\Users\Hoang Minh\OneDrive\Documents\Minh_SE2014_2025\SWP299\web\SWP391_GroupC\web-temp" +*.png +*.gif +*.jpg +*.jpeg +*.css +*.js -ad.doubleclick.net/* -mime:application/foobar )
+
+Information, Warnings and Errors reported for this mirror:
+note:	the hts-log.txt file, and hts-cache folder, may contain sensitive information,
+	such as username/password authentication for websites mirrored in this project
+	do not share these files/folders if you want these information to remain private
+
+22:11:46	Error: 	"Not Found" (404) at link https://rre-project.site/dermify/wp-content/plugins/gum-elementor-addon//css/owl.video.play.png (from https://rre-project.site/dermify/wp-content/plugins/gum-elementor-addon//css/owl.carousel.css?ver=7.0)
+22:11:47	Warning: 	Moved Permanently for https://rre-project.site/dermify/?p=422
+22:11:47	Warning: 	File has moved from https://rre-project.site/dermify/?p=422 to https://rre-project.site/dermify/about/
+22:11:48	Warning: 	Moved Permanently for https://rre-project.site/dermify/?p=538
+22:11:48	Warning: 	File has moved from https://rre-project.site/dermify/?p=538 to https://rre-project.site/dermify/services/
+22:11:48	Warning: 	Moved Permanently for https://rre-project.site/dermify/?p=539
+22:11:48	Warning: 	File has moved from https://rre-project.site/dermify/?p=539 to https://rre-project.site/dermify/service-details/
+22:11:48	Warning: 	Moved Permanently for https://rre-project.site/dermify/?p=455
+22:11:48	Warning: 	File has moved from https://rre-project.site/dermify/?p=455 to https://rre-project.site/dermify/appointment/
+22:11:49	Warning: 	Moved Permanently for https://rre-project.site/dermify/?p=508
+22:11:49	Warning: 	File has moved from https://rre-project.site/dermify/?p=508 to https://rre-project.site/dermify/faqs/
+22:11:49	Warning: 	Moved Permanently for https://rre-project.site/dermify/?p=513
+22:11:49	Warning: 	File has moved from https://rre-project.site/dermify/?p=513 to https://rre-project.site/dermify/gallery/
+22:11:49	Warning: 	Moved Permanently for https://rre-project.site/dermify/?p=529
+22:11:49	Warning: 	File has moved from https://rre-project.site/dermify/?p=529 to https://rre-project.site/dermify/pricing/
+22:11:49	Warning: 	Moved Permanently for https://rre-project.site/dermify/?p=552
+22:11:49	Warning: 	File has moved from https://rre-project.site/dermify/?p=552 to https://rre-project.site/dermify/team/
+22:11:50	Warning: 	Moved Permanently for https://rre-project.site/dermify/?p=553
+22:11:50	Warning: 	File has moved from https://rre-project.site/dermify/?p=553 to https://rre-project.site/dermify/testimonials/
+22:11:50	Warning: 	Moved Permanently for https://rre-project.site/dermify/?p=473
+22:11:50	Warning: 	File has moved from https://rre-project.site/dermify/?p=473 to https://rre-project.site/dermify/career/
+22:11:50	Warning: 	Moved Permanently for https://rre-project.site/dermify/?p=475
+22:11:50	Warning: 	File has moved from https://rre-project.site/dermify/?p=475 to https://rre-project.site/dermify/career-details/
+22:11:50	Warning: 	Moved Permanently for https://rre-project.site/dermify/?p=465
+22:11:50	Warning: 	File has moved from https://rre-project.site/dermify/?p=465 to https://rre-project.site/dermify/blog/
+22:11:55	Warning: 	Moved Permanently for https://rre-project.site/dermify/?p=359
+22:11:55	Warning: 	File has moved from https://rre-project.site/dermify/?p=359 to https://rre-project.site/dermify/2026/03/24/flawless-skin-is-what-matters/
+22:12:18	Warning: 	Moved Permanently for https://rre-project.site/dermify/?p=497
+22:12:18	Warning: 	File has moved from https://rre-project.site/dermify/?p=497 to https://rre-project.site/dermify/coming-soon/
+22:12:18	Warning: 	Moved Permanently for https://rre-project.site/dermify/?p=443
+22:12:18	Warning: 	File has moved from https://rre-project.site/dermify/?p=443 to https://rre-project.site/dermify/404-page/
+22:12:18	Warning: 	Moved Permanently for https://rre-project.site/dermify/?p=489
+22:12:18	Warning: 	File has moved from https://rre-project.site/dermify/?p=489 to https://rre-project.site/dermify/contact/
+22:12:18	Warning: 	Moved Permanently for https://rre-project.site/dermify/?p=355
+22:12:18	Warning: 	File has moved from https://rre-project.site/dermify/?p=355 to https://rre-project.site/dermify/2026/03/24/perfect-skin-until-the-end-time/
+22:12:19	Warning: 	Moved Permanently for https://rre-project.site/dermify/?p=350
+22:12:19	Warning: 	File has moved from https://rre-project.site/dermify/?p=350 to https://rre-project.site/dermify/2026/03/24/derm-clinic-that-you-can-trust/
+22:12:20	Warning: 	Moved Permanently for https://rre-project.site/dermify/?p=347
+22:12:20	Warning: 	File has moved from https://rre-project.site/dermify/?p=347 to https://rre-project.site/dermify/2026/03/24/great-skin-that-truly-impresses/
+22:12:20	Warning: 	Moved Permanently for https://rre-project.site/dermify/?p=344
+22:12:20	Warning: 	File has moved from https://rre-project.site/dermify/?p=344 to https://rre-project.site/dermify/2026/03/24/we-live-breathe-great-skin/
+22:12:21	Warning: 	Moved Permanently for https://rre-project.site/dermify/?p=342
+22:12:21	Warning: 	File has moved from https://rre-project.site/dermify/?p=342 to https://rre-project.site/dermify/2026/03/24/the-dermatologists-that-care/
+
+HTTrack Website Copier/3.49-2 mirror complete in 2 minutes 15 seconds : 349 links scanned, 326 files written (18638645 bytes overall) [16303144 bytes received at 120764 bytes/sec], 3127751 bytes transferred using HTTP compression in 38 files, ratio 20%, 26.8 requests per connection
+(1 errors, 42 warnings, 0 messages)
