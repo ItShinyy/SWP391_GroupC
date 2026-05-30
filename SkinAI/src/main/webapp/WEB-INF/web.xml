@@ -90,6 +90,33 @@
         <url-pattern>/auth/logout</url-pattern>
     </servlet-mapping>
 
+    <servlet>
+        <servlet-name>ForgotPasswordController</servlet-name>
+        <servlet-class>com.skinai.controller.auth.ForgotPasswordController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ForgotPasswordController</servlet-name>
+        <url-pattern>/auth/forgot-password</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>ResetPasswordController</servlet-name>
+        <servlet-class>com.skinai.controller.auth.ResetPasswordController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ResetPasswordController</servlet-name>
+        <url-pattern>/auth/reset-password</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>UnlockAccountController</servlet-name>
+        <servlet-class>com.skinai.controller.auth.UnlockAccountController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>UnlockAccountController</servlet-name>
+        <url-pattern>/auth/unlock-account</url-pattern>
+    </servlet-mapping>
+
     <!-- ==================== Public Servlets ==================== -->
     <servlet>
         <servlet-name>HomeController</servlet-name>
@@ -98,6 +125,15 @@
     <servlet-mapping>
         <servlet-name>HomeController</servlet-name>
         <url-pattern>/home</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>ProfileController</servlet-name>
+        <servlet-class>com.skinai.controller.ProfileController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ProfileController</servlet-name>
+        <url-pattern>/patient/profile</url-pattern>
     </servlet-mapping>
 
     <!-- ==================== Patient Servlets ==================== -->
@@ -129,6 +165,33 @@
         <url-pattern>/admin/dashboard</url-pattern>
     </servlet-mapping>
 
+    <servlet>
+        <servlet-name>DashboardDataController</servlet-name>
+        <servlet-class>com.skinai.controller.admin.DashboardDataController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>DashboardDataController</servlet-name>
+        <url-pattern>/admin/api/dashboard</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>ExportCsvController</servlet-name>
+        <servlet-class>com.skinai.controller.admin.ExportCsvController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ExportCsvController</servlet-name>
+        <url-pattern>/admin/export/csv</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>AuditLogsController</servlet-name>
+        <servlet-class>com.skinai.controller.admin.AuditLogsController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AuditLogsController</servlet-name>
+        <url-pattern>/admin/audit-logs</url-pattern>
+    </servlet-mapping>
+
     <!-- Admin User Management -->
     <servlet>
         <servlet-name>AdminUserListController</servlet-name>
@@ -137,6 +200,15 @@
     <servlet-mapping>
         <servlet-name>AdminUserListController</servlet-name>
         <url-pattern>/admin/users</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>ClinicsController</servlet-name>
+        <servlet-class>com.skinai.controller.admin.ClinicsController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ClinicsController</servlet-name>
+        <url-pattern>/admin/clinics</url-pattern>
     </servlet-mapping>
 
     <servlet>
@@ -155,6 +227,33 @@
     <servlet-mapping>
         <servlet-name>AdminUserUnlockController</servlet-name>
         <url-pattern>/admin/users/unlock</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>AdminUserStatusChangeController</servlet-name>
+        <servlet-class>com.skinai.controller.admin.AdminUserStatusChangeController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AdminUserStatusChangeController</servlet-name>
+        <url-pattern>/admin/users/status-change</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>AdminDiagnosisController</servlet-name>
+        <servlet-class>com.skinai.controller.admin.AdminDiagnosisController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AdminDiagnosisController</servlet-name>
+        <url-pattern>/admin/ai-results</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>ReportDetailAdminController</servlet-name>
+        <servlet-class>com.skinai.controller.admin.ReportDetailAdminController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ReportDetailAdminController</servlet-name>
+        <url-pattern>/admin/ai-results/detail</url-pattern>
     </servlet-mapping>
 
     <!-- ==================== Welcome File ==================== -->

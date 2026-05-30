@@ -62,14 +62,14 @@
                 <c:otherwise>
                     <div class="dropdown">
                         <button class="btn btn-skin dropdown-toggle px-4 fw-bold" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <img src="${sessionScope.user.avatarUrl != null ? sessionScope.user.avatarUrl : pageContext.request.contextPath.concat('/assets/img/default-avatar.png')}" class="rounded-circle me-2" width="24" height="24" alt="Avatar">
-                            ${sessionScope.user.fullName}
+                            <i class="fa-regular fa-user me-2"></i> ${sessionScope.user.fullName}
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 mt-2" style="border-radius: var(--skin-radius);">
                             <c:if test="${sessionScope.user.role == 'ADMIN'}">
                                 <li><a class="dropdown-item" href="${pageContext.request.contextPath}/admin/dashboard"><i class="fa-solid fa-chart-line me-2 text-muted"></i>Admin Portal</a></li>
+                                <li><hr class="dropdown-divider"></li>
                             </c:if>
-                            <li><a class="dropdown-item" href="${pageContext.request.contextPath}/patient/profile"><i class="fa-regular fa-id-card me-2 text-muted"></i>Hồ sơ</a></li>
+                            <li><a class="dropdown-item" href="${pageContext.request.contextPath}/patient/profile"><i class="fa-solid fa-user-gear me-2 text-muted"></i>Trang cá nhân</a></li>
                             <li><a class="dropdown-item" href="${pageContext.request.contextPath}/patient/reports"><i class="fa-solid fa-file-medical me-2 text-muted"></i>Lịch sử khám</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li>

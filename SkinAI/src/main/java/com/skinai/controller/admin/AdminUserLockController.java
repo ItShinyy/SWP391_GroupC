@@ -24,6 +24,8 @@ public class AdminUserLockController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String id = req.getParameter("id");
+        String reason = req.getParameter("reason");
+        
         if (id != null && !id.trim().isEmpty()) {
             boolean success = userDAO.updateStatus(id, "LOCKED");
             if (success) {
@@ -34,7 +36,12 @@ public class AdminUserLockController extends HttpServlet {
                 String ip = (String) req.getAttribute("clientIp");
                 String ua = (String) req.getAttribute("userAgent");
                 
-                auditService.log(adminId, "LOCK_USER", "User", id, "ACTIVE", "LOCKED", ip, ua);
+                String newValues = "LOCKED";
+                if (reason != null && !reason.trim().isEmpty()) {
+                    newValues += " (Reason: " + reason.trim() + ")";
+                }
+                
+                auditService.log(adminId, "LOCK_USER", "User", id, "ACTIVE", newValues, ip, ua);
             }
         }
         resp.sendRedirect(req.getContextPath() + "/admin/users");

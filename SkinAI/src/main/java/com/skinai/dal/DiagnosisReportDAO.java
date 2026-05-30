@@ -106,17 +106,166 @@ public class DiagnosisReportDAO {
     }
 
     public int countAll() {
-        String sql = "SELECT COUNT(*) FROM diagnosis_reports";
+        return countAll(null, null);
+    }
+
+    public List<DiagnosisReport> findAll(String search, String riskLevel, String sort, int page, int pageSize) {
+        List<DiagnosisReport> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("SELECT dr.id, dr.patient_id, dr.disease_id, dr.clinic_id, dr.image_url, dr.heatmap_url, " +
+                     "dr.confidence_score, dr.risk_level, dr.recommendation, dr.model_version, dr.created_at, " +
+                     "d.disease_name, u.full_name as patient_name " +
+                     "FROM diagnosis_reports dr " +
+                     "LEFT JOIN diseases d ON dr.disease_id = d.id " +
+                     "LEFT JOIN patients p ON dr.patient_id = p.id " +
+                     "LEFT JOIN users u ON p.user_id = u.id " +
+                     "WHERE 1=1");
+
+        List<Object> params = new ArrayList<>();
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append(" AND (u.full_name LIKE ? OR d.disease_name LIKE ?)");
+            String pattern = "%" + search.trim() + "%";
+            params.add(pattern);
+            params.add(pattern);
+        }
+        if (riskLevel != null && !riskLevel.trim().isEmpty()) {
+            sql.append(" AND dr.risk_level = ?");
+            params.add(riskLevel.trim());
+        }
+
+        if ("precision".equals(sort)) {
+            sql.append(" ORDER BY dr.confidence_score DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+        } else {
+            sql.append(" ORDER BY dr.created_at DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+        }
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+             
+            int paramIndex = 1;
+            for (Object param : params) {
+                ps.setObject(paramIndex++, param);
+            }
+            ps.setInt(paramIndex++, (page - 1) * pageSize);
+            ps.setInt(paramIndex, pageSize);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRow(rs));
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error finding all diagnosis reports with filters", e);
+        }
+        return list;
+    }
+
+    public int countAll(String search, String riskLevel) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM diagnosis_reports dr LEFT JOIN patients p ON dr.patient_id = p.id LEFT JOIN users u ON p.user_id = u.id LEFT JOIN diseases d ON dr.disease_id = d.id WHERE 1=1");
+        List<Object> params = new ArrayList<>();
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append(" AND (u.full_name LIKE ? OR d.disease_name LIKE ?)");
+            String pattern = "%" + search.trim() + "%";
+            params.add(pattern);
+            params.add(pattern);
+        }
+        if (riskLevel != null && !riskLevel.trim().isEmpty()) {
+            sql.append(" AND dr.risk_level = ?");
+            params.add(riskLevel.trim());
+        }
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+             
+            int paramIndex = 1;
+            for (Object param : params) {
+                ps.setObject(paramIndex++, param);
+            }
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error counting all diagnosis reports with filters", e);
+        }
+        return 0;
+    }
+
+    public java.util.Map<String, Integer> getRiskLevelDistribution() {
+        java.util.Map<String, Integer> map = new java.util.HashMap<>();
+        String sql = "SELECT COALESCE(risk_level, 'PENDING') as risk_level, COUNT(*) as count FROM diagnosis_reports GROUP BY risk_level";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                map.put(rs.getString("risk_level"), rs.getInt("count"));
+            }
+        } catch (SQLException e) {
+            logger.error("Error getting risk level distribution", e);
+        }
+        return map;
+    }
+
+    public java.util.Map<String, Integer> getTopDiseases(int limit) {
+        java.util.Map<String, Integer> map = new java.util.LinkedHashMap<>();
+        String sql = "SELECT TOP " + limit + " d.disease_name, COUNT(*) as count " +
+                     "FROM diagnosis_reports dr " +
+                     "JOIN diseases d ON dr.disease_id = d.id " +
+                     "GROUP BY d.disease_name ORDER BY count DESC, d.disease_name ASC";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                map.put(rs.getString("disease_name"), rs.getInt("count"));
+            }
+        } catch (SQLException e) {
+            logger.error("Error getting top diseases", e);
+        }
+        return map;
+    }
+
+    public java.util.Map<String, Integer> getScansTrend() {
+        java.util.Map<String, Integer> map = new java.util.LinkedHashMap<>();
+        // Generate last 30 days initialized to 0
+        java.time.LocalDate today = java.time.LocalDate.now();
+        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        for (int i = 29; i >= 0; i--) {
+            map.put(today.minusDays(i).format(formatter), 0);
+        }
+
+        String sql = "SELECT CAST(created_at AS DATE) as scan_date, COUNT(*) as count " +
+                     "FROM diagnosis_reports " +
+                     "WHERE created_at >= DATEADD(day, -30, GETDATE()) " +
+                     "GROUP BY CAST(created_at AS DATE) " +
+                     "ORDER BY scan_date ASC";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                String date = rs.getString("scan_date");
+                if (map.containsKey(date)) {
+                    map.put(date, rs.getInt("count"));
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error getting scans trend", e);
+        }
+        return map;
+    }
+
+    public double getAverageConfidenceScore() {
+        String sql = "SELECT COALESCE(AVG(confidence_score), 0.0) FROM diagnosis_reports";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             if (rs.next()) {
-                return rs.getInt(1);
+                return rs.getDouble(1);
             }
         } catch (SQLException e) {
-            logger.error("Error counting diagnosis reports", e);
+            logger.error("Error getting average confidence score", e);
         }
-        return 0;
+        return 0.0;
     }
 
     public String create(DiagnosisReport report) {

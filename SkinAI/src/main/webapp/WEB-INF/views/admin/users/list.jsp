@@ -8,6 +8,34 @@
         <h1 class="page-title">User Management</h1>
     </div>
 
+    <!-- Search & Filter Bar -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form action="${pageContext.request.contextPath}/admin/users" method="get" class="row g-3 align-items-center">
+                <div class="col-md-4">
+                    <input type="text" name="search" class="form-control" placeholder="Search by name, email or username" value="${param.search}">
+                </div>
+                <div class="col-md-3">
+                    <select name="role" class="form-select">
+                        <option value="">All Roles</option>
+                        <option value="PATIENT" ${param.role == 'PATIENT' ? 'selected' : ''}>PATIENT</option>
+                        <option value="ADMIN" ${param.role == 'ADMIN' ? 'selected' : ''}>ADMIN</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select name="status" class="form-select">
+                        <option value="">All Statuses</option>
+                        <option value="ACTIVE" ${param.status == 'ACTIVE' ? 'selected' : ''}>ACTIVE</option>
+                        <option value="LOCKED" ${param.status == 'LOCKED' ? 'selected' : ''}>LOCKED</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-grid">
+                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass me-2"></i>Filter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="card shadow-sm">
         <div class="card-body">
             <div class="table-responsive">
@@ -27,7 +55,6 @@
                             <tr>
                                 <td>
                                     <div class="d-flex align-items-center">
-                                        <img src="${u.avatarUrl != null ? u.avatarUrl : pageContext.request.contextPath.concat('/assets/img/default-avatar.png')}" alt="Avatar" class="avatar-sm rounded-circle me-2">
                                         <strong>${u.fullName}</strong>
                                     </div>
                                 </td>
@@ -45,16 +72,10 @@
                                     <c:if test="${u.role != 'ADMIN' || u.id != sessionScope.user.id}">
                                         <c:choose>
                                             <c:when test="${u.status == 'ACTIVE'}">
-                                                <form action="${pageContext.request.contextPath}/admin/users/lock" method="post" class="d-inline">
-                                                    <input type="hidden" name="id" value="${u.id}">
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Lock this user?')">Lock</button>
-                                                </form>
+                                                <a href="${pageContext.request.contextPath}/admin/users/status-change?id=${u.id}&action=lock" class="btn btn-sm btn-outline-danger">Lock</a>
                                             </c:when>
                                             <c:otherwise>
-                                                <form action="${pageContext.request.contextPath}/admin/users/unlock" method="post" class="d-inline">
-                                                    <input type="hidden" name="id" value="${u.id}">
-                                                    <button type="submit" class="btn btn-sm btn-outline-success">Unlock</button>
-                                                </form>
+                                                <a href="${pageContext.request.contextPath}/admin/users/status-change?id=${u.id}&action=unlock" class="btn btn-sm btn-outline-success">Unlock</a>
                                             </c:otherwise>
                                         </c:choose>
                                     </c:if>
@@ -75,15 +96,15 @@
                 <nav aria-label="Page navigation" class="mt-4">
                     <ul class="pagination justify-content-center">
                         <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
-                            <a class="page-link" href="?page=${currentPage - 1}">Previous</a>
+                            <a class="page-link" href="?page=${currentPage - 1}&search=${param.search}&role=${param.role}&status=${param.status}">Previous</a>
                         </li>
                         <c:forEach begin="1" end="${totalPages}" var="i">
                             <li class="page-item ${currentPage == i ? 'active' : ''}">
-                                <a class="page-link" href="?page=${i}">${i}</a>
+                                <a class="page-link" href="?page=${i}&search=${param.search}&role=${param.role}&status=${param.status}">${i}</a>
                             </li>
                         </c:forEach>
                         <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
-                            <a class="page-link" href="?page=${currentPage + 1}">Next</a>
+                            <a class="page-link" href="?page=${currentPage + 1}&search=${param.search}&role=${param.role}&status=${param.status}">Next</a>
                         </li>
                     </ul>
                 </nav>

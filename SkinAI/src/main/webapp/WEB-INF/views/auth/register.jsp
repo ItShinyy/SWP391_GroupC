@@ -37,6 +37,15 @@
                     </c:if>
 
                     <form action="${pageContext.request.contextPath}/auth/register" method="post">
+                        <!-- Username -->
+                        <div class="mb-3">
+                            <label class="form-label text-muted fw-semibold small">Tên đăng nhập (Username)</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-at"></i></span>
+                                <input type="text" name="username" class="form-control border-start-0 ps-0" placeholder="nguyenvana123" required>
+                            </div>
+                        </div>
+
                         <!-- Full Name -->
                         <div class="mb-3">
                             <label class="form-label text-muted fw-semibold small">Họ và tên</label>

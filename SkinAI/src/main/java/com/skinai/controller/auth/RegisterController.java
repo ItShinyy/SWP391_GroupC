@@ -28,7 +28,7 @@ public class RegisterController extends HttpServlet {
 
         String error = req.getParameter("error");
         if ("email_exists".equals(error)) {
-            req.setAttribute("errorMessage", "Email is already registered. Please login.");
+            req.setAttribute("errorMessage", "Email or Username is already registered. Please login.");
         } else if ("invalid_input".equals(error)) {
             req.setAttribute("errorMessage", "Invalid input data. Please check your information.");
         }
@@ -38,17 +38,18 @@ public class RegisterController extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String username = req.getParameter("username");
         String fullName = req.getParameter("fullName");
         String email = req.getParameter("email");
         String password = req.getParameter("password");
 
-        if (fullName == null || email == null || password == null ||
-            fullName.trim().isEmpty() || email.trim().isEmpty() || password.trim().isEmpty() || password.length() < 6) {
+        if (username == null || fullName == null || email == null || password == null ||
+            username.trim().isEmpty() || fullName.trim().isEmpty() || email.trim().isEmpty() || password.trim().isEmpty() || password.length() < 6) {
             resp.sendRedirect(req.getContextPath() + "/auth/register?error=invalid_input");
             return;
         }
 
-        User user = authService.registerLocal(email.trim(), fullName.trim(), password);
+        User user = authService.registerLocal(username.trim(), email.trim(), fullName.trim(), password);
 
         if (user != null) {
             // Auto login after registration

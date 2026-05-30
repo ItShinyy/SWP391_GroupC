@@ -34,10 +34,12 @@ public class LoginController extends HttpServlet {
 
         // Pass error message to JSP if any
         String error = req.getParameter("error");
-        if ("account_locked".equals(error)) {
-            req.setAttribute("errorMessage", "Your account has been locked. Please contact support.");
+        if ("account_locked_inactive".equals(error)) {
+            req.setAttribute("errorMessage", "Tài khoản bị khóa do không hoạt động trên 3 tháng. Vui lòng mở khóa để tiếp tục.");
+        } else if ("account_locked".equals(error)) {
+            req.setAttribute("errorMessage", "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin.");
         } else if ("auth_failed".equals(error)) {
-            req.setAttribute("errorMessage", "Authentication failed. Please try again.");
+            req.setAttribute("errorMessage", "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.");
         }
 
         req.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(req, resp);
@@ -45,21 +47,37 @@ public class LoginController extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String email = req.getParameter("email");
+        String keyword = req.getParameter("usernameOrEmail");
         String password = req.getParameter("password");
 
-        if (email == null || password == null || email.trim().isEmpty() || password.trim().isEmpty()) {
+        if (keyword == null || password == null || keyword.trim().isEmpty() || password.trim().isEmpty()) {
             resp.sendRedirect(req.getContextPath() + "/auth/login?error=auth_failed");
             return;
         }
 
-        User user = authService.loginLocal(email, password);
+        User user = authService.loginLocal(keyword, password);
 
         if (user != null) {
+            // Auto-lock PATIENT accounts inactive for > 3 months
+            if ("PATIENT".equals(user.getRole())) {
+                java.time.LocalDateTime lastActivity = user.getLastLoginAt() != null ? user.getLastLoginAt() : user.getCreatedAt();
+                if (lastActivity != null && lastActivity.isBefore(java.time.LocalDateTime.now().minusMonths(3))) {
+                    authService.lockAccount(user.getId());
+                    user.setStatus("LOCKED");
+                }
+            }
+
             if (!authService.isAccountActive(user)) {
-                resp.sendRedirect(req.getContextPath() + "/auth/login?error=account_locked");
+                if ("LOCKED".equals(user.getStatus())) {
+                    resp.sendRedirect(req.getContextPath() + "/auth/login?error=account_locked_inactive");
+                } else {
+                    resp.sendRedirect(req.getContextPath() + "/auth/login?error=account_locked");
+                }
                 return;
             }
+
+            // Update last_login_at
+            authService.updateLastLogin(user.getId());
 
             HttpSession session = req.getSession(true);
             session.setAttribute("user", user);

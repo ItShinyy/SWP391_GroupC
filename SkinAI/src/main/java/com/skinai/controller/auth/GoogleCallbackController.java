@@ -29,6 +29,17 @@ public class GoogleCallbackController extends HttpServlet {
         String code = req.getParameter("code");
         String error = req.getParameter("error");
 
+        HttpSession session = req.getSession(false);
+        if (session != null && session.getAttribute("user") != null) {
+            User existingUser = (User) session.getAttribute("user");
+            if ("ADMIN".equals(existingUser.getRole())) {
+                resp.sendRedirect(req.getContextPath() + "/admin/dashboard");
+            } else {
+                resp.sendRedirect(req.getContextPath() + "/home");
+            }
+            return;
+        }
+
         if (error != null) {
             logger.warn("Google OAuth error: {}", error);
             resp.sendRedirect(req.getContextPath() + "/auth/login?error=auth_failed");
@@ -64,7 +75,7 @@ public class GoogleCallbackController extends HttpServlet {
                     }
 
                     // Set user in session
-                    HttpSession session = req.getSession(true);
+                    session = req.getSession(true);
                     session.setAttribute("user", user);
                     
                     // Audit log could go here...

@@ -30,8 +30,12 @@ public class AdminUserListController extends HttpServlet {
             } catch (NumberFormatException ignored) {}
         }
 
-        List<User> users = userDAO.findAll(page, pageSize);
-        int totalUsers = userDAO.countAll();
+        String search = req.getParameter("search");
+        String role = req.getParameter("role");
+        String status = req.getParameter("status");
+
+        List<User> users = userDAO.findAll(search, role, status, page, pageSize);
+        int totalUsers = userDAO.countAll(search, role, status);
         int totalPages = (int) Math.ceil((double) totalUsers / pageSize);
 
         req.setAttribute("users", users);

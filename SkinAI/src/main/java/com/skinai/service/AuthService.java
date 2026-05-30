@@ -34,6 +34,8 @@ public class AuthService {
                 user = new User();
                 user.setGoogleId(googleId);
                 user.setEmail(email);
+                // For Google login, username might not be available, we can auto-generate or leave null if allowed
+                user.setUsername(email.split("@")[0] + "_" + System.currentTimeMillis() % 1000); 
                 user.setFullName(fullName);
                 user.setAvatarUrl(avatarUrl);
                 user.setRole("PATIENT");
@@ -66,13 +68,14 @@ public class AuthService {
         return user;
     }
 
-    public User registerLocal(String email, String fullName, String rawPassword) {
-        if (userDAO.findByEmail(email) != null) {
-            // Email already exists
+    public User registerLocal(String username, String email, String fullName, String rawPassword) {
+        if (userDAO.findByUsernameOrEmail(email) != null || userDAO.findByUsernameOrEmail(username) != null) {
+            // Email or Username already exists
             return null;
         }
 
         User user = new User();
+        user.setUsername(username);
         user.setEmail(email);
         user.setFullName(fullName);
         user.setRole("PATIENT");
@@ -87,12 +90,25 @@ public class AuthService {
         return null;
     }
 
-    public User loginLocal(String email, String rawPassword) {
-        User user = userDAO.findByEmail(email);
-        if (user != null) {
-            // Prevent NPE for users who registered via Google and don't have a password
-            if (user.getPasswordHash() != null && BCrypt.checkpw(rawPassword, user.getPasswordHash())) {
-                return user;
+    public User loginLocal(String keyword, String rawPassword) {
+        User user = userDAO.findByUsernameOrEmail(keyword);
+        if (user != null && user.getPasswordHash() != null) {
+            String dbHash = user.getPasswordHash();
+            // Prevent crash if dbHash is plain text (not BCrypt)
+            if (dbHash.startsWith("$2a$") || dbHash.startsWith("$2b$") || dbHash.startsWith("$2y$")) {
+                try {
+                    if (BCrypt.checkpw(rawPassword, dbHash)) {
+                        return user;
+                    }
+                } catch (Exception e) {
+                    // Fallback in case of parsing error
+                }
+            } else {
+                // DB contains plain text password
+                if (dbHash.equals(rawPassword)) {
+                    // Optionally update to hash here, but for now just allow login
+                    return user;
+                }
             }
         }
         return null;
@@ -104,5 +120,17 @@ public class AuthService {
 
     public boolean isAccountActive(User user) {
         return user != null && "ACTIVE".equals(user.getStatus());
+    }
+
+    public boolean updateLastLogin(String userId) {
+        return userDAO.updateLastLogin(userId);
+    }
+
+    public boolean lockAccount(String userId) {
+        return userDAO.updateStatus(userId, "LOCKED");
+    }
+
+    public boolean unlockAccount(String userId) {
+        return userDAO.updateStatus(userId, "ACTIVE");
     }
 }

@@ -57,15 +57,83 @@ public class AuditLogDAO {
     }
 
     public int countAll() {
-        String sql = "SELECT COUNT(*) FROM audit_logs";
+        return countAll(null, null);
+    }
+
+    public List<AuditLog> findAll(String search, String action, int page, int pageSize) {
+        List<AuditLog> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("SELECT a.id, a.user_id, a.action, a.entity_type, a.record_id, a.old_values, a.new_values, a.ip_address, a.user_agent, a.created_at, " +
+                     "u.full_name as user_name " +
+                     "FROM audit_logs a " +
+                     "LEFT JOIN users u ON a.user_id = u.id " +
+                     "WHERE 1=1");
+        
+        List<Object> params = new ArrayList<>();
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append(" AND (u.full_name LIKE ? OR a.entity_type LIKE ? OR a.record_id LIKE ?)");
+            String pattern = "%" + search.trim() + "%";
+            params.add(pattern);
+            params.add(pattern);
+            params.add(pattern);
+        }
+        if (action != null && !action.trim().isEmpty()) {
+            sql.append(" AND a.action = ?");
+            params.add(action.trim());
+        }
+
+        sql.append(" ORDER BY a.created_at DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+
         try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            if (rs.next()) {
-                return rs.getInt(1);
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+             
+            int paramIndex = 1;
+            for (Object param : params) {
+                ps.setObject(paramIndex++, param);
+            }
+            ps.setInt(paramIndex++, (page - 1) * pageSize);
+            ps.setInt(paramIndex, pageSize);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRow(rs));
+                }
             }
         } catch (SQLException e) {
-            logger.error("Error counting audit logs", e);
+            logger.error("Error finding all audit logs with filters", e);
+        }
+        return list;
+    }
+
+    public int countAll(String search, String action) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM audit_logs a LEFT JOIN users u ON a.user_id = u.id WHERE 1=1");
+        List<Object> params = new ArrayList<>();
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append(" AND (u.full_name LIKE ? OR a.entity_type LIKE ? OR a.record_id LIKE ?)");
+            String pattern = "%" + search.trim() + "%";
+            params.add(pattern);
+            params.add(pattern);
+            params.add(pattern);
+        }
+        if (action != null && !action.trim().isEmpty()) {
+            sql.append(" AND a.action = ?");
+            params.add(action.trim());
+        }
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+             
+            int paramIndex = 1;
+            for (Object param : params) {
+                ps.setObject(paramIndex++, param);
+            }
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error counting audit logs with filters", e);
         }
         return 0;
     }
