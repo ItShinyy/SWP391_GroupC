@@ -15,7 +15,7 @@ public class UserDAO {
     private static final Logger logger = LoggerFactory.getLogger(UserDAO.class);
 
     public User findById(String id) {
-        String sql = "SELECT id, google_id, username, email, password_hash, full_name, role, status, created_at, updated_at, last_login_at " +
+        String sql = "SELECT id, google_id, username, email, phone, password_hash, full_name, role, status, created_at, updated_at, last_login_at " +
                      "FROM users WHERE id = ?";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -32,7 +32,7 @@ public class UserDAO {
     }
 
     public User findByGoogleId(String googleId) {
-        String sql = "SELECT id, google_id, username, email, password_hash, full_name, role, status, created_at, updated_at, last_login_at " +
+        String sql = "SELECT id, google_id, username, email, phone, password_hash, full_name, role, status, created_at, updated_at, last_login_at " +
                      "FROM users WHERE google_id = ?";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -49,7 +49,7 @@ public class UserDAO {
     }
 
     public User findByEmail(String email) {
-        String sql = "SELECT id, google_id, username, email, password_hash, full_name, role, status, created_at, updated_at, last_login_at " +
+        String sql = "SELECT id, google_id, username, email, phone, password_hash, full_name, role, status, created_at, updated_at, last_login_at " +
                      "FROM users WHERE email = ?";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -66,26 +66,27 @@ public class UserDAO {
     }
 
     public User findByUsernameOrEmail(String keyword) {
-        String sql = "SELECT id, google_id, username, email, password_hash, full_name, role, status, created_at, updated_at, last_login_at " +
-                     "FROM users WHERE email = ? OR username = ?";
+        String sql = "SELECT id, google_id, username, email, phone, password_hash, full_name, role, status, created_at, updated_at, last_login_at " +
+                     "FROM users WHERE email = ? OR username = ? OR phone = ?";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, keyword);
             ps.setString(2, keyword);
+            ps.setString(3, keyword);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return mapRow(rs);
                 }
             }
         } catch (SQLException e) {
-            logger.error("Error finding user by username or email: {}", keyword, e);
+            logger.error("Error finding user by keyword: {}", keyword, e);
         }
         return null;
     }
 
     public List<User> findAll(int page, int pageSize) {
         List<User> list = new ArrayList<>();
-        String sql = "SELECT id, google_id, username, email, password_hash, full_name, role, status, created_at, updated_at, last_login_at " +
+        String sql = "SELECT id, google_id, username, email, phone, password_hash, full_name, role, status, created_at, updated_at, last_login_at " +
                      "FROM users ORDER BY created_at DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -108,7 +109,7 @@ public class UserDAO {
 
     public List<User> findAll(String search, String role, String status, int page, int pageSize) {
         List<User> list = new ArrayList<>();
-        StringBuilder sql = new StringBuilder("SELECT id, google_id, username, email, password_hash, full_name, role, status, created_at, updated_at, last_login_at FROM users WHERE 1=1");
+        StringBuilder sql = new StringBuilder("SELECT id, google_id, username, email, phone, password_hash, full_name, role, status, created_at, updated_at, last_login_at FROM users WHERE 1=1");
         
         List<Object> params = new ArrayList<>();
         if (search != null && !search.trim().isEmpty()) {
@@ -218,18 +219,19 @@ public class UserDAO {
     }
 
     public String create(User user) {
-        String sql = "INSERT INTO users (id, google_id, username, email, password_hash, full_name, role, status, created_at, updated_at) " +
+        String sql = "INSERT INTO users (id, google_id, username, email, phone, password_hash, full_name, role, status, created_at, updated_at) " +
                      "OUTPUT INSERTED.id " +
-                     "VALUES (NEWID(), ?, ?, ?, ?, ?, ?, ?, GETDATE(), GETDATE())";
+                     "VALUES (NEWID(), ?, ?, ?, ?, ?, ?, ?, ?, GETDATE(), GETDATE())";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, user.getGoogleId());
             ps.setString(2, user.getUsername());
             ps.setString(3, user.getEmail());
-            ps.setString(4, user.getPasswordHash());
-            ps.setString(5, user.getFullName());
-            ps.setString(6, user.getRole() != null ? user.getRole() : "PATIENT");
-            ps.setString(7, user.getStatus() != null ? user.getStatus() : "ACTIVE");
+            ps.setString(4, user.getPhone());
+            ps.setString(5, user.getPasswordHash());
+            ps.setString(6, user.getFullName());
+            ps.setString(7, user.getRole() != null ? user.getRole() : "PATIENT");
+            ps.setString(8, user.getStatus() != null ? user.getStatus() : "ACTIVE");
             
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -244,17 +246,19 @@ public class UserDAO {
     }
 
     public boolean update(User user) {
-        String sql = "UPDATE users SET google_id = ?, username = ?, password_hash = ?, full_name = ?, role = ?, status = ?, updated_at = GETDATE() " +
+        String sql = "UPDATE users SET google_id = ?, username = ?, email = ?, phone = ?, password_hash = ?, full_name = ?, role = ?, status = ?, updated_at = GETDATE() " +
                      "WHERE id = ?";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, user.getGoogleId());
             ps.setString(2, user.getUsername());
-            ps.setString(3, user.getPasswordHash());
-            ps.setString(4, user.getFullName());
-            ps.setString(5, user.getRole());
-            ps.setString(6, user.getStatus());
-            ps.setString(7, user.getId());
+            ps.setString(3, user.getEmail());
+            ps.setString(4, user.getPhone());
+            ps.setString(5, user.getPasswordHash());
+            ps.setString(6, user.getFullName());
+            ps.setString(7, user.getRole());
+            ps.setString(8, user.getStatus());
+            ps.setString(9, user.getId());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             logger.error("Error updating user: {}", user.getId(), e);
@@ -293,6 +297,7 @@ public class UserDAO {
         user.setGoogleId(rs.getString("google_id"));
         user.setUsername(rs.getString("username"));
         user.setEmail(rs.getString("email"));
+        user.setPhone(rs.getString("phone"));
         user.setPasswordHash(rs.getString("password_hash"));
         user.setFullName(rs.getString("full_name"));
         user.setRole(rs.getString("role"));

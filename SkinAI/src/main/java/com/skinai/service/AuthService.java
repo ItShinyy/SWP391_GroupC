@@ -14,7 +14,7 @@ public class AuthService {
         this.userDAO = new UserDAO();
     }
 
-    public User loginWithGoogle(String googleId, String email, String fullName, String avatarUrl) {
+    public User loginWithGoogle(String googleId, String email, String fullName) {
         // Try to find user by Google ID
         User user = userDAO.findByGoogleId(googleId);
         
@@ -24,7 +24,6 @@ public class AuthService {
             if (user != null) {
                 // Link Google account
                 user.setGoogleId(googleId);
-                user.setAvatarUrl(avatarUrl);
                 if (user.getFullName() == null || user.getFullName().isEmpty()) {
                     user.setFullName(fullName);
                 }
@@ -37,8 +36,7 @@ public class AuthService {
                 // For Google login, username might not be available, we can auto-generate or leave null if allowed
                 user.setUsername(email.split("@")[0] + "_" + System.currentTimeMillis() % 1000); 
                 user.setFullName(fullName);
-                user.setAvatarUrl(avatarUrl);
-                user.setRole("PATIENT");
+                user.setRole("USER"); // Zero-Trust: Default to USER
                 user.setStatus("ACTIVE");
                 
                 String newId = userDAO.create(user);
@@ -50,12 +48,8 @@ public class AuthService {
                 }
             }
         } else {
-            // Update avatar and name if changed
+            // Update name if changed
             boolean needsUpdate = false;
-            if (avatarUrl != null && !avatarUrl.equals(user.getAvatarUrl())) {
-                user.setAvatarUrl(avatarUrl);
-                needsUpdate = true;
-            }
             if (fullName != null && (user.getFullName() == null || !fullName.equals(user.getFullName()))) {
                 user.setFullName(fullName);
                 needsUpdate = true;
@@ -68,17 +62,23 @@ public class AuthService {
         return user;
     }
 
-    public User registerLocal(String username, String email, String fullName, String rawPassword) {
-        if (userDAO.findByUsernameOrEmail(email) != null || userDAO.findByUsernameOrEmail(username) != null) {
-            // Email or Username already exists
+    public User registerLocal(String username, String email, String phone, String fullName, String rawPassword) {
+        if (email != null && userDAO.findByUsernameOrEmail(email) != null) {
+            return null;
+        }
+        if (phone != null && userDAO.findByUsernameOrEmail(phone) != null) {
+            return null;
+        }
+        if (username != null && userDAO.findByUsernameOrEmail(username) != null) {
             return null;
         }
 
         User user = new User();
         user.setUsername(username);
         user.setEmail(email);
+        user.setPhone(phone);
         user.setFullName(fullName);
-        user.setRole("PATIENT");
+        user.setRole("USER"); // Zero-Trust: Default to USER
         user.setStatus("ACTIVE");
         user.setPasswordHash(BCrypt.hashpw(rawPassword, BCrypt.gensalt()));
 

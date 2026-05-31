@@ -32,11 +32,13 @@ com\skinai\controller\admin\AdminUserUnlockController.class
 com\skinai\filter\AuthorizationFilter.class
 com\skinai\HashGen.class
 com\skinai\controller\admin\AdminUserLockController.class
+com\skinai\service\BookingService.class
 com\skinai\controller\admin\ReportDetailAdminController.class
 com\skinai\controller\auth\GoogleOAuthController.class
 com\skinai\model\AuditLog.class
 com\skinai\dal\DiseaseDAO.class
 com\skinai\filter\AuditFilter.class
+com\skinai\controller\patient\PatientReportsController.class
 com\skinai\model\Article.class
 com\skinai\model\DiagnosisReport.class
 com\skinai\controller\admin\AdminUserStatusChangeController.class
@@ -47,6 +49,7 @@ com\skinai\model\User.class
 com\skinai\controller\admin\AuditLogsController.class
 com\skinai\controller\auth\RegisterController.class
 com\skinai\dal\ClinicDAO.class
+com\skinai\service\ConsoleEmailServiceImpl$1.class
 com\skinai\controller\admin\ExportCsvController.class
 com\skinai\dal\AuditLogDAO.class
 com\skinai\controller\admin\AdminUserListController.class

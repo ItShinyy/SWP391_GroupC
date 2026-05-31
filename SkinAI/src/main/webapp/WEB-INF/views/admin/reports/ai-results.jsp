@@ -6,7 +6,7 @@
 <div class="container-fluid">
     <div class="table-container bg-white shadow-sm rounded-4 p-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h4 class="text-primary font-weight-bold mb-0"><i class="fas fa-microscope mr-2"></i>System Diagnosis Results</h4>
+            <h1 class="page-title">System Diagnosis Results</h1>
         </div>
         
         <!-- Search & Filter Bar -->
@@ -31,8 +31,8 @@
                         </select>
                     </div>
                     <div class="col-md-2 d-flex gap-2">
-                        <button type="submit" class="btn btn-primary flex-grow-1"><i class="fa-solid fa-magnifying-glass"></i></button>
-                        <a href="${pageContext.request.contextPath}/admin/ai-results" class="btn btn-outline-secondary" title="Clear Filters"><i class="fa-solid fa-xmark"></i></a>
+                        <button type="submit" class="btn btn-primary flex-grow-1"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+                        <a href="${pageContext.request.contextPath}/admin/ai-results" class="btn btn-outline-secondary">Xóa Bộ Lọc</a>
                     </div>
                 </form>
             </div>

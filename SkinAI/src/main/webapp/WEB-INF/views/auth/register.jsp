@@ -60,13 +60,23 @@
                             <label class="form-label text-muted fw-semibold small">Địa chỉ Email</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-regular fa-envelope"></i></span>
-                                <input type="email" name="email" class="form-control border-start-0 ps-0" placeholder="name@example.com" required>
+                                <input type="email" name="email" class="form-control border-start-0 ps-0" placeholder="name@example.com">
                             </div>
+                        </div>
+                        
+                        <!-- Phone -->
+                        <div class="mb-3">
+                            <label class="form-label text-muted fw-semibold small">Số điện thoại</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-phone"></i></span>
+                                <input type="text" name="phone" class="form-control border-start-0 ps-0" placeholder="0901234567">
+                            </div>
+                            <div class="form-text small text-danger">* Bạn phải nhập ít nhất Email hoặc Số điện thoại.</div>
                         </div>
 
                         <!-- Password -->
                         <div class="mb-4">
-                            <label class="form-label text-muted fw-semibold small">Mật khẩu (ít nhất 6 ký tự)</label>
+                            <label class="form-label text-muted fw-semibold small">Mật khẩu (Ít nhất 6 ký tự)</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-lock"></i></span>
                                 <input type="password" name="password" class="form-control border-start-0 ps-0" placeholder="••••••••" required minlength="6">

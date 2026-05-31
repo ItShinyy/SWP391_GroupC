@@ -14,7 +14,7 @@ public class PatientDAO {
     private static final Logger logger = LoggerFactory.getLogger(PatientDAO.class);
 
     public Patient findById(String id) {
-        String sql = "SELECT id, user_id, phone, gender, dob, address, created_at, updated_at " +
+        String sql = "SELECT id, user_id, gender, dob, address, created_at, updated_at " +
                      "FROM patients WHERE id = ?";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -31,7 +31,7 @@ public class PatientDAO {
     }
 
     public Patient findByUserId(String userId) {
-        String sql = "SELECT id, user_id, phone, gender, dob, address, created_at, updated_at " +
+        String sql = "SELECT id, user_id, gender, dob, address, created_at, updated_at " +
                      "FROM patients WHERE user_id = ?";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -48,20 +48,19 @@ public class PatientDAO {
     }
 
     public String create(Patient patient) {
-        String sql = "INSERT INTO patients (id, user_id, phone, gender, dob, address) " +
+        String sql = "INSERT INTO patients (id, user_id, gender, dob, address) " +
                      "OUTPUT INSERTED.id " +
-                     "VALUES (NEWID(), ?, ?, ?, ?, ?)";
+                     "VALUES (NEWID(), ?, ?, ?, ?)";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, patient.getUserId());
-            ps.setString(2, patient.getPhone());
-            ps.setString(3, patient.getGender());
+            ps.setString(2, patient.getGender());
             if (patient.getDob() != null) {
-                ps.setDate(4, Date.valueOf(patient.getDob()));
+                ps.setDate(3, Date.valueOf(patient.getDob()));
             } else {
-                ps.setNull(4, java.sql.Types.DATE);
+                ps.setNull(3, java.sql.Types.DATE);
             }
-            ps.setString(5, patient.getAddress());
+            ps.setString(4, patient.getAddress());
             
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -75,19 +74,18 @@ public class PatientDAO {
     }
 
     public boolean update(Patient patient) {
-        String sql = "UPDATE patients SET phone = ?, gender = ?, dob = ?, address = ?, updated_at = GETDATE() " +
+        String sql = "UPDATE patients SET gender = ?, dob = ?, address = ?, updated_at = GETDATE() " +
                      "WHERE id = ?";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, patient.getPhone());
-            ps.setString(2, patient.getGender());
+            ps.setString(1, patient.getGender());
             if (patient.getDob() != null) {
-                ps.setDate(3, Date.valueOf(patient.getDob()));
+                ps.setDate(2, Date.valueOf(patient.getDob()));
             } else {
-                ps.setNull(3, java.sql.Types.DATE);
+                ps.setNull(2, java.sql.Types.DATE);
             }
-            ps.setString(4, patient.getAddress());
-            ps.setString(5, patient.getId());
+            ps.setString(3, patient.getAddress());
+            ps.setString(4, patient.getId());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             logger.error("Error updating patient: {}", patient.getId(), e);
@@ -99,7 +97,6 @@ public class PatientDAO {
         Patient p = new Patient();
         p.setId(rs.getString("id"));
         p.setUserId(rs.getString("user_id"));
-        p.setPhone(rs.getString("phone"));
         p.setGender(rs.getString("gender"));
         if (rs.getDate("dob") != null) {
             p.setDob(rs.getDate("dob").toLocalDate());

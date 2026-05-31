@@ -14,6 +14,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import org.mindrot.jbcrypt.BCrypt;
 
 public class ForgotPasswordController extends HttpServlet {
     private UserDAO userDAO;
@@ -34,37 +35,51 @@ public class ForgotPasswordController extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String email = req.getParameter("email");
-        if (email == null || email.trim().isEmpty()) {
-            req.setAttribute("errorMessage", "Vui lòng nhập email.");
+        String identifier = req.getParameter("identifier");
+        if (identifier == null || identifier.trim().isEmpty()) {
+            req.setAttribute("errorMessage", "Vui lòng nhập Email hoặc Số điện thoại.");
             req.getRequestDispatcher("/WEB-INF/views/auth/forgot-password.jsp").forward(req, resp);
             return;
         }
 
-        User user = userDAO.findByEmail(email.trim());
+        identifier = identifier.trim();
+        User user = userDAO.findByUsernameOrEmail(identifier);
+        
         if (user != null) {
             // Generate 6 digit OTP
             SecureRandom random = new SecureRandom();
             int num = random.nextInt(1000000);
             String otp = String.format("%06d", num);
 
+            // Hash OTP for storage
+            String hashedOtp = BCrypt.hashpw(otp, BCrypt.gensalt());
+
+            // Delete old reset tokens for this user
+            tokenDAO.deleteByUserIdAndPurpose(user.getId(), "RESET_PASSWORD");
+
             PasswordResetToken token = new PasswordResetToken();
             token.setUserId(user.getId());
-            token.setToken(otp);
-            token.setExpiresAt(LocalDateTime.now().plusMinutes(15)); // Expires in 15 mins
+            token.setToken(hashedOtp);
+            token.setPurpose("RESET_PASSWORD");
+            token.setExpiresAt(LocalDateTime.now().plusMinutes(5)); // TTL 5 mins
 
             if (tokenDAO.create(token)) {
-                emailService.sendPasswordResetEmail(user.getEmail(), otp);
-                resp.sendRedirect(req.getContextPath() + "/auth/reset-password?email=" + email);
+                // Send OTP based on available contact
+                if (user.getEmail() != null && !user.getEmail().isEmpty()) {
+                    emailService.sendPasswordResetEmail(user.getEmail(), otp);
+                } else if (user.getPhone() != null && !user.getPhone().isEmpty()) {
+                    emailService.sendSmsOTP(user.getPhone(), otp);
+                }
+                resp.sendRedirect(req.getContextPath() + "/auth/reset-password?identifier=" + identifier);
                 return;
             } else {
                 req.setAttribute("errorMessage", "Lỗi hệ thống. Vui lòng thử lại sau.");
+                req.getRequestDispatcher("/WEB-INF/views/auth/forgot-password.jsp").forward(req, resp);
+                return;
             }
-        } else {
-            // Do not reveal that email does not exist for security reasons, just pretend it was sent or show generic message
-            req.setAttribute("errorMessage", "Nếu email tồn tại, mã OTP đã được gửi.");
         }
 
-        req.getRequestDispatcher("/WEB-INF/views/auth/forgot-password.jsp").forward(req, resp);
+        // Zero-Knowledge response
+        resp.sendRedirect(req.getContextPath() + "/auth/reset-password?identifier=" + identifier);
     }
 }

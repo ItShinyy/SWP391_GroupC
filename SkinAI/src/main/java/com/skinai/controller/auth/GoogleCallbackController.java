@@ -66,7 +66,7 @@ public class GoogleCallbackController extends HttpServlet {
                 String name = userInfo.get("name");
                 String picture = userInfo.get("picture");
 
-                User user = authService.loginWithGoogle(googleId, email, name, picture);
+                User user = authService.loginWithGoogle(googleId, email, name);
 
                 if (user != null) {
                     if (!authService.isAccountActive(user)) {
@@ -74,6 +74,9 @@ public class GoogleCallbackController extends HttpServlet {
                         return;
                     }
 
+                    // Zero-Trust: Prevent session fixation
+                    req.changeSessionId();
+                    
                     // Set user in session
                     session = req.getSession(true);
                     session.setAttribute("user", user);

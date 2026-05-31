@@ -41,23 +41,47 @@ public class RegisterController extends HttpServlet {
         String username = req.getParameter("username");
         String fullName = req.getParameter("fullName");
         String email = req.getParameter("email");
+        String phone = req.getParameter("phone");
         String password = req.getParameter("password");
 
-        if (username == null || fullName == null || email == null || password == null ||
-            username.trim().isEmpty() || fullName.trim().isEmpty() || email.trim().isEmpty() || password.trim().isEmpty() || password.length() < 6) {
+        // Validate basic requirements
+        if (username == null || fullName == null || password == null ||
+            username.trim().isEmpty() || fullName.trim().isEmpty() || password.trim().isEmpty() || password.length() < 6) {
+            resp.sendRedirect(req.getContextPath() + "/auth/register?error=invalid_input");
+            return;
+        }
+        
+        // Normalize
+        username = username.trim();
+        fullName = fullName.trim();
+        if (email != null && !email.trim().isEmpty()) {
+            email = email.trim().toLowerCase();
+        } else {
+            email = null;
+        }
+        
+        if (phone != null && !phone.trim().isEmpty()) {
+            phone = phone.replaceAll("\\s+", "");
+        } else {
+            phone = null;
+        }
+        
+        // Must provide at least email or phone
+        if (email == null && phone == null) {
             resp.sendRedirect(req.getContextPath() + "/auth/register?error=invalid_input");
             return;
         }
 
-        User user = authService.registerLocal(username.trim(), email.trim(), fullName.trim(), password);
+        User user = authService.registerLocal(username, email, phone, fullName, password);
 
         if (user != null) {
-            // Auto login after registration
+            // Auto login after registration and prevent session fixation
+            req.changeSessionId(); // Zero-Trust: Regenerate Session ID
             HttpSession session = req.getSession(true);
             session.setAttribute("user", user);
             resp.sendRedirect(req.getContextPath() + "/home");
         } else {
-            // Registration failed (email exists)
+            // Registration failed (email or phone exists)
             resp.sendRedirect(req.getContextPath() + "/auth/register?error=email_exists");
         }
     }

@@ -31,14 +31,14 @@
 
                     <form action="${pageContext.request.contextPath}/auth/forgot-password" method="post">
                         <div class="mb-4">
-                            <label class="form-label text-muted fw-semibold small">Nhập địa chỉ Email đã đăng ký</label>
+                            <label class="form-label text-muted fw-semibold small">Nhập Email hoặc Số điện thoại</label>
                             <div class="input-group">
-                                <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-regular fa-envelope"></i></span>
-                                <input type="email" name="email" class="form-control border-start-0 ps-0" placeholder="name@example.com" required>
+                                <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-user"></i></span>
+                                <input type="text" name="identifier" class="form-control border-start-0 ps-0" placeholder="name@example.com hoặc 0901234567" required>
                             </div>
                         </div>
 
-                        <button type="submit" class="btn btn-skin w-100 fw-bold mb-3">Nhận mã OTP qua Email</button>
+                        <button type="submit" class="btn btn-skin w-100 fw-bold mb-3">Nhận mã OTP</button>
                     </form>
                 </div>
                 <div class="text-center mt-4 text-muted small">

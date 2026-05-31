@@ -37,7 +37,6 @@ DROP TABLE IF EXISTS users;
 -- 1. USERS
 -- =========================================================
 CREATE TABLE users (
-    -- OPTIMIZATION: Use NEWSEQUENTIALID() to prevent clustered index fragmentation
     id UNIQUEIDENTIFIER NOT NULL DEFAULT NEWSEQUENTIALID(),
     google_id VARCHAR(100) NULL,
     email VARCHAR(100) NOT NULL,
@@ -51,9 +50,7 @@ CREATE TABLE users (
     updated_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
 
     CONSTRAINT PK_users PRIMARY KEY (id),
-    CONSTRAINT UQ_users_email UNIQUE (email),
-    CONSTRAINT CK_users_role CHECK (role IN ('PATIENT', 'ADMIN')),
-    CONSTRAINT CK_users_status CHECK (status IN ('ACTIVE', 'INACTIVE', 'LOCKED'))
+    CONSTRAINT UQ_users_email UNIQUE (email)
 );
 
 -- =========================================================
@@ -62,17 +59,15 @@ CREATE TABLE users (
 CREATE TABLE patients (
     id UNIQUEIDENTIFIER NOT NULL DEFAULT NEWSEQUENTIALID(),
     user_id UNIQUEIDENTIFIER UNIQUE NULL,
-    phone VARCHAR(20) UNIQUE NOT NULL,
+    phone VARCHAR(20) NOT NULL,
     gender VARCHAR(10) NULL,
     dob DATE NULL,
-    -- OPTIMIZATION: Changed from NVARCHAR(MAX) to NVARCHAR(500)
     address NVARCHAR(500) NULL,
     created_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
     updated_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
 
     CONSTRAINT PK_patients PRIMARY KEY (id),
-    CONSTRAINT FK_patients_users FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
-    CONSTRAINT CK_patients_gender CHECK (gender IN ('MALE', 'FEMALE', 'OTHER'))
+    CONSTRAINT FK_patients_users FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
 -- =========================================================
@@ -82,7 +77,6 @@ CREATE TABLE diseases (
     id UNIQUEIDENTIFIER NOT NULL DEFAULT NEWSEQUENTIALID(),
     disease_name NVARCHAR(150) NOT NULL,
     disease_code VARCHAR(50) NULL,
-    -- OPTIMIZATION: Restricted from MAX to 2000 for better inline storage
     description NVARCHAR(2000) NULL,
     symptoms NVARCHAR(2000) NULL,
     severity_level VARCHAR(20) NULL,
@@ -90,8 +84,7 @@ CREATE TABLE diseases (
     created_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
 
     CONSTRAINT PK_diseases PRIMARY KEY (id),
-    CONSTRAINT UQ_diseases_name UNIQUE (disease_name),
-    CONSTRAINT CK_diseases_severity CHECK (severity_level IN ('LOW', 'MEDIUM', 'HIGH'))
+    CONSTRAINT UQ_diseases_name UNIQUE (disease_name)
 );
 
 -- =========================================================
@@ -101,7 +94,6 @@ CREATE TABLE clinics (
     id UNIQUEIDENTIFIER NOT NULL DEFAULT NEWSEQUENTIALID(),
     google_place_id VARCHAR(100) NULL,
     clinic_name NVARCHAR(150) NOT NULL,
-    -- OPTIMIZATION: Restricted from MAX to 500
     address NVARCHAR(500) NOT NULL,
     phone VARCHAR(20) NULL,
     latitude DECIMAL(9,6) NULL,
@@ -113,8 +105,7 @@ CREATE TABLE clinics (
     created_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
     updated_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
 
-    CONSTRAINT PK_clinics PRIMARY KEY (id),
-    CONSTRAINT CK_clinics_rating CHECK (rating >= 0 AND rating <= 5)
+    CONSTRAINT PK_clinics PRIMARY KEY (id)
 );
 
 -- =========================================================
@@ -129,7 +120,6 @@ CREATE TABLE diagnosis_reports (
     heatmap_url VARCHAR(255) NULL,
     confidence_score DECIMAL(5,2) NULL,
     risk_level VARCHAR(20) NULL,
-    -- OPTIMIZATION: Restricted from MAX to 2000
     recommendation NVARCHAR(2000) NULL,
     model_version VARCHAR(50) NULL,
     created_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
@@ -137,9 +127,7 @@ CREATE TABLE diagnosis_reports (
     CONSTRAINT PK_diagnosis_reports PRIMARY KEY (id),
     CONSTRAINT FK_diagnosis_reports_patients FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,
     CONSTRAINT FK_diagnosis_reports_diseases FOREIGN KEY (disease_id) REFERENCES diseases(id) ON DELETE SET NULL,
-    CONSTRAINT FK_diagnosis_reports_clinics FOREIGN KEY (clinic_id) REFERENCES clinics(id) ON DELETE SET NULL,
-    CONSTRAINT CK_reports_confidence CHECK (confidence_score >= 0 AND confidence_score <= 100),
-    CONSTRAINT CK_reports_risk CHECK (risk_level IN ('LOW', 'MEDIUM', 'HIGH'))
+    CONSTRAINT FK_diagnosis_reports_clinics FOREIGN KEY (clinic_id) REFERENCES clinics(id) ON DELETE SET NULL
 );
 
 -- =========================================================
@@ -152,16 +140,15 @@ CREATE TABLE appointments (
     diagnosis_report_id UNIQUEIDENTIFIER NULL,
     appointment_time DATETIME2 NOT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'CREATED',
-    -- OPTIMIZATION: Restricted from MAX to 1000
     notes NVARCHAR(1000) NULL,
     created_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
     updated_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
 
     CONSTRAINT PK_appointments PRIMARY KEY (id),
-    CONSTRAINT FK_appointments_patients FOREIGN KEY (patient_id) REFERENCES patients(id),
-    CONSTRAINT FK_appointments_clinics FOREIGN KEY (clinic_id) REFERENCES clinics(id),
-    CONSTRAINT FK_appointments_reports FOREIGN KEY (diagnosis_report_id) REFERENCES diagnosis_reports(id),
-    CONSTRAINT CK_appointments_status CHECK (status IN ('CREATED', 'CONFIRMED', 'CHECKED_IN', 'COMPLETED', 'CANCELLED', 'NO_SHOW'))
+    -- CẢI TIẾN: Thay đổi thành ON DELETE NO ACTION để tránh lỗi trùng lặp đường dẫn cascade xóa từ bảng patients
+    CONSTRAINT FK_appointments_patients FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE NO ACTION,
+    CONSTRAINT FK_appointments_clinics FOREIGN KEY (clinic_id) REFERENCES clinics(id) ON DELETE NO ACTION,
+    CONSTRAINT FK_appointments_reports FOREIGN KEY (diagnosis_report_id) REFERENCES diagnosis_reports(id) ON DELETE NO ACTION
 );
 
 -- =========================================================
@@ -172,7 +159,6 @@ CREATE TABLE articles (
     title NVARCHAR(200) NOT NULL,
     slug VARCHAR(220) NOT NULL,
     thumbnail_url VARCHAR(255) NULL,
-    -- Kept as MAX because article contents can genuinely exceed 8000 bytes
     content NVARCHAR(MAX) NOT NULL,
     author_user_id UNIQUEIDENTIFIER NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'DRAFT',
@@ -181,8 +167,7 @@ CREATE TABLE articles (
 
     CONSTRAINT PK_articles PRIMARY KEY (id),
     CONSTRAINT UQ_articles_slug UNIQUE (slug),
-    CONSTRAINT FK_articles_users FOREIGN KEY (author_user_id) REFERENCES users(id) ON DELETE SET NULL,
-    CONSTRAINT CK_articles_status CHECK (status IN ('DRAFT', 'PUBLISHED', 'ARCHIVED'))
+    CONSTRAINT FK_articles_users FOREIGN KEY (author_user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
 -- =========================================================
@@ -197,7 +182,7 @@ CREATE TABLE audit_logs (
     old_values NVARCHAR(MAX) NULL,
     new_values NVARCHAR(MAX) NULL,
     ip_address VARCHAR(45) NULL,
-    user_agent NVARCHAR(500) NULL, -- OPTIMIZED from MAX
+    user_agent NVARCHAR(500) NULL,
     created_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
 
     CONSTRAINT PK_audit_logs PRIMARY KEY (id),
@@ -219,7 +204,6 @@ GO
 -- =========================================================
 -- INDEXES & FILTERED UNIQUE CONSTRAINTS
 -- =========================================================
--- Unique constraint filtering out NULLs
 CREATE UNIQUE NONCLUSTERED INDEX UX_users_google_id 
 ON users(google_id) 
 WHERE google_id IS NOT NULL;
@@ -228,11 +212,11 @@ CREATE UNIQUE NONCLUSTERED INDEX UX_clinics_google_place_id
 ON clinics(google_place_id) 
 WHERE google_place_id IS NOT NULL;
 
--- Basic Foreign Key Indexes
 CREATE INDEX idx_patients_user_id ON patients(user_id);
 CREATE INDEX idx_reports_patient_id ON diagnosis_reports(patient_id);
 CREATE INDEX idx_reports_disease_id ON diagnosis_reports(disease_id);
 CREATE INDEX idx_reports_clinic_id ON diagnosis_reports(clinic_id);
+CREATE INDEX idx_reports_created_at ON diagnosis_reports(created_at);
 CREATE INDEX idx_appointments_patient_id ON appointments(patient_id);
 CREATE INDEX idx_appointments_clinic_id ON appointments(clinic_id);
 CREATE INDEX idx_articles_status ON articles(status);
@@ -242,10 +226,6 @@ GO
 -- =========================================================
 -- SEED DATA 
 -- =========================================================
--- Use NEWID() for generating manual keys during local script execution. 
--- NEWSEQUENTIALID() is not allowed inside a generic DECLARE statement.
-
--- 1. Khai báo các biến lưu trữ mã định danh (UUID)
 DECLARE @AdminId UNIQUEIDENTIFIER = NEWID();
 DECLARE @User1Id UNIQUEIDENTIFIER = NEWID();
 DECLARE @User2Id UNIQUEIDENTIFIER = NEWID();
@@ -268,64 +248,64 @@ DECLARE @Report1Id UNIQUEIDENTIFIER = NEWID();
 DECLARE @Report2Id UNIQUEIDENTIFIER = NEWID();
 DECLARE @Report3Id UNIQUEIDENTIFIER = NEWID();
 
--- 2. Chèn dữ liệu vào bảng: users (Đã cập nhật trường last_login_at)
+-- Insert Users
 INSERT INTO users (id, google_id, username, email, full_name, password_hash, role, status, last_login_at)
 VALUES
 (@AdminId, NULL, 'admin', 'admin@skinai.com', N'Super Admin', '$2a$10$jtcCTW/1FJvB0s5D1YeqlOkhcDLZsXxdTJkV8NzTKoaurQXTY26DK', 'ADMIN', 'ACTIVE', SYSDATETIME()),
 (@User1Id, NULL, 'patient1', 'patient.local@gmail.com', N'Nguyễn Văn Local', '$2a$10$samplehashlocal', 'PATIENT', 'ACTIVE', SYSDATETIME()),
 (@User2Id, 'google-id-12345', 'patient2', 'patient.google@gmail.com', N'Trần Thị Google', NULL, 'PATIENT', 'ACTIVE', SYSDATETIME()),
-(@User3Id, NULL, 'patient3', 'patient.locked@gmail.com', N'Lê Văn Locked', '$2a$10$samplehashlocked', 'PATIENT', 'LOCKED', DATEADD(MONTH, -4, SYSDATETIME())), -- Đã quá 3 tháng để test Auto-Lock
+(@User3Id, NULL, 'patient3', 'patient.locked@gmail.com', N'Lê Văn Locked', '$2a$10$samplehashlocked', 'PATIENT', 'LOCKED', DATEADD(MONTH, -4, SYSDATETIME())),
 (@User4Id, NULL, 'patient4', 'patient.inactive@gmail.com', N'Phạm Thị Inactive', '$2a$10$samplehashinactive', 'PATIENT', 'INACTIVE', SYSDATETIME());
 
--- 3. Chèn dữ liệu vào bảng: patients
+-- Insert Patients
 INSERT INTO patients (id, user_id, phone, gender, dob, address)
 VALUES
 (@Patient1Id, @User1Id, '0901000001', 'MALE', '1995-10-20', N'Quận 1, TP.HCM'),
 (@Patient2Id, @User2Id, '0902000002', 'FEMALE', '1998-05-15', N'Cầu Giấy, Hà Nội'),
 (@Patient3Id, @User3Id, '0903000003', 'OTHER', '2000-01-01', N'Hải Châu, Đà Nẵng');
 
--- 4. Chèn dữ liệu vào bảng: diseases
+-- Insert Diseases
 INSERT INTO diseases (id, disease_name, disease_code, description, symptoms, severity_level, recommended_specialty)
 VALUES
 (@DiseaseAcneId, N'Mụn trứng cá (Acne)', 'L70', N'Tình trạng da liễu phổ biến gây tổn thương mụn bọc, mụn đỏ.', N'Mụn mủ, sưng đỏ, da nhiều dầu nhờn', 'LOW', N'Da liễu tổng quát'),
 (@DiseaseEczemaId, N'Viêm da cơ địa (Eczema)', 'L20', N'Bệnh viêm da mãn tính gây ngứa ngáy và khô rát.', N'Ngứa ngáy, đỏ da, bong tróc vảy', 'MEDIUM', N'Da liễu dị ứng'),
 (@DiseaseMelanomaId, N'Ung thư hắc tố (Melanoma)', 'C43', N'Dạng ung thư da nguy hiểm nhất bắt nguồn từ tế bào tạo sắc tố.', N'Nốt ruồi bất thường, loét da, rỉ máu', 'HIGH', N'Ung thư da liễu');
 
--- 5. Chèn dữ liệu vào bảng: clinics
+-- Insert Clinics
 INSERT INTO clinics (id, google_place_id, clinic_name, address, phone, latitude, longitude, specialty, rating, website, is_active)
 VALUES
 (@Clinic1Id, 'place_ok_1', N'Phòng khám Da liễu Trung Ương', N'15A Phương Mai, Đống Đa, Hà Nội', '0241111222', 21.0062, 105.8402, N'Da liễu tổng quát', 4.9, 'https://dalieu.vn', 1),
 (@Clinic2Id, 'place_ok_2', N'O2 Skin Clinic', N'343/5F Tô Hiến Thành, Quận 10, TP.HCM', '0283333444', 10.7769, 106.6669, N'Trị mụn & Sẹo', 4.5, 'https://o2skin.vn', 1),
 (@Clinic3Id, 'place_closed', N'Phòng khám Thẩm mỹ X (Ngừng hoạt động)', N'Khuất Duy Tiến, Hà Nội', NULL, 21.0000, 105.8000, N'Thẩm mỹ ngoại khoa', 2.0, NULL, 0);
 
--- 6. Chèn dữ liệu vào bảng: diagnosis_reports
+-- Insert Diagnosis Reports
 INSERT INTO diagnosis_reports (id, patient_id, disease_id, clinic_id, image_url, heatmap_url, confidence_score, risk_level, recommendation)
 VALUES
 (@Report1Id, @Patient1Id, @DiseaseAcneId, @Clinic2Id, 'uploads/acne_test.jpg', 'uploads/acne_heat.jpg', 95.50, 'LOW', N'Vệ sinh da sạch sẽ, hạn chế đồ cay nóng và sử dụng gel trị mụn.'),
 (@Report2Id, @Patient2Id, @DiseaseMelanomaId, NULL, 'uploads/melanoma_test.jpg', 'uploads/melanoma_heat.jpg', 88.00, 'HIGH', N'CẢNH BÁO: Phát hiện bất thường mức độ cao. Vui lòng đến ngay bệnh viện chuyên khoa để làm sinh thiết!'),
 (@Report3Id, @Patient3Id, @DiseaseEczemaId, @Clinic1Id, 'uploads/eczema_test.jpg', NULL, 45.00, 'MEDIUM', N'Mô hình phát hiện mật độ tổn thương trung bình. Khuyến nghị bôi kem dưỡng ẩm và khám chuyên khoa.');
 
--- 7. Chèn dữ liệu vào bảng: appointments
+-- Insert Appointments
 INSERT INTO appointments (id, patient_id, clinic_id, diagnosis_report_id, appointment_time, status, notes)
 VALUES
 (NEWID(), @Patient1Id, @Clinic2Id, @Report1Id, DATEADD(DAY, 2, SYSDATETIME()), 'CREATED', N'Bệnh nhân đặt khám sau khi có kết quả chẩn đoán AI.'),
 (NEWID(), @Patient2Id, @Clinic1Id, @Report2Id, DATEADD(DAY, 1, SYSDATETIME()), 'CONFIRMED', N'Đã liên hệ xác nhận lịch hẹn khẩn cấp cho ca rủi ro cao.'),
 (NEWID(), @Patient1Id, @Clinic1Id, NULL, DATEADD(DAY, -10, SYSDATETIME()), 'COMPLETED', N'Lịch hẹn hoàn thành trong quá khứ.');
 
--- 8. Chèn dữ liệu vào bảng: articles
+-- Insert Articles
 INSERT INTO articles (id, title, slug, thumbnail_url, content, author_user_id, status)
 VALUES
 (NEWID(), N'Cách chăm sóc da mụn chuẩn y khoa', 'cach-cham-soc-da-mun', 'img/thumb1.jpg', N'Bài viết chi tiết về các bước chăm sóc da mụn hiệu quả...', @AdminId, 'PUBLISHED'),
 (NEWID(), N'Dấu hiệu nhận biết ung thư hắc tố da', 'dau-hieu-ung-thu-da', 'img/thumb2.jpg', N'Bản thảo phân tích cấu trúc nốt ruồi bất thường...', @AdminId, 'DRAFT'),
 (NEWID(), N'Bài viết lưu trữ nội bộ', 'article-archived', NULL, N'Tài liệu lưu trữ không công khai ra ngoài.', @AdminId, 'ARCHIVED');
 
--- 9. Chèn dữ liệu vào bảng: audit_logs
+-- Insert Audit Logs
 INSERT INTO audit_logs (id, user_id, action, entity_type, record_id, old_values, new_values, ip_address, user_agent)
 VALUES
 (NEWID(), @AdminId, 'USER_LOGIN', 'users', @AdminId, NULL, N'{"status":"success"}', '127.0.0.1', 'Chrome/120.0'),
 (NEWID(), @User1Id, 'CREATE_DIAGNOSIS_REPORT', 'diagnosis_reports', @Report1Id, NULL, N'{"disease_id":"Acne","score":95.5}', '192.168.1.5', 'iPhone/Safari');
 
--- 10. Chèn dữ liệu vào bảng: password_reset_tokens
+-- Insert Password Reset Tokens
 INSERT INTO password_reset_tokens (user_id, token, expires_at)
 VALUES
 (@User1Id, 'valid_token_123456_local_user', DATEADD(HOUR, 2, SYSDATETIME())),

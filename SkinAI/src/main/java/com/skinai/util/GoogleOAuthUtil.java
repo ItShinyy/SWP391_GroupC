@@ -1,10 +1,9 @@
 package com.skinai.util;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -45,12 +44,23 @@ public class GoogleOAuthUtil {
             }
 
             if (conn.getResponseCode() == 200) {
-                try (InputStreamReader reader = new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8)) {
-                    JsonObject jsonObject = JsonParser.parseReader(reader).getAsJsonObject();
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
+                    StringBuilder responseBuilder = new StringBuilder();
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        responseBuilder.append(line);
+                    }
+                    String responseStr = responseBuilder.toString();
+                    
                     Map<String, String> result = new HashMap<>();
-                    result.put("access_token", jsonObject.get("access_token").getAsString());
-                    if (jsonObject.has("id_token")) {
-                        result.put("id_token", jsonObject.get("id_token").getAsString());
+                    // Manual JSON parsing to avoid Gson dependency
+                    String accessToken = extractJsonValue(responseStr, "access_token");
+                    if (accessToken != null) {
+                        result.put("access_token", accessToken);
+                    }
+                    String idToken = extractJsonValue(responseStr, "id_token");
+                    if (idToken != null) {
+                        result.put("id_token", idToken);
                     }
                     return result;
                 }
@@ -71,23 +81,44 @@ public class GoogleOAuthUtil {
             conn.setRequestProperty("Authorization", "Bearer " + accessToken);
 
             if (conn.getResponseCode() == 200) {
-                try (InputStreamReader reader = new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8)) {
-                    JsonObject jsonObject = JsonParser.parseReader(reader).getAsJsonObject();
-                    Map<String, String> userInfo = new HashMap<>();
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
+                    StringBuilder responseBuilder = new StringBuilder();
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        responseBuilder.append(line);
+                    }
+                    String responseStr = responseBuilder.toString();
                     
-                    userInfo.put("id", jsonObject.has("sub") ? jsonObject.get("sub").getAsString() : null);
-                    userInfo.put("email", jsonObject.has("email") ? jsonObject.get("email").getAsString() : null);
-                    userInfo.put("name", jsonObject.has("name") ? jsonObject.get("name").getAsString() : null);
-                    userInfo.put("picture", jsonObject.has("picture") ? jsonObject.get("picture").getAsString() : null);
-                    
-                    return userInfo;
+                    Map<String, String> result = new HashMap<>();
+                    result.put("id", extractJsonValue(responseStr, "sub"));
+                    result.put("email", extractJsonValue(responseStr, "email"));
+                    result.put("name", extractJsonValue(responseStr, "name"));
+                    result.put("picture", extractJsonValue(responseStr, "picture"));
+                    return result;
                 }
             } else {
-                logger.error("Get user info failed with code: {}", conn.getResponseCode());
+                logger.error("Failed to get user info: {}", conn.getResponseCode());
             }
         } catch (Exception e) {
             logger.error("Error getting user info", e);
         }
         return null;
+    }
+
+    private static String extractJsonValue(String json, String key) {
+        String searchKey = "\"" + key + "\"";
+        int keyIdx = json.indexOf(searchKey);
+        if (keyIdx == -1) return null;
+        
+        int colonIdx = json.indexOf(":", keyIdx);
+        if (colonIdx == -1) return null;
+        
+        int startQuote = json.indexOf("\"", colonIdx);
+        if (startQuote == -1) return null;
+        
+        int endQuote = json.indexOf("\"", startQuote + 1);
+        if (endQuote == -1) return null;
+        
+        return json.substring(startQuote + 1, endQuote);
     }
 }

@@ -4,13 +4,14 @@
 <jsp:include page="/WEB-INF/views/layout/admin-header.jsp" />
 
 <div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="page-title">User Management</h1>
-    </div>
+    <div class="table-container bg-white shadow-sm rounded-4 p-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="page-title">User Management</h1>
+        </div>
 
-    <!-- Search & Filter Bar -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-body">
+        <!-- Search & Filter Bar -->
+        <div class="card shadow-sm mb-4 border-0 rounded-4 bg-light">
+            <div class="card-body">
             <form action="${pageContext.request.contextPath}/admin/users" method="get" class="row g-3 align-items-center">
                 <div class="col-md-4">
                     <input type="text" name="search" class="form-control" placeholder="Search by name, email or username" value="${param.search}">
@@ -30,28 +31,26 @@
                     </select>
                 </div>
                 <div class="col-md-2 d-flex gap-2">
-                    <button type="submit" class="btn btn-primary flex-grow-1"><i class="fa-solid fa-magnifying-glass"></i></button>
-                    <a href="${pageContext.request.contextPath}/admin/users" class="btn btn-outline-secondary" title="Clear Filters"><i class="fa-solid fa-xmark"></i></a>
+                    <button type="submit" class="btn btn-primary flex-grow-1"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+                    <a href="${pageContext.request.contextPath}/admin/users" class="btn btn-outline-secondary">Xóa Bộ Lọc</a>
                 </div>
             </form>
         </div>
     </div>
 
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Role</th>
-                            <th>Status</th>
-                            <th>Joined</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+        <div class="table-responsive">
+            <table class="table table-hover table-striped align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th scope="col">Name</th>
+                        <th scope="col">Email</th>
+                        <th scope="col">Role</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Joined</th>
+                        <th scope="col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
                         <c:forEach var="u" items="${users}">
                             <tr>
                                 <td>
@@ -94,8 +93,9 @@
             
             <!-- Pagination -->
             <c:if test="${totalPages > 1}">
-                <nav aria-label="Page navigation" class="mt-4">
-                    <ul class="pagination justify-content-center">
+                <div class="p-3 border-top">
+                    <nav aria-label="Page navigation" class="mb-0">
+                        <ul class="pagination justify-content-center mb-0">
                         <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
                             <a class="page-link" href="?page=${currentPage - 1}&search=${param.search}&role=${param.role}&status=${param.status}">Previous</a>
                         </li>
@@ -107,10 +107,10 @@
                         <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
                             <a class="page-link" href="?page=${currentPage + 1}&search=${param.search}&role=${param.role}&status=${param.status}">Next</a>
                         </li>
-                    </ul>
-                </nav>
+                        </ul>
+                    </nav>
+                </div>
             </c:if>
-        </div>
     </div>
 </div>
 

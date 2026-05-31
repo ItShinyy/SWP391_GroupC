@@ -30,8 +30,8 @@
                     </c:if>
 
                     <form action="${pageContext.request.contextPath}/auth/reset-password" method="post">
-                        <!-- Hidden email if needed -->
-                        <input type="hidden" name="email" value="${email}">
+                        <!-- Hidden identifier -->
+                        <input type="hidden" name="identifier" value="${identifier}">
 
                         <div class="mb-3">
                             <label class="form-label text-muted fw-semibold small">Mã xác thực OTP (6 số)</label>

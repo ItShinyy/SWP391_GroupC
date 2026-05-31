@@ -3,16 +3,14 @@
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <jsp:include page="/WEB-INF/views/layout/admin-header.jsp" />
 
-<div class="container-fluid py-4">
-    <div class="row mb-4">
-        <div class="col-12">
-            <h3 class="fw-bold mb-1" style="color: var(--skin-primary);">Audit Logs</h3>
-            <p class="text-muted mb-0">Monitor important system activities</p>
+<div class="container-fluid">
+    <div class="table-container bg-white shadow-sm rounded-4 p-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="page-title">Audit Logs</h1>
         </div>
-    </div>
 
-    <!-- Search & Filter Bar -->
-    <div class="card shadow-sm mb-4 border-0 rounded-4">
+        <!-- Search & Filter Bar -->
+        <div class="card shadow-sm mb-4 border-0 rounded-4 bg-light">
         <div class="card-body">
             <form action="${pageContext.request.contextPath}/admin/audit-logs" method="get" class="row g-3 align-items-center">
                 <div class="col-md-5">
@@ -28,26 +26,24 @@
                     </select>
                 </div>
                 <div class="col-md-3 d-flex gap-2">
-                    <button type="submit" class="btn btn-primary flex-grow-1"><i class="fa-solid fa-magnifying-glass"></i></button>
-                    <a href="${pageContext.request.contextPath}/admin/audit-logs" class="btn btn-outline-secondary" title="Clear Filters"><i class="fa-solid fa-xmark"></i></a>
+                    <button type="submit" class="btn btn-primary flex-grow-1"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+                    <a href="${pageContext.request.contextPath}/admin/audit-logs" class="btn btn-outline-secondary">Xóa Bộ Lọc</a>
                 </div>
             </form>
         </div>
     </div>
 
-    <div class="card border-0 shadow-sm rounded-4">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light text-muted">
-                        <tr>
-                            <th class="ps-4">Time</th>
-                            <th>User</th>
-                            <th>Action</th>
-                            <th>Entity</th>
-                            <th>Record ID</th>
-                            <th>Details (Reason)</th>
-                            <th class="pe-4 text-end">IP Address</th>
+        <div class="table-responsive">
+            <table class="table table-hover table-striped align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th scope="col" class="ps-4">Time</th>
+                        <th scope="col">User</th>
+                        <th scope="col">Action</th>
+                        <th scope="col">Entity</th>
+                        <th scope="col">Record ID</th>
+                        <th scope="col">Details (Reason)</th>
+                        <th scope="col" class="pe-4 text-end">IP Address</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -85,10 +81,9 @@
                     </tbody>
                 </table>
             </div>
-        </div>
-        
+            
         <c:if test="${totalPages > 1}">
-            <div class="card-footer bg-white border-0 py-3">
+            <div class="p-3 border-top">
                 <nav aria-label="Page navigation">
                     <ul class="pagination justify-content-center mb-0">
                         <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">

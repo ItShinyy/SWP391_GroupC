@@ -39,7 +39,11 @@ public class ProfileController extends HttpServlet {
         User freshUser = userDAO.findById(user.getId());
         session.setAttribute("user", freshUser);
         
-        req.getRequestDispatcher("/WEB-INF/views/patient/profile.jsp").forward(req, resp);
+        if (req.getRequestURI().endsWith("/verify-otp")) {
+            req.getRequestDispatcher("/WEB-INF/views/patient/verify-otp.jsp").forward(req, resp);
+        } else {
+            req.getRequestDispatcher("/WEB-INF/views/patient/profile.jsp").forward(req, resp);
+        }
     }
 
     @Override
@@ -56,109 +60,196 @@ public class ProfileController extends HttpServlet {
                 // Check if username is taken by someone else
                 User existing = userDAO.findByUsernameOrEmail(username);
                 if (existing != null && !existing.getId().equals(currentUser.getId())) {
-                    req.setAttribute("errorMessage", "Tên đăng nhập đã tồn tại!");
+                    req.setAttribute("errorMessage", "Username is already taken!");
                 } else {
                     currentUser.setFullName(fullName.trim());
                     currentUser.setUsername(username.trim());
                     if (userDAO.update(currentUser)) {
-                        req.setAttribute("successMessage", "Cập nhật thông tin thành công!");
+                        req.setAttribute("successMessage", "Profile updated successfully!");
                     } else {
-                        req.setAttribute("errorMessage", "Lỗi khi cập nhật thông tin.");
+                        req.setAttribute("errorMessage", "Error updating profile.");
                     }
                 }
             } else {
-                req.setAttribute("errorMessage", "Vui lòng nhập đầy đủ thông tin.");
+                req.setAttribute("errorMessage", "Please provide all required information.");
             }
-        } else if ("request_change_password".equals(action)) {
+        } else if ("request_change_security".equals(action)) {
             String oldPassword = req.getParameter("oldPassword");
+            String newEmail = req.getParameter("newEmail");
+            String newPhone = req.getParameter("newPhone");
             String newPassword = req.getParameter("newPassword");
             String confirmPassword = req.getParameter("confirmPassword");
+            String otpMethod = req.getParameter("otpMethod");
 
-            if (newPassword == null || newPassword.length() < 8 || 
-                !Pattern.compile("(?=.*[a-zA-Z])(?=.*[0-9])").matcher(newPassword).find()) {
-                req.setAttribute("errorMessage", "Mật khẩu mới phải từ 8 kí tự, bao gồm chữ và số.");
-            } else if (!newPassword.equals(confirmPassword)) {
-                req.setAttribute("errorMessage", "Mật khẩu xác nhận không khớp.");
-            } else if (oldPassword != null && newPassword.equals(oldPassword)) {
-                req.setAttribute("errorMessage", "Mật khẩu mới phải khác mật khẩu cũ.");
-            } else {
-                if (currentUser.getPasswordHash() != null && BCrypt.checkpw(oldPassword, currentUser.getPasswordHash())) {
-                    // Generate OTP
+            // Verify old password — only if user has a local password set
+            boolean hasLocalPassword = currentUser.getPasswordHash() != null && !currentUser.getPasswordHash().isEmpty();
+            if (hasLocalPassword) {
+                if (oldPassword == null || oldPassword.isEmpty() || !BCrypt.checkpw(oldPassword, currentUser.getPasswordHash())) {
+                    req.setAttribute("errorMessage", "Incorrect old password.");
+                    req.getRequestDispatcher("/WEB-INF/views/patient/profile.jsp").forward(req, resp);
+                    return;
+                }
+            }
+            // Google users (no password) proceed directly — OTP will still protect the change
+            {
+                boolean hasChanges = false;
+                
+                // Validate new email
+                if (newEmail != null && !newEmail.trim().isEmpty() && !newEmail.trim().equals(currentUser.getEmail())) {
+                    User existing = userDAO.findByEmail(newEmail.trim());
+                    if (existing != null && !existing.getId().equals(currentUser.getId())) {
+                        req.setAttribute("errorMessage", "This email is already in use.");
+                        req.getRequestDispatcher("/WEB-INF/views/patient/profile.jsp").forward(req, resp);
+                        return;
+                    }
+                    session.setAttribute("pendingNewEmail", newEmail.trim());
+                    hasChanges = true;
+                }
+
+                // Validate new phone
+                if (newPhone != null && !newPhone.trim().isEmpty() && !newPhone.trim().equals(currentUser.getPhone())) {
+                    session.setAttribute("pendingNewPhone", newPhone.trim());
+                    hasChanges = true;
+                }
+
+                // Validate new password
+                if (newPassword != null && !newPassword.trim().isEmpty()) {
+                    if (newPassword.length() < 8 || !Pattern.compile("(?=.*[a-zA-Z])(?=.*[0-9])").matcher(newPassword).find()) {
+                        req.setAttribute("errorMessage", "New password must be at least 8 characters, including letters and numbers.");
+                        req.getRequestDispatcher("/WEB-INF/views/patient/profile.jsp").forward(req, resp);
+                        return;
+                    } else if (!newPassword.equals(confirmPassword)) {
+                        req.setAttribute("errorMessage", "Password confirmation does not match.");
+                        req.getRequestDispatcher("/WEB-INF/views/patient/profile.jsp").forward(req, resp);
+                        return;
+                    }
+                    session.setAttribute("pendingNewPassword", newPassword);
+                    hasChanges = true;
+                }
+
+                if (!hasChanges) {
+                    req.setAttribute("errorMessage", "No changes were requested.");
+                } else {
+                    // Generate OTP and hash it
                     String otp = String.format("%06d", new SecureRandom().nextInt(1000000));
-                    PasswordResetToken token = new PasswordResetToken(currentUser.getId(), otp, LocalDateTime.now().plusMinutes(5));
+                    String hashedOtp = BCrypt.hashpw(otp, BCrypt.gensalt());
+                    
+                    // Delete any previous security-change OTP for this user
+                    tokenDAO.deleteByUserIdAndPurpose(currentUser.getId(), "CHANGE_SECURITY");
+                    
+                    PasswordResetToken token = new PasswordResetToken(currentUser.getId(), hashedOtp, "CHANGE_SECURITY", LocalDateTime.now().plusMinutes(5));
+                    
                     if (tokenDAO.create(token)) {
-                        emailService.sendPasswordResetEmail(currentUser.getEmail(), otp);
-                        session.setAttribute("pendingPassword", BCrypt.hashpw(newPassword, BCrypt.gensalt()));
-                        req.setAttribute("successMessage", "Mã OTP đã được gửi đến email của bạn.");
-                    } else {
-                        req.setAttribute("errorMessage", "Lỗi tạo OTP.");
-                    }
-                } else {
-                    req.setAttribute("errorMessage", "Mật khẩu cũ không chính xác.");
-                }
-            }
-        } else if ("verify_password_otp".equals(action)) {
-            String otpStr = req.getParameter("otp");
-            PasswordResetToken token = tokenDAO.findByToken(otpStr);
-            if (token != null && token.getUserId().equals(currentUser.getId())) {
-                if (token.getExpiresAt().isBefore(LocalDateTime.now())) {
-                    req.setAttribute("errorMessage", "Mã OTP đã hết hạn.");
-                } else {
-                    String pendingPwd = (String) session.getAttribute("pendingPassword");
-                    if (pendingPwd != null) {
-                        currentUser.setPasswordHash(pendingPwd);
-                        if (userDAO.update(currentUser)) {
-                            req.setAttribute("successMessage", "Đổi mật khẩu thành công!");
-                            session.removeAttribute("pendingPassword");
+                        session.setAttribute("last_otp_sent_at", System.currentTimeMillis());
+                        session.setAttribute("otpMethod", otpMethod);
+                        
+                        if ("phone".equals(otpMethod)) {
+                            // Send to current phone if available, else send to new phone (useful if adding phone for the first time)
+                            String phoneToSend = (currentUser.getPhone() != null && !currentUser.getPhone().isEmpty()) ? currentUser.getPhone() : newPhone;
+                            emailService.sendSmsOTP(phoneToSend, otp);
+                        } else {
+                            emailService.sendPasswordResetEmail(currentUser.getEmail(), otp);
                         }
-                    }
-                }
-                tokenDAO.deleteByToken(otpStr);
-            } else {
-                req.setAttribute("errorMessage", "Mã OTP không chính xác.");
-            }
-        } else if ("request_change_email".equals(action)) {
-            String newEmail = req.getParameter("newEmail");
-            if (newEmail != null && !newEmail.trim().isEmpty()) {
-                User existing = userDAO.findByEmail(newEmail.trim());
-                if (existing != null) {
-                    req.setAttribute("errorMessage", "Email này đã được sử dụng.");
-                } else {
-                    String otp = String.format("%06d", new SecureRandom().nextInt(1000000));
-                    PasswordResetToken token = new PasswordResetToken(currentUser.getId(), otp, LocalDateTime.now().plusMinutes(5));
-                    if (tokenDAO.create(token)) {
-                        emailService.sendPasswordResetEmail(newEmail.trim(), otp);
-                        session.setAttribute("pendingEmail", newEmail.trim());
-                        req.setAttribute("successMessage", "Mã OTP đã được gửi đến email mới của bạn.");
+                        
+                        resp.sendRedirect(req.getContextPath() + "/patient/verify-otp");
+                        return;
                     } else {
-                        req.setAttribute("errorMessage", "Lỗi tạo OTP.");
+                        req.setAttribute("errorMessage", "Error generating OTP.");
                     }
                 }
             }
-        } else if ("verify_email_otp".equals(action)) {
+        } else if ("verify_security_otp".equals(action)) {
             String otpStr = req.getParameter("otp");
-            PasswordResetToken token = tokenDAO.findByToken(otpStr);
-            if (token != null && token.getUserId().equals(currentUser.getId())) {
-                if (token.getExpiresAt().isBefore(LocalDateTime.now())) {
-                    req.setAttribute("errorMessage", "Mã OTP đã hết hạn.");
-                } else {
-                    String pendingEmail = (String) session.getAttribute("pendingEmail");
-                    if (pendingEmail != null) {
-                        currentUser.setEmail(pendingEmail);
-                        if (userDAO.update(currentUser)) {
-                            req.setAttribute("successMessage", "Đổi email thành công!");
-                            session.removeAttribute("pendingEmail");
-                        }
+            
+            PasswordResetToken token = tokenDAO.findByUserIdAndPurpose(currentUser.getId(), "CHANGE_SECURITY");
+            if (token != null) {
+                if (token.getAttempts() >= 3) {
+                    req.setAttribute("errorMessage", "Too many failed attempts. Please request a new OTP.");
+                    tokenDAO.deleteByUserIdAndPurpose(currentUser.getId(), "CHANGE_SECURITY");
+                } else if (token.getExpiresAt().isBefore(LocalDateTime.now())) {
+                    req.setAttribute("errorMessage", "OTP has expired.");
+                    tokenDAO.deleteByUserIdAndPurpose(currentUser.getId(), "CHANGE_SECURITY");
+                } else if (BCrypt.checkpw(otpStr, token.getToken())) {
+                    // OTP matches — apply pending changes
+                    boolean updated = false;
+                    String pendingNewEmail = (String) session.getAttribute("pendingNewEmail");
+                    if (pendingNewEmail != null) {
+                        currentUser.setEmail(pendingNewEmail);
+                        updated = true;
                     }
+                    
+                    String pendingNewPhone = (String) session.getAttribute("pendingNewPhone");
+                    if (pendingNewPhone != null) {
+                        currentUser.setPhone(pendingNewPhone);
+                        updated = true;
+                    }
+                    
+                    String pendingNewPassword = (String) session.getAttribute("pendingNewPassword");
+                    if (pendingNewPassword != null) {
+                        currentUser.setPasswordHash(BCrypt.hashpw(pendingNewPassword, BCrypt.gensalt()));
+                        updated = true;
+                    }
+                    
+                    if (updated && userDAO.update(currentUser)) {
+                        req.setAttribute("successMessage", "Security settings updated successfully!");
+                        session.removeAttribute("pendingNewEmail");
+                        session.removeAttribute("pendingNewPhone");
+                        session.removeAttribute("pendingNewPassword");
+                    } else {
+                        req.setAttribute("errorMessage", "Failed to update profile.");
+                    }
+                    tokenDAO.deleteByUserIdAndPurpose(currentUser.getId(), "CHANGE_SECURITY");
+                } else {
+                    // Wrong OTP — increment attempts
+                    tokenDAO.updateAttempts(token.getId(), token.getAttempts() + 1);
+                    req.setAttribute("errorMessage", "Invalid OTP.");
                 }
-                tokenDAO.deleteByToken(otpStr);
             } else {
-                req.setAttribute("errorMessage", "Mã OTP không chính xác.");
+                req.setAttribute("errorMessage", "No OTP found. Please request a new one.");
+            }
+        } else if ("resend_otp".equals(action)) {
+            Long lastSent = (Long) session.getAttribute("last_otp_sent_at");
+            if (lastSent != null && (System.currentTimeMillis() - lastSent) < 60000) {
+                req.setAttribute("errorMessage", "Please wait 1 minute before resending OTP.");
+                req.getRequestDispatcher("/WEB-INF/views/patient/verify-otp.jsp").forward(req, resp);
+                return;
+            }
+            
+            // Generate OTP and hash it
+            String otp = String.format("%06d", new SecureRandom().nextInt(1000000));
+            String hashedOtp = BCrypt.hashpw(otp, BCrypt.gensalt());
+            tokenDAO.deleteByUserIdAndPurpose(currentUser.getId(), "CHANGE_SECURITY");
+            PasswordResetToken token = new PasswordResetToken(currentUser.getId(), hashedOtp, "CHANGE_SECURITY", LocalDateTime.now().plusMinutes(5));
+            if (tokenDAO.create(token)) {
+                session.setAttribute("last_otp_sent_at", System.currentTimeMillis());
+                String otpMethod = (String) session.getAttribute("otpMethod");
+                
+                if ("phone".equals(otpMethod)) {
+                    String pendingNewPhone = (String) session.getAttribute("pendingNewPhone");
+                    String phoneToSend = (currentUser.getPhone() != null && !currentUser.getPhone().isEmpty()) ? currentUser.getPhone() : pendingNewPhone;
+                    emailService.sendSmsOTP(phoneToSend, otp);
+                } else {
+                    emailService.sendPasswordResetEmail(currentUser.getEmail(), otp);
+                }
+                
+                req.setAttribute("successMessage", "A new OTP has been sent.");
+                req.getRequestDispatcher("/WEB-INF/views/patient/verify-otp.jsp").forward(req, resp);
+                return;
+            } else {
+                req.setAttribute("errorMessage", "Error generating OTP.");
+                req.getRequestDispatcher("/WEB-INF/views/patient/verify-otp.jsp").forward(req, resp);
+                return;
             }
         }
 
         // Refresh session
         session.setAttribute("user", currentUser);
-        req.getRequestDispatcher("/WEB-INF/views/patient/profile.jsp").forward(req, resp);
+        
+        String forwardPath = "/WEB-INF/views/patient/profile.jsp";
+        if ("verify_security_otp".equals(action)) {
+            forwardPath = "/WEB-INF/views/patient/verify-otp.jsp";
+        }
+        
+        req.getRequestDispatcher(forwardPath).forward(req, resp);
     }
 }

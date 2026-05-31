@@ -1,7 +1,5 @@
 package com.skinai.controller.admin;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.skinai.dal.ClinicDAO;
 import com.skinai.dal.DiagnosisReportDAO;
 import com.skinai.dal.UserDAO;
@@ -14,8 +12,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -23,14 +19,10 @@ public class DashboardDataController extends HttpServlet {
     private UserDAO userDAO;
     private ClinicDAO clinicDAO;
     private DiagnosisReportDAO reportDAO;
-    private Gson gson;
-
-    @Override
     public void init() throws ServletException {
         userDAO = new UserDAO();
         clinicDAO = new ClinicDAO();
         reportDAO = new DiagnosisReportDAO();
-        gson = new GsonBuilder().create();
     }
 
     @Override
@@ -38,23 +30,23 @@ public class DashboardDataController extends HttpServlet {
         resp.setContentType("application/json");
         resp.setCharacterEncoding("UTF-8");
 
-        Map<String, Object> data = new HashMap<>();
+        StringBuilder json = new StringBuilder("{");
 
         try {
             // KPI Cards
             int activePatients = userDAO.countActivePatients();
             int totalScans = reportDAO.countAll();
             
-            data.put("activePatients", activePatients);
-            data.put("totalScans", totalScans);
-            data.put("totalClinics", clinicDAO.countAll());
+            json.append("\"activePatients\":").append(activePatients).append(",");
+            json.append("\"totalScans\":").append(totalScans).append(",");
+            json.append("\"totalClinics\":").append(clinicDAO.countAll()).append(",");
             
             double avgConf = reportDAO.getAverageConfidenceScore();
-            data.put("avgConfidence", Math.round(avgConf)); // e.g. 95
+            json.append("\"avgConfidence\":").append(Math.round(avgConf)).append(",");
 
             // Risk Data
             Map<String, Integer> riskData = reportDAO.getRiskLevelDistribution();
-            data.put("riskLevelDistribution", riskData);
+            json.append("\"riskLevelDistribution\":").append(mapToJsonString(riskData)).append(",");
             
             // Calculate High Risk Ratio
             int highRiskScans = riskData.getOrDefault("HIGH", 0);
@@ -62,41 +54,62 @@ public class DashboardDataController extends HttpServlet {
             if (totalScans > 0) {
                 highRiskRatio = (highRiskScans * 100.0) / totalScans;
             }
-            data.put("highRiskRatio", Math.round(highRiskRatio));
+            json.append("\"highRiskRatio\":").append(Math.round(highRiskRatio)).append(",");
 
             // Charts Data
-            data.put("topDiseases", reportDAO.getTopDiseases(5));
-            data.put("scansTrend", reportDAO.getScansTrend());
+            json.append("\"topDiseases\":").append(mapToJsonString(reportDAO.getTopDiseases(5))).append(",");
+            json.append("\"scansTrend\":").append(mapToJsonString(reportDAO.getScansTrend())).append(",");
 
             // Recent Scans Table
             List<DiagnosisReport> recentList = reportDAO.findAll(1, 5);
-            List<Map<String, Object>> recentScans = new ArrayList<>();
             DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
             
-            for (DiagnosisReport dr : recentList) {
-                Map<String, Object> scanMap = new HashMap<>();
-                scanMap.put("id", dr.getId());
-                scanMap.put("patientName", dr.getPatientName());
-                scanMap.put("diseaseName", dr.getDiseaseName());
-                scanMap.put("riskLevel", dr.getRiskLevel());
-                scanMap.put("confidenceScore", Math.round(dr.getConfidenceScore()));
-                if (dr.getCreatedAt() != null) {
-                    scanMap.put("createdAt", dr.getCreatedAt().format(dtf));
-                } else {
-                    scanMap.put("createdAt", "");
+            json.append("\"recentScans\":[");
+            for (int i = 0; i < recentList.size(); i++) {
+                DiagnosisReport dr = recentList.get(i);
+                json.append("{");
+                json.append("\"id\":\"").append(escapeJson(dr.getId())).append("\",");
+                json.append("\"patientName\":\"").append(escapeJson(dr.getPatientName())).append("\",");
+                json.append("\"diseaseName\":\"").append(escapeJson(dr.getDiseaseName())).append("\",");
+                json.append("\"riskLevel\":\"").append(escapeJson(dr.getRiskLevel())).append("\",");
+                json.append("\"confidenceScore\":").append(Math.round(dr.getConfidenceScore())).append(",");
+                
+                String createdAt = dr.getCreatedAt() != null ? dr.getCreatedAt().format(dtf) : "";
+                json.append("\"createdAt\":\"").append(createdAt).append("\"");
+                json.append("}");
+                if (i < recentList.size() - 1) {
+                    json.append(",");
                 }
-                recentScans.add(scanMap);
             }
-            data.put("recentScans", recentScans);
+            json.append("]");
 
         } catch (Exception e) {
             e.printStackTrace();
-            data.put("error", "Failed to fetch dashboard data");
+            json = new StringBuilder("{\"error\":\"Failed to fetch dashboard data\"");
         }
 
+        json.append("}");
+
         try (PrintWriter out = resp.getWriter()) {
-            out.print(gson.toJson(data));
+            out.print(json.toString());
             out.flush();
         }
+    }
+
+    private String mapToJsonString(Map<String, Integer> map) {
+        StringBuilder sb = new StringBuilder("{");
+        boolean first = true;
+        for (Map.Entry<String, Integer> entry : map.entrySet()) {
+            if (!first) sb.append(",");
+            sb.append("\"").append(escapeJson(entry.getKey())).append("\":").append(entry.getValue());
+            first = false;
+        }
+        sb.append("}");
+        return sb.toString();
+    }
+
+    private String escapeJson(String input) {
+        if (input == null) return "";
+        return input.replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r");
     }
 }

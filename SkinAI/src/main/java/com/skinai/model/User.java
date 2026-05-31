@@ -10,9 +10,9 @@ public class User {
     private String googleId;
     private String username;
     private String email;
+    private String phone;
     private String passwordHash;
     private String fullName;
-    private String avatarUrl;
     private String role; // PATIENT, ADMIN
     private String status; // ACTIVE, INACTIVE, LOCKED
     private LocalDateTime createdAt;
@@ -22,13 +22,13 @@ public class User {
     public User() {
     }
 
-    public User(String id, String googleId, String email, String passwordHash, String fullName, String avatarUrl, String role, String status, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public User(String id, String googleId, String email, String phone, String passwordHash, String fullName, String role, String status, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.googleId = googleId;
         this.email = email;
+        this.phone = phone;
         this.passwordHash = passwordHash;
         this.fullName = fullName;
-        this.avatarUrl = avatarUrl;
         this.role = role;
         this.status = status;
         this.createdAt = createdAt;
@@ -63,8 +63,8 @@ public class User {
     public String getFullName() { return fullName; }
     public void setFullName(String fullName) { this.fullName = fullName; }
     
-    public String getAvatarUrl() { return avatarUrl; }
-    public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
     
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }

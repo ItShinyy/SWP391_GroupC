@@ -16,7 +16,7 @@ public class AppointmentDAO {
     private static final Logger logger = LoggerFactory.getLogger(AppointmentDAO.class);
 
     public Appointment findById(String id) {
-        String sql = "SELECT a.id, a.patient_id, a.clinic_id, a.diagnosis_report_id, a.appointment_time, a.status, a.notes, a.created_at, a.updated_at, " +
+        String sql = "SELECT a.id, a.request_id, a.patient_id, a.clinic_id, a.diagnosis_report_id, a.appointment_time, a.status, a.notes, a.created_at, a.updated_at, " +
                      "c.clinic_name " +
                      "FROM appointments a " +
                      "LEFT JOIN clinics c ON a.clinic_id = c.id " +
@@ -37,7 +37,7 @@ public class AppointmentDAO {
 
     public List<Appointment> findByPatientId(String patientId) {
         List<Appointment> list = new ArrayList<>();
-        String sql = "SELECT a.id, a.patient_id, a.clinic_id, a.diagnosis_report_id, a.appointment_time, a.status, a.notes, a.created_at, a.updated_at, " +
+        String sql = "SELECT a.id, a.request_id, a.patient_id, a.clinic_id, a.diagnosis_report_id, a.appointment_time, a.status, a.notes, a.created_at, a.updated_at, " +
                      "c.clinic_name " +
                      "FROM appointments a " +
                      "LEFT JOIN clinics c ON a.clinic_id = c.id " +
@@ -58,17 +58,18 @@ public class AppointmentDAO {
     }
 
     public String create(Appointment appointment) {
-        String sql = "INSERT INTO appointments (id, patient_id, clinic_id, diagnosis_report_id, appointment_time, status, notes) " +
+        String sql = "INSERT INTO appointments (id, request_id, patient_id, clinic_id, diagnosis_report_id, appointment_time, status, notes) " +
                      "OUTPUT INSERTED.id " +
-                     "VALUES (NEWID(), ?, ?, ?, ?, ?, ?)";
+                     "VALUES (NEWID(), ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, appointment.getPatientId());
-            ps.setString(2, appointment.getClinicId());
-            ps.setString(3, appointment.getDiagnosisReportId());
-            ps.setTimestamp(4, Timestamp.valueOf(appointment.getAppointmentTime()));
-            ps.setString(5, appointment.getStatus() != null ? appointment.getStatus() : "CREATED");
-            ps.setString(6, appointment.getNotes());
+            ps.setString(1, appointment.getRequestId());
+            ps.setString(2, appointment.getPatientId());
+            ps.setString(3, appointment.getClinicId());
+            ps.setString(4, appointment.getDiagnosisReportId());
+            ps.setTimestamp(5, Timestamp.valueOf(appointment.getAppointmentTime()));
+            ps.setString(6, appointment.getStatus() != null ? appointment.getStatus() : "CREATED");
+            ps.setString(7, appointment.getNotes());
             
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -77,6 +78,28 @@ public class AppointmentDAO {
             }
         } catch (SQLException e) {
             logger.error("Error creating appointment", e);
+        }
+        return null;
+    }
+
+    public String createWithConnection(Connection conn, Appointment appointment) throws SQLException {
+        String sql = "INSERT INTO appointments (id, request_id, patient_id, clinic_id, diagnosis_report_id, appointment_time, status, notes) " +
+                     "OUTPUT INSERTED.id " +
+                     "VALUES (NEWID(), ?, ?, ?, ?, ?, ?, ?)";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, appointment.getRequestId());
+            ps.setString(2, appointment.getPatientId());
+            ps.setString(3, appointment.getClinicId());
+            ps.setString(4, appointment.getDiagnosisReportId());
+            ps.setTimestamp(5, Timestamp.valueOf(appointment.getAppointmentTime()));
+            ps.setString(6, appointment.getStatus() != null ? appointment.getStatus() : "CREATED");
+            ps.setString(7, appointment.getNotes());
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString(1);
+                }
+            }
         }
         return null;
     }
@@ -97,6 +120,7 @@ public class AppointmentDAO {
     private Appointment mapRow(ResultSet rs) throws SQLException {
         Appointment a = new Appointment();
         a.setId(rs.getString("id"));
+        a.setRequestId(rs.getString("request_id"));
         a.setPatientId(rs.getString("patient_id"));
         a.setClinicId(rs.getString("clinic_id"));
         a.setDiagnosisReportId(rs.getString("diagnosis_report_id"));

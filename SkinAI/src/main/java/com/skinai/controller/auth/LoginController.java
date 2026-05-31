@@ -58,8 +58,8 @@ public class LoginController extends HttpServlet {
         User user = authService.loginLocal(keyword, password);
 
         if (user != null) {
-            // Auto-lock PATIENT accounts inactive for > 3 months
-            if ("PATIENT".equals(user.getRole())) {
+            // Auto-lock non-ADMIN accounts inactive for > 3 months
+            if (!"ADMIN".equals(user.getRole())) {
                 java.time.LocalDateTime lastActivity = user.getLastLoginAt() != null ? user.getLastLoginAt() : user.getCreatedAt();
                 if (lastActivity != null && lastActivity.isBefore(java.time.LocalDateTime.now().minusMonths(3))) {
                     authService.lockAccount(user.getId());
@@ -79,6 +79,8 @@ public class LoginController extends HttpServlet {
             // Update last_login_at
             authService.updateLastLogin(user.getId());
 
+            // Zero-Trust: Prevent session fixation
+            req.changeSessionId();
             HttpSession session = req.getSession(true);
             session.setAttribute("user", user);
 

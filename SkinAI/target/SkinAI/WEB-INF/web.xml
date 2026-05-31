@@ -135,6 +135,10 @@
         <servlet-name>ProfileController</servlet-name>
         <url-pattern>/patient/profile</url-pattern>
     </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ProfileController</servlet-name>
+        <url-pattern>/patient/verify-otp</url-pattern>
+    </servlet-mapping>
 
     <!-- ==================== Patient Servlets ==================== -->
     <servlet>
@@ -153,6 +157,15 @@
     <servlet-mapping>
         <servlet-name>ReportDetailController</servlet-name>
         <url-pattern>/patient/reports/view</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>PatientReportsController</servlet-name>
+        <servlet-class>com.skinai.controller.patient.PatientReportsController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>PatientReportsController</servlet-name>
+        <url-pattern>/patient/reports</url-pattern>
     </servlet-mapping>
 
     <!-- ==================== Admin Servlets ==================== -->

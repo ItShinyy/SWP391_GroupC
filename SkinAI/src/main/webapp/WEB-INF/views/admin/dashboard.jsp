@@ -35,6 +35,9 @@
 <div class="container-fluid pt-4 px-4">
     <!-- Header Actions -->
     <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="page-title">Dashboard</h1>
+        </div>
         <div class="small text-muted fw-semibold">
             <i class="fa-regular fa-clock me-1"></i> Data updated at: <span id="last-updated">--:--:--</span>
         </div>
