@@ -43,7 +43,7 @@ public class BookingService {
         // 2. Atomic Transaction (ACID)
         Connection conn = null;
         try {
-            conn = DBContext.getConnection();
+            conn = appointmentDAO.getConnection();
             conn.setAutoCommit(false); // Start transaction
 
             // Ensure idempotency constraint applies here.
@@ -78,9 +78,9 @@ public class BookingService {
             if (conn != null) {
                 try {
                     conn.setAutoCommit(true);
-                    conn.close();
+                    // Do NOT close the connection because it belongs to the DAO instance
                 } catch (SQLException ex) {
-                    logger.error("Error closing connection", ex);
+                    logger.error("Error resetting auto-commit", ex);
                 }
             }
         }

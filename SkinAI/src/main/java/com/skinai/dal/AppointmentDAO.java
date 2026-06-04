@@ -4,141 +4,87 @@ import com.skinai.model.Appointment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.util.ArrayList;
+import java.sql.*;
 import java.util.List;
 
-public class AppointmentDAO {
+/**
+ * DAO for the appointments table.
+ * createWithConnection() is kept for transactional use in BookingService.
+ */
+public class AppointmentDAO extends DBContext {
     private static final Logger logger = LoggerFactory.getLogger(AppointmentDAO.class);
 
+    private static final String SELECT_COLS =
+        "SELECT a.id, a.request_id, a.patient_id, a.clinic_id, a.diagnosis_report_id," +
+        " a.appointment_time, a.status, a.notes, a.created_at, a.updated_at, c.clinic_name" +
+        " FROM appointments a LEFT JOIN clinics c ON a.clinic_id = c.id";
+
+    private static final String INSERT_SQL =
+        "INSERT INTO appointments (id, request_id, patient_id, clinic_id, diagnosis_report_id," +
+        " appointment_time, status, notes) OUTPUT INSERTED.id" +
+        " VALUES (NEWID(), ?, ?, ?, ?, ?, ?, ?)";
+
     public Appointment findById(String id) {
-        String sql = "SELECT a.id, a.request_id, a.patient_id, a.clinic_id, a.diagnosis_report_id, a.appointment_time, a.status, a.notes, a.created_at, a.updated_at, " +
-                     "c.clinic_name " +
-                     "FROM appointments a " +
-                     "LEFT JOIN clinics c ON a.clinic_id = c.id " +
-                     "WHERE a.id = ?";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return mapRow(rs);
-                }
-            }
-        } catch (SQLException e) {
-            logger.error("Error finding appointment by id: {}", id, e);
-        }
-        return null;
+        return queryOne(SELECT_COLS + " WHERE a.id = ?", AppointmentDAO::mapRow, id);
     }
 
     public List<Appointment> findByPatientId(String patientId) {
-        List<Appointment> list = new ArrayList<>();
-        String sql = "SELECT a.id, a.request_id, a.patient_id, a.clinic_id, a.diagnosis_report_id, a.appointment_time, a.status, a.notes, a.created_at, a.updated_at, " +
-                     "c.clinic_name " +
-                     "FROM appointments a " +
-                     "LEFT JOIN clinics c ON a.clinic_id = c.id " +
-                     "WHERE a.patient_id = ? " +
-                     "ORDER BY a.appointment_time DESC";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, patientId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    list.add(mapRow(rs));
-                }
-            }
-        } catch (SQLException e) {
-            logger.error("Error finding appointments by patientId: {}", patientId, e);
-        }
-        return list;
+        return queryList(
+            SELECT_COLS + " WHERE a.patient_id = ? ORDER BY a.appointment_time DESC",
+            AppointmentDAO::mapRow, patientId
+        );
     }
 
-    public String create(Appointment appointment) {
-        String sql = "INSERT INTO appointments (id, request_id, patient_id, clinic_id, diagnosis_report_id, appointment_time, status, notes) " +
-                     "OUTPUT INSERTED.id " +
-                     "VALUES (NEWID(), ?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, appointment.getRequestId());
-            ps.setString(2, appointment.getPatientId());
-            ps.setString(3, appointment.getClinicId());
-            ps.setString(4, appointment.getDiagnosisReportId());
-            ps.setTimestamp(5, Timestamp.valueOf(appointment.getAppointmentTime()));
-            ps.setString(6, appointment.getStatus() != null ? appointment.getStatus() : "CREATED");
-            ps.setString(7, appointment.getNotes());
-            
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getString(1);
-                }
-            }
-        } catch (SQLException e) {
-            logger.error("Error creating appointment", e);
-        }
-        return null;
+    /** Standard insert; acquires its own connection from the pool. */
+    public String create(Appointment a) {
+        return insertReturningId(INSERT_SQL,
+            a.getRequestId(), a.getPatientId(), a.getClinicId(),
+            a.getDiagnosisReportId(),
+            Timestamp.valueOf(a.getAppointmentTime()),
+            a.getStatus() != null ? a.getStatus() : "CREATED",
+            a.getNotes()
+        );
     }
 
-    public String createWithConnection(Connection conn, Appointment appointment) throws SQLException {
-        String sql = "INSERT INTO appointments (id, request_id, patient_id, clinic_id, diagnosis_report_id, appointment_time, status, notes) " +
-                     "OUTPUT INSERTED.id " +
-                     "VALUES (NEWID(), ?, ?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, appointment.getRequestId());
-            ps.setString(2, appointment.getPatientId());
-            ps.setString(3, appointment.getClinicId());
-            ps.setString(4, appointment.getDiagnosisReportId());
-            ps.setTimestamp(5, Timestamp.valueOf(appointment.getAppointmentTime()));
-            ps.setString(6, appointment.getStatus() != null ? appointment.getStatus() : "CREATED");
-            ps.setString(7, appointment.getNotes());
-            
+    /**
+     * Transactional insert — uses the caller-supplied connection.
+     * The caller is responsible for commit/rollback.
+     */
+    public String createWithConnection(Connection conn, Appointment a) throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement(INSERT_SQL)) {
+            setParams(ps,
+                a.getRequestId(), a.getPatientId(), a.getClinicId(),
+                a.getDiagnosisReportId(),
+                Timestamp.valueOf(a.getAppointmentTime()),
+                a.getStatus() != null ? a.getStatus() : "CREATED",
+                a.getNotes()
+            );
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getString(1);
-                }
+                return rs.next() ? rs.getString(1) : null;
             }
         }
-        return null;
     }
 
     public boolean updateStatus(String id, String status) {
-        String sql = "UPDATE appointments SET status = ?, updated_at = GETDATE() WHERE id = ?";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, status);
-            ps.setString(2, id);
-            return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
-            logger.error("Error updating appointment status: {}", id, e);
-        }
-        return false;
+        return executeUpdate(
+            "UPDATE appointments SET status = ?, updated_at = GETDATE() WHERE id = ?", status, id
+        );
     }
 
-    private Appointment mapRow(ResultSet rs) throws SQLException {
+    private static Appointment mapRow(ResultSet rs) throws SQLException {
         Appointment a = new Appointment();
         a.setId(rs.getString("id"));
         a.setRequestId(rs.getString("request_id"));
         a.setPatientId(rs.getString("patient_id"));
         a.setClinicId(rs.getString("clinic_id"));
         a.setDiagnosisReportId(rs.getString("diagnosis_report_id"));
-        if (rs.getTimestamp("appointment_time") != null) {
-            a.setAppointmentTime(rs.getTimestamp("appointment_time").toLocalDateTime());
-        }
+        Timestamp at = rs.getTimestamp("appointment_time"); if (at != null) a.setAppointmentTime(at.toLocalDateTime());
         a.setStatus(rs.getString("status"));
         a.setNotes(rs.getString("notes"));
-        if (rs.getTimestamp("created_at") != null) {
-            a.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
-        }
-        if (rs.getTimestamp("updated_at") != null) {
-            a.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
-        }
-        
-        // Transient fields
+        Timestamp ca = rs.getTimestamp("created_at"); if (ca != null) a.setCreatedAt(ca.toLocalDateTime());
+        Timestamp ua = rs.getTimestamp("updated_at"); if (ua != null) a.setUpdatedAt(ua.toLocalDateTime());
         a.setClinicName(rs.getString("clinic_name"));
-        
         return a;
     }
 }
+

@@ -64,6 +64,15 @@
     </servlet-mapping>
 
     <servlet>
+        <servlet-name>VerifyController</servlet-name>
+        <servlet-class>com.skinai.controller.auth.VerifyController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>VerifyController</servlet-name>
+        <url-pattern>/auth/verify</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
         <servlet-name>GoogleOAuthController</servlet-name>
         <servlet-class>com.skinai.controller.auth.GoogleOAuthController</servlet-class>
     </servlet>
@@ -203,6 +212,15 @@
     <servlet-mapping>
         <servlet-name>AuditLogsController</servlet-name>
         <url-pattern>/admin/audit-logs</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>AuditLogDetailController</servlet-name>
+        <servlet-class>com.skinai.controller.admin.AuditLogDetailController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AuditLogDetailController</servlet-name>
+        <url-pattern>/admin/audit-logs/detail</url-pattern>
     </servlet-mapping>
 
     <!-- Admin User Management -->

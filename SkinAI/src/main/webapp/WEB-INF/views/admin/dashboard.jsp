@@ -287,11 +287,10 @@
                 
                 // Risk Badge styling
                 let riskBadgeClass = 'bg-secondary';
-                if (scan.riskLevel === 'LOW') riskBadgeClass = 'bg-success';
-                else if (scan.riskLevel === 'MEDIUM') riskBadgeClass = 'bg-warning';
-                else if (scan.riskLevel === 'HIGH') riskBadgeClass = 'bg-danger';
-
-                const riskText = scan.riskLevel || 'PENDING';
+                let riskText = 'PENDING';
+                if (scan.riskLevel === 'LOW') { riskBadgeClass = 'bg-success'; riskText = 'An toàn'; }
+                else if (scan.riskLevel === 'MEDIUM') { riskBadgeClass = 'bg-warning'; riskText = 'Trung bình'; }
+                else if (scan.riskLevel === 'HIGH') { riskBadgeClass = 'bg-danger'; riskText = 'Nguy cơ cao'; }
 
                 tr.innerHTML = `
                     <td>\${scan.createdAt}</td>

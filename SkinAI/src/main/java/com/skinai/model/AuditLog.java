@@ -15,6 +15,8 @@ public class AuditLog {
     private String newValues;
     private String ipAddress;
     private String userAgent;
+    private String status;
+    private String errorMessage;
     private LocalDateTime createdAt;
 
     // Transient field
@@ -23,7 +25,7 @@ public class AuditLog {
     public AuditLog() {
     }
 
-    public AuditLog(String id, String userId, String action, String entityType, String recordId, String oldValues, String newValues, String ipAddress, String userAgent, LocalDateTime createdAt) {
+    public AuditLog(String id, String userId, String action, String entityType, String recordId, String oldValues, String newValues, String ipAddress, String userAgent, String status, String errorMessage, LocalDateTime createdAt) {
         this.id = id;
         this.userId = userId;
         this.action = action;
@@ -33,6 +35,8 @@ public class AuditLog {
         this.newValues = newValues;
         this.ipAddress = ipAddress;
         this.userAgent = userAgent;
+        this.status = status;
+        this.errorMessage = errorMessage;
         this.createdAt = createdAt;
     }
 
@@ -62,6 +66,12 @@ public class AuditLog {
 
     public String getUserAgent() { return userAgent; }
     public void setUserAgent(String userAgent) { this.userAgent = userAgent; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
+    public String getErrorMessage() { return errorMessage; }
+    public void setErrorMessage(String errorMessage) { this.errorMessage = errorMessage; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

@@ -72,17 +72,54 @@ public class RegisterController extends HttpServlet {
             return;
         }
 
-        User user = authService.registerLocal(username, email, phone, fullName, password);
+        User user = null;
+        try {
+            user = authService.prepareRegistration(username, email, phone, fullName, password);
+        } catch (IllegalArgumentException e) {
+            String errorMsg = e.getMessage();
+            if (errorMsg.contains("Username")) {
+                resp.sendRedirect(req.getContextPath() + "/auth/register?error=email_exists"); // Mapped to email_exists for now to reuse UI
+                return;
+            } else if (errorMsg.contains("Email") || errorMsg.contains("điện thoại")) {
+                resp.sendRedirect(req.getContextPath() + "/auth/register?error=email_exists");
+                return;
+            } else {
+                resp.sendRedirect(req.getContextPath() + "/auth/register?error=invalid_input");
+                return;
+            }
+        }
 
         if (user != null) {
-            // Auto login after registration and prevent session fixation
-            req.changeSessionId(); // Zero-Trust: Regenerate Session ID
+            boolean isPhone = (email == null);
+            String token;
+            if (isPhone) {
+                // Generate 6 digit OTP
+                token = String.format("%06d", new java.util.Random().nextInt(999999));
+                System.out.println("DEBUG - Phone OTP: " + token);
+            } else {
+                // Generate UUID link
+                token = java.util.UUID.randomUUID().toString();
+                String link = req.getScheme() + "://" + req.getServerName() + ":" + req.getServerPort() + req.getContextPath() + "/auth/verify?token=" + token;
+                
+                System.out.println("====================================================");
+                System.out.println("DEBUG - EMAIL VERIFICATION LINK:");
+                System.out.println(link);
+                System.out.println("====================================================");
+
+                String emailHtml = com.skinai.mail.MailTemplate.buildVerifyLinkMail(link, 15);
+                com.skinai.mail.AsyncMailService.sendAsync(email, "Kích hoạt tài khoản - SkinAI", emailHtml);
+            }
+            
+            com.skinai.util.RegistrationCache.put(token, user, isPhone);
+
+            // Store the token in session just so we can identify the user for RESEND
             HttpSession session = req.getSession(true);
-            session.setAttribute("user", user);
-            resp.sendRedirect(req.getContextPath() + "/home");
+            session.setAttribute("pending_verify_token", token);
+            
+            resp.sendRedirect(req.getContextPath() + "/auth/verify");
         } else {
-            // Registration failed (email or phone exists)
-            resp.sendRedirect(req.getContextPath() + "/auth/register?error=email_exists");
+            // Registration failed
+            resp.sendRedirect(req.getContextPath() + "/auth/register?error=invalid_input");
         }
     }
 }

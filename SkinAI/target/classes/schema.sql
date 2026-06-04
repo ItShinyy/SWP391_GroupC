@@ -1,5 +1,8 @@
 USE master;
 GO
+SET QUOTED_IDENTIFIER ON;
+SET ANSI_NULLS ON;
+GO
 
 -- =========================================================
 -- RECREATE DATABASE
@@ -18,6 +21,9 @@ CREATE DATABASE SWP391;
 GO
 
 USE SWP391;
+GO
+SET QUOTED_IDENTIFIER ON;
+SET ANSI_NULLS ON;
 GO
 
 -- =========================================================
@@ -39,9 +45,10 @@ DROP TABLE IF EXISTS users;
 CREATE TABLE users (
     id UNIQUEIDENTIFIER NOT NULL DEFAULT NEWSEQUENTIALID(),
     google_id VARCHAR(100) NULL,
-    email VARCHAR(100) NULL,
+    email VARCHAR(100) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
+    pending_email VARCHAR(100) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
     phone VARCHAR(20) NULL,
-    username VARCHAR(100) NOT NULL,
+    username VARCHAR(100) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
     full_name NVARCHAR(100) NOT NULL,
     password_hash VARCHAR(255) NULL, 
     role VARCHAR(20) NOT NULL DEFAULT 'USER',
@@ -53,11 +60,17 @@ CREATE TABLE users (
     CONSTRAINT PK_users PRIMARY KEY (id),
     CONSTRAINT UQ_users_username UNIQUE (username),
     CONSTRAINT CHK_users_role CHECK (role IN ('USER', 'PATIENT', 'ADMIN')),
-    CONSTRAINT CHK_users_status CHECK (status IN ('ACTIVE', 'INACTIVE', 'LOCKED'))
+    CONSTRAINT CHK_users_status CHECK (status IN ('ACTIVE', 'INACTIVE', 'LOCKED')),
+    CONSTRAINT CHK_users_identity CHECK (
+        email IS NOT NULL OR 
+        phone IS NOT NULL OR 
+        google_id IS NOT NULL
+    )
 );
 
 CREATE UNIQUE NONCLUSTERED INDEX idx_users_email ON users(email) WHERE email IS NOT NULL;
 CREATE UNIQUE NONCLUSTERED INDEX idx_users_phone ON users(phone) WHERE phone IS NOT NULL;
+CREATE UNIQUE NONCLUSTERED INDEX idx_users_google_id ON users(google_id) WHERE google_id IS NOT NULL;
 
 -- =========================================================
 -- 2. PATIENTS
@@ -192,6 +205,8 @@ CREATE TABLE audit_logs (
     new_values NVARCHAR(MAX) NULL,
     ip_address VARCHAR(45) NULL,
     user_agent NVARCHAR(500) NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'SUCCESS',
+    error_message NVARCHAR(1000) NULL,
     created_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
 
     CONSTRAINT PK_audit_logs PRIMARY KEY (id),
@@ -232,6 +247,7 @@ CREATE INDEX idx_appointments_patient_id ON appointments(patient_id);
 CREATE INDEX idx_appointments_clinic_id ON appointments(clinic_id);
 CREATE INDEX idx_articles_status ON articles(status);
 CREATE INDEX idx_audit_logs_user_id ON audit_logs(user_id);
+CREATE INDEX idx_audit_logs_perf ON audit_logs(created_at DESC, status);
 CREATE INDEX idx_pwd_tokens_user_id ON password_reset_tokens(user_id);
 GO
 

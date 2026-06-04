@@ -2,6 +2,7 @@ package com.skinai.service;
 
 import com.skinai.dal.UserDAO;
 import com.skinai.model.User;
+import com.skinai.util.IdentityNormalizer;
 import org.mindrot.jbcrypt.BCrypt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,28 +16,31 @@ public class AuthService {
     }
 
     public User loginWithGoogle(String googleId, String email, String fullName) {
+        String normEmail = IdentityNormalizer.normalizeEmail(email);
+        
         // Try to find user by Google ID
         User user = userDAO.findByGoogleId(googleId);
         
-        if (user == null) {
-            // Try to find by email (if they registered differently before)
-            user = userDAO.findByEmail(email);
+        if (user == null && normEmail != null) {
+            // Try to find by email
+            user = userDAO.findByEmail(normEmail);
             if (user != null) {
-                // Link Google account
+                // Rule: If email exists in DB, it is GUARANTEED to be verified (Verification-led validation).
+                // So we Auto-Link the Google account.
                 user.setGoogleId(googleId);
                 if (user.getFullName() == null || user.getFullName().isEmpty()) {
                     user.setFullName(fullName);
                 }
                 userDAO.update(user);
             } else {
-                // Create new user (default role is PATIENT, status ACTIVE)
+                // Create new user directly from Google
                 user = new User();
                 user.setGoogleId(googleId);
-                user.setEmail(email);
-                // For Google login, username might not be available, we can auto-generate or leave null if allowed
-                user.setUsername(email.split("@")[0] + "_" + System.currentTimeMillis() % 1000); 
+                user.setEmail(normEmail);
+                // Generate a unique username if not provided
+                user.setUsername(normEmail.split("@")[0] + "_" + (System.currentTimeMillis() % 10000)); 
                 user.setFullName(fullName);
-                user.setRole("USER"); // Zero-Trust: Default to USER
+                user.setRole("USER");
                 user.setStatus("ACTIVE");
                 
                 String newId = userDAO.create(user);
@@ -47,7 +51,7 @@ public class AuthService {
                     return null;
                 }
             }
-        } else {
+        } else if (user != null) {
             // Update name if changed
             boolean needsUpdate = false;
             if (fullName != null && (user.getFullName() == null || !fullName.equals(user.getFullName()))) {
@@ -62,30 +66,59 @@ public class AuthService {
         return user;
     }
 
-    public User registerLocal(String username, String email, String phone, String fullName, String rawPassword) {
-        if (email != null && userDAO.findByUsernameOrEmail(email) != null) {
-            return null;
+    /**
+     * Prepares a registration by validating and normalizing inputs.
+     * DOES NOT SAVE to database yet (Verification-led validation).
+     * @return User object to be stored in session pending OTP/Email verification.
+     */
+    public User prepareRegistration(String username, String email, String phone, String fullName, String rawPassword) {
+        String normEmail = email != null ? IdentityNormalizer.normalizeEmail(email) : null;
+        String normPhone = phone != null ? IdentityNormalizer.normalizePhone(phone) : null;
+        String normUsername = IdentityNormalizer.normalizeUsername(username);
+
+        // Service Layer Uniqueness Check
+        if (normEmail != null && userDAO.isEmailTaken(normEmail)) {
+            throw new IllegalArgumentException("Email này đã được sử dụng.");
         }
-        if (phone != null && userDAO.findByUsernameOrEmail(phone) != null) {
-            return null;
+        if (normPhone != null && userDAO.isPhoneTaken(normPhone)) {
+            throw new IllegalArgumentException("Số điện thoại này đã được sử dụng.");
         }
-        if (username != null && userDAO.findByUsernameOrEmail(username) != null) {
-            return null;
+        if (userDAO.isUsernameTaken(normUsername)) {
+            throw new IllegalArgumentException("Username này đã tồn tại.");
         }
 
         User user = new User();
-        user.setUsername(username);
-        user.setEmail(email);
-        user.setPhone(phone);
+        user.setUsername(normUsername);
+        user.setEmail(normEmail);
+        user.setPhone(normPhone);
         user.setFullName(fullName);
-        user.setRole("USER"); // Zero-Trust: Default to USER
+        user.setRole("USER"); 
         user.setStatus("ACTIVE");
         user.setPasswordHash(BCrypt.hashpw(rawPassword, BCrypt.gensalt()));
 
-        String newId = userDAO.create(user);
+        // Do NOT call userDAO.create() yet!
+        return user;
+    }
+
+    /**
+     * Finalizes registration after successful OTP/Email link verification.
+     */
+    public User finalizeRegistration(User pendingUser) {
+        // Double check uniqueness just in case it was taken while waiting for OTP
+        if (pendingUser.getEmail() != null && userDAO.isEmailTaken(pendingUser.getEmail())) {
+            throw new IllegalArgumentException("Email này đã được sử dụng bởi người khác.");
+        }
+        if (pendingUser.getPhone() != null && userDAO.isPhoneTaken(pendingUser.getPhone())) {
+            throw new IllegalArgumentException("Số điện thoại này đã được sử dụng bởi người khác.");
+        }
+        if (userDAO.isUsernameTaken(pendingUser.getUsername())) {
+            throw new IllegalArgumentException("Username này đã bị lấy bởi người khác.");
+        }
+
+        String newId = userDAO.create(pendingUser);
         if (newId != null) {
-            user.setId(newId);
-            return user;
+            pendingUser.setId(newId);
+            return pendingUser;
         }
         return null;
     }
@@ -94,19 +127,15 @@ public class AuthService {
         User user = userDAO.findByUsernameOrEmail(keyword);
         if (user != null && user.getPasswordHash() != null) {
             String dbHash = user.getPasswordHash();
-            // Prevent crash if dbHash is plain text (not BCrypt)
             if (dbHash.startsWith("$2a$") || dbHash.startsWith("$2b$") || dbHash.startsWith("$2y$")) {
                 try {
                     if (BCrypt.checkpw(rawPassword, dbHash)) {
                         return user;
                     }
                 } catch (Exception e) {
-                    // Fallback in case of parsing error
                 }
             } else {
-                // DB contains plain text password
                 if (dbHash.equals(rawPassword)) {
-                    // Optionally update to hash here, but for now just allow login
                     return user;
                 }
             }

@@ -4,155 +4,67 @@ import com.skinai.model.Disease;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
+import java.sql.*;
 import java.util.List;
 
-public class DiseaseDAO {
+/**
+ * DAO for the diseases table.
+ */
+public class DiseaseDAO extends DBContext {
     private static final Logger logger = LoggerFactory.getLogger(DiseaseDAO.class);
 
+    private static final String SELECT_COLS =
+        "SELECT id, disease_name, disease_code, description, symptoms," +
+        " severity_level, recommended_specialty, created_at FROM diseases";
+
     public Disease findById(String id) {
-        String sql = "SELECT id, disease_name, disease_code, description, symptoms, severity_level, recommended_specialty, created_at " +
-                     "FROM diseases WHERE id = ?";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return mapRow(rs);
-                }
-            }
-        } catch (SQLException e) {
-            logger.error("Error finding disease by id: {}", id, e);
-        }
-        return null;
+        return queryOne(SELECT_COLS + " WHERE id = ?", DiseaseDAO::mapRow, id);
     }
 
     public Disease findByCode(String code) {
-        String sql = "SELECT id, disease_name, disease_code, description, symptoms, severity_level, recommended_specialty, created_at " +
-                     "FROM diseases WHERE disease_code = ?";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, code);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return mapRow(rs);
-                }
-            }
-        } catch (SQLException e) {
-            logger.error("Error finding disease by code: {}", code, e);
-        }
-        return null;
+        return queryOne(SELECT_COLS + " WHERE disease_code = ?", DiseaseDAO::mapRow, code);
     }
 
     public List<Disease> findAll() {
-        List<Disease> list = new ArrayList<>();
-        String sql = "SELECT id, disease_name, disease_code, description, symptoms, severity_level, recommended_specialty, created_at " +
-                     "FROM diseases ORDER BY disease_name ASC";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                list.add(mapRow(rs));
-            }
-        } catch (SQLException e) {
-            logger.error("Error finding all diseases", e);
-        }
-        return list;
+        return queryList(SELECT_COLS + " ORDER BY disease_name ASC", DiseaseDAO::mapRow);
     }
 
     public List<Disease> findAll(int page, int pageSize) {
-        List<Disease> list = new ArrayList<>();
-        String sql = "SELECT id, disease_name, disease_code, description, symptoms, severity_level, recommended_specialty, created_at " +
-                     "FROM diseases ORDER BY disease_name ASC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, (page - 1) * pageSize);
-            ps.setInt(2, pageSize);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    list.add(mapRow(rs));
-                }
-            }
-        } catch (SQLException e) {
-            logger.error("Error finding all diseases with pagination", e);
-        }
-        return list;
+        return queryList(
+            SELECT_COLS + " ORDER BY disease_name ASC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY",
+            DiseaseDAO::mapRow, (page - 1) * pageSize, pageSize
+        );
     }
 
     public int countAll() {
-        String sql = "SELECT COUNT(*) FROM diseases";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            if (rs.next()) {
-                return rs.getInt(1);
-            }
-        } catch (SQLException e) {
-            logger.error("Error counting diseases", e);
-        }
-        return 0;
+        return queryScalar("SELECT COUNT(*) FROM diseases");
     }
 
-    public String create(Disease disease) {
-        String sql = "INSERT INTO diseases (id, disease_name, disease_code, description, symptoms, severity_level, recommended_specialty) " +
-                     "OUTPUT INSERTED.id " +
-                     "VALUES (NEWID(), ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, disease.getDiseaseName());
-            ps.setString(2, disease.getDiseaseCode());
-            ps.setString(3, disease.getDescription());
-            ps.setString(4, disease.getSymptoms());
-            ps.setString(5, disease.getSeverityLevel() != null ? disease.getSeverityLevel() : "LOW");
-            ps.setString(6, disease.getRecommendedSpecialty());
-            
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getString(1);
-                }
-            }
-        } catch (SQLException e) {
-            logger.error("Error creating disease", e);
-        }
-        return null;
+    public String create(Disease d) {
+        String sql = "INSERT INTO diseases (id, disease_name, disease_code, description, symptoms, severity_level, recommended_specialty)" +
+                     " OUTPUT INSERTED.id VALUES (NEWID(), ?, ?, ?, ?, ?, ?)";
+        return insertReturningId(sql,
+            d.getDiseaseName(), d.getDiseaseCode(), d.getDescription(),
+            d.getSymptoms(),
+            d.getSeverityLevel() != null ? d.getSeverityLevel() : "LOW",
+            d.getRecommendedSpecialty()
+        );
     }
 
-    public boolean update(Disease disease) {
-        String sql = "UPDATE diseases SET disease_name = ?, disease_code = ?, description = ?, symptoms = ?, " +
-                     "severity_level = ?, recommended_specialty = ? WHERE id = ?";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, disease.getDiseaseName());
-            ps.setString(2, disease.getDiseaseCode());
-            ps.setString(3, disease.getDescription());
-            ps.setString(4, disease.getSymptoms());
-            ps.setString(5, disease.getSeverityLevel());
-            ps.setString(6, disease.getRecommendedSpecialty());
-            ps.setString(7, disease.getId());
-            return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
-            logger.error("Error updating disease: {}", disease.getId(), e);
-        }
-        return false;
+    public boolean update(Disease d) {
+        String sql = "UPDATE diseases SET disease_name = ?, disease_code = ?, description = ?," +
+                     " symptoms = ?, severity_level = ?, recommended_specialty = ? WHERE id = ?";
+        return executeUpdate(sql,
+            d.getDiseaseName(), d.getDiseaseCode(), d.getDescription(),
+            d.getSymptoms(), d.getSeverityLevel(), d.getRecommendedSpecialty(), d.getId()
+        );
     }
 
     public boolean delete(String id) {
-        String sql = "DELETE FROM diseases WHERE id = ?";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, id);
-            return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
-            logger.error("Error deleting disease: {}", id, e);
-        }
-        return false;
+        return executeUpdate("DELETE FROM diseases WHERE id = ?", id);
     }
 
-    private Disease mapRow(ResultSet rs) throws SQLException {
+    private static Disease mapRow(ResultSet rs) throws SQLException {
         Disease d = new Disease();
         d.setId(rs.getString("id"));
         d.setDiseaseName(rs.getString("disease_name"));
@@ -161,9 +73,8 @@ public class DiseaseDAO {
         d.setSymptoms(rs.getString("symptoms"));
         d.setSeverityLevel(rs.getString("severity_level"));
         d.setRecommendedSpecialty(rs.getString("recommended_specialty"));
-        if (rs.getTimestamp("created_at") != null) {
-            d.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
-        }
+        Timestamp ca = rs.getTimestamp("created_at"); if (ca != null) d.setCreatedAt(ca.toLocalDateTime());
         return d;
     }
 }
+

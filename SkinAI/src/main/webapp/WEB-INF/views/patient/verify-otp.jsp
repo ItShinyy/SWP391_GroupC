@@ -17,11 +17,11 @@
                     <div class="bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
                         <i class="fa-solid fa-shield-halved fa-2x text-warning"></i>
                     </div>
-                    <h4 class="fw-bold mb-0 text-dark">OTP Verification</h4>
+                    <h4 class="fw-bold mb-0 text-dark">Xác Thực OTP</h4>
                 </div>
                 <div class="card-body p-4">
                     <p class="text-center text-muted mb-4">
-                        A 6-digit verification code has been sent to your chosen delivery method. Please enter it below to confirm your security changes.
+                        Một mã xác thực gồm 6 chữ số đã được gửi đến bạn. Vui lòng nhập mã vào bên dưới để xác nhận thay đổi bảo mật của bạn.
                     </p>
                     
                     <c:if test="${not empty successMessage}">
@@ -40,25 +40,25 @@
                         <input type="hidden" name="action" value="verify_security_otp">
                         
                         <div class="mb-4">
-                            <label class="form-label text-muted fw-semibold small">Enter OTP</label>
-                            <input type="text" name="otp" class="form-control form-control-lg text-center fw-bold fs-4" placeholder="------" maxlength="6" required autofocus>
+                            <label class="form-label text-muted fw-semibold small">Nhập mã OTP</label>
+                            <input type="text" name="otp" class="form-control form-control-lg text-center fw-bold fs-4" placeholder="------" maxlength="6" required autofocus autocomplete="off">
                         </div>
                         
-                        <button type="submit" class="btn btn-warning text-white fw-bold w-100 py-2">Verify OTP & Update</button>
+                        <button type="submit" class="btn btn-warning text-white fw-bold w-100 py-2">Xác nhận & Cập nhật</button>
                     </form>
                     
                     <form action="${pageContext.request.contextPath}/patient/profile" method="post" id="resendForm">
                         <input type="hidden" name="action" value="resend_otp">
                         <div class="text-center">
                             <button type="submit" id="resendBtn" class="btn btn-link text-decoration-none p-0 text-muted small" disabled>
-                                <i class="fa-solid fa-rotate-right me-1"></i> Resend OTP <span id="timerText">(60s)</span>
+                                <i class="fa-solid fa-rotate-right me-1"></i> Gửi lại mã OTP <span id="timerText">(60s)</span>
                             </button>
                         </div>
                     </form>
                     
                     <div class="text-center mt-4">
                         <a href="${pageContext.request.contextPath}/patient/profile" class="text-muted text-decoration-none small">
-                            <i class="fa-solid fa-arrow-left me-1"></i> Cancel & Back to Profile
+                            <i class="fa-solid fa-arrow-left me-1"></i> Hủy & Quay lại Hồ sơ
                         </a>
                     </div>
                 </div>

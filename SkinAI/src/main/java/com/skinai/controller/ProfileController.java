@@ -39,6 +39,11 @@ public class ProfileController extends HttpServlet {
         User freshUser = userDAO.findById(user.getId());
         session.setAttribute("user", freshUser);
         
+        String success = req.getParameter("success");
+        if ("security_updated".equals(success)) {
+            req.setAttribute("successMessage", "Thông tin bảo mật đã được cập nhật thành công.");
+        }
+        
         if (req.getRequestURI().endsWith("/verify-otp")) {
             req.getRequestDispatcher("/WEB-INF/views/patient/verify-otp.jsp").forward(req, resp);
         } else {
@@ -191,12 +196,16 @@ public class ProfileController extends HttpServlet {
                     }
                     
                     if (updated && userDAO.update(currentUser)) {
-                        req.setAttribute("successMessage", "Security settings updated successfully!");
+                        session.setAttribute("user", currentUser);
                         session.removeAttribute("pendingNewEmail");
                         session.removeAttribute("pendingNewPhone");
                         session.removeAttribute("pendingNewPassword");
+                        tokenDAO.deleteByUserIdAndPurpose(currentUser.getId(), "CHANGE_SECURITY");
+                        
+                        resp.sendRedirect(req.getContextPath() + "/patient/profile?success=security_updated");
+                        return;
                     } else {
-                        req.setAttribute("errorMessage", "Failed to update profile.");
+                        req.setAttribute("errorMessage", "Cập nhật hồ sơ thất bại.");
                     }
                     tokenDAO.deleteByUserIdAndPurpose(currentUser.getId(), "CHANGE_SECURITY");
                 } else {
@@ -246,7 +255,7 @@ public class ProfileController extends HttpServlet {
         session.setAttribute("user", currentUser);
         
         String forwardPath = "/WEB-INF/views/patient/profile.jsp";
-        if ("verify_security_otp".equals(action)) {
+        if ("verify_security_otp".equals(action) || "resend_otp".equals(action)) {
             forwardPath = "/WEB-INF/views/patient/verify-otp.jsp";
         }
         

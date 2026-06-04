@@ -6,7 +6,7 @@
 <div class="container-fluid">
     <div class="table-container bg-white shadow-sm rounded-4 p-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="page-title">System Diagnosis Results</h1>
+            <h1 class="page-title">Kết Quả Chẩn Đoán AI</h1>
         </div>
         
         <!-- Search & Filter Bar -->
@@ -14,11 +14,11 @@
             <div class="card-body">
                 <form action="${pageContext.request.contextPath}/admin/ai-results" method="get" class="row g-3 align-items-center">
                     <div class="col-md-4">
-                        <input type="text" name="search" class="form-control" placeholder="Search by patient name or disease" value="${param.search}">
+                        <input type="text" name="search" class="form-control" placeholder="Tìm theo tên bệnh nhân hoặc bệnh" value="${param.search}">
                     </div>
                     <div class="col-md-3">
                         <select name="risk" class="form-select">
-                            <option value="">All Risk Levels</option>
+                            <option value="">Tất cả mức độ rủi ro</option>
                             <option value="LOW" ${param.risk == 'LOW' ? 'selected' : ''}>LOW</option>
                             <option value="MEDIUM" ${param.risk == 'MEDIUM' ? 'selected' : ''}>MEDIUM</option>
                             <option value="HIGH" ${param.risk == 'HIGH' ? 'selected' : ''}>HIGH</option>
@@ -26,12 +26,12 @@
                     </div>
                     <div class="col-md-3">
                         <select name="sort" class="form-select">
-                            <option value="date" ${param.sort == 'date' || empty param.sort ? 'selected' : ''}>Sort by Date (Newest)</option>
-                            <option value="precision" ${param.sort == 'precision' ? 'selected' : ''}>Sort by Precision (Highest)</option>
+                            <option value="date" ${param.sort == 'date' || empty param.sort ? 'selected' : ''}>Sắp xếp theo ngày (Mới nhất)</option>
+                            <option value="precision" ${param.sort == 'precision' ? 'selected' : ''}>Sắp xếp theo độ tin cậy (Cao nhất)</option>
                         </select>
                     </div>
                     <div class="col-md-2 d-flex gap-2">
-                        <button type="submit" class="btn btn-primary flex-grow-1"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+                        <button type="submit" class="btn btn-primary flex-grow-1"><i class="fa-solid fa-magnifying-glass"></i> Tìm kiếm</button>
                         <a href="${pageContext.request.contextPath}/admin/ai-results" class="btn btn-outline-secondary">Xóa Bộ Lọc</a>
                     </div>
                 </form>
@@ -42,20 +42,20 @@
             <table class="table table-hover table-striped align-middle">
                 <thead class="table-dark">
                     <tr>
-                        <th scope="col" style="width: 12%">ID</th>
-                        <th scope="col" style="width: 18%">Patient Name</th>
-                        <th scope="col" style="width: 20%">Disease</th>
-                        <th scope="col" style="width: 12%">Confidence</th>
-                        <th scope="col" style="width: 13%">Risk Level</th>
-                        <th scope="col" style="width: 15%">Created At</th>
-                        <th scope="col" style="width: 10%" class="text-center">Action</th>
+                        <th scope="col" style="width: 12%">Mã (ID)</th>
+                        <th scope="col" style="width: 18%">Tên Bệnh Nhân</th>
+                        <th scope="col" style="width: 20%">Bệnh</th>
+                        <th scope="col" style="width: 12%">Độ Tin Cậy</th>
+                        <th scope="col" style="width: 13%">Mức Độ Rủi Ro</th>
+                        <th scope="col" style="width: 15%">Ngày Tạo</th>
+                        <th scope="col" style="width: 10%" class="text-center">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
                     <c:choose>
                         <c:when test="${empty reports}">
                             <tr>
-                                <td colspan="7" class="text-center py-4 text-muted">No diagnosis results found.</td>
+                                <td colspan="7" class="text-center py-4 text-muted">Không tìm thấy kết quả chẩn đoán nào.</td>
                             </tr>
                         </c:when>
                         <c:otherwise>
@@ -88,16 +88,16 @@
                                     <td>
                                         <c:choose>
                                             <c:when test="${r.riskLevel == 'HIGH'}">
-                                                <span class="badge bg-danger px-3 py-2 text-uppercase" style="font-size: 85%;">Nguy cơ cao</span>
+                                                <span class="badge bg-danger">Nguy cơ cao</span>
                                             </c:when>
                                             <c:when test="${r.riskLevel == 'MEDIUM'}">
-                                                <span class="badge bg-warning text-white px-3 py-2 text-uppercase" style="font-size: 85%;">Trung bình</span>
+                                                <span class="badge bg-warning">Trung bình</span>
                                             </c:when>
                                             <c:when test="${r.riskLevel == 'LOW'}">
-                                                <span class="badge bg-success px-3 py-2 text-uppercase" style="font-size: 85%;">An toàn</span>
+                                                <span class="badge bg-success">An toàn</span>
                                             </c:when>
                                             <c:otherwise>
-                                                <span class="badge bg-secondary px-3 py-2">PENDING</span>
+                                                <span class="badge bg-secondary">PENDING</span>
                                             </c:otherwise>
                                         </c:choose>
                                     </td>
@@ -109,7 +109,7 @@
                                     </td>
                                     <td class="text-center">
                                         <a href="${pageContext.request.contextPath}/admin/ai-results/detail?id=${r.id}" class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-eye"></i> View Details
+                                            <i class="fas fa-eye"></i> Xem chi tiết
                                         </a>
                                     </td>
                                 </tr>
@@ -122,11 +122,11 @@
         
         <!-- Pagination -->
         <c:if test="${totalPages > 1}">
-            <div class="mt-4">
-                <nav aria-label="Page navigation">
+            <div class="p-3 border-top">
+                <nav aria-label="Page navigation" class="mb-0">
                     <ul class="pagination justify-content-center mb-0">
                         <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
-                            <a class="page-link" href="?page=${currentPage - 1}&search=${param.search}&risk=${param.risk}&sort=${param.sort}">Previous</a>
+                            <a class="page-link" href="?page=${currentPage - 1}&search=${param.search}&risk=${param.risk}&sort=${param.sort}">Trước</a>
                         </li>
                         <c:forEach begin="1" end="${totalPages}" var="i">
                             <li class="page-item ${i == currentPage ? 'active' : ''}">
@@ -134,7 +134,7 @@
                             </li>
                         </c:forEach>
                         <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
-                            <a class="page-link" href="?page=${currentPage + 1}&search=${param.search}&risk=${param.risk}&sort=${param.sort}">Next</a>
+                            <a class="page-link" href="?page=${currentPage + 1}&search=${param.search}&risk=${param.risk}&sort=${param.sort}">Sau</a>
                         </li>
                     </ul>
                 </nav>
