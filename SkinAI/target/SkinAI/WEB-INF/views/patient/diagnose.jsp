@@ -1,6 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
-<jsp:include page="/WEB-INF/views/layout/public-header.jsp" />
+<jsp:include page="/WEB-INF/views/layout/guest-header.jsp" />
 
 <!-- Loading Overlay -->
 <div id="loadingOverlay" class="d-none" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column;">
@@ -126,4 +126,4 @@
     });
 </script>
 
-<jsp:include page="/WEB-INF/views/layout/public-footer.jsp" />
+<jsp:include page="/WEB-INF/views/layout/guest-footer.jsp" />

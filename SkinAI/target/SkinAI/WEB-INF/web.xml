@@ -9,7 +9,7 @@
     <!-- ==================== Filters ==================== -->
     <filter>
         <filter-name>EncodingFilter</filter-name>
-        <filter-class>com.skinai.filter.EncodingFilter</filter-class>
+        <filter-class>com.dermathologyai.filter.EncodingFilter</filter-class>
     </filter>
     <filter-mapping>
         <filter-name>EncodingFilter</filter-name>
@@ -18,7 +18,7 @@
 
     <filter>
         <filter-name>AuthenticationFilter</filter-name>
-        <filter-class>com.skinai.filter.AuthenticationFilter</filter-class>
+        <filter-class>com.dermathologyai.filter.AuthenticationFilter</filter-class>
     </filter>
     <filter-mapping>
         <filter-name>AuthenticationFilter</filter-name>
@@ -28,16 +28,17 @@
 
     <filter>
         <filter-name>AuthorizationFilter</filter-name>
-        <filter-class>com.skinai.filter.AuthorizationFilter</filter-class>
+        <filter-class>com.dermathologyai.filter.AuthorizationFilter</filter-class>
     </filter>
     <filter-mapping>
         <filter-name>AuthorizationFilter</filter-name>
         <url-pattern>/admin/*</url-pattern>
+        <url-pattern>/patient/*</url-pattern>
     </filter-mapping>
 
     <filter>
         <filter-name>AuditFilter</filter-name>
-        <filter-class>com.skinai.filter.AuditFilter</filter-class>
+        <filter-class>com.dermathologyai.filter.AuditFilter</filter-class>
     </filter>
     <filter-mapping>
         <filter-name>AuditFilter</filter-name>
@@ -47,7 +48,7 @@
     <!-- ==================== Auth Servlets ==================== -->
     <servlet>
         <servlet-name>LoginController</servlet-name>
-        <servlet-class>com.skinai.controller.auth.LoginController</servlet-class>
+        <servlet-class>com.dermathologyai.controller.auth.LoginController</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>LoginController</servlet-name>
@@ -56,7 +57,7 @@
 
     <servlet>
         <servlet-name>RegisterController</servlet-name>
-        <servlet-class>com.skinai.controller.auth.RegisterController</servlet-class>
+        <servlet-class>com.dermathologyai.controller.auth.RegisterController</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>RegisterController</servlet-name>
@@ -65,7 +66,7 @@
 
     <servlet>
         <servlet-name>VerifyController</servlet-name>
-        <servlet-class>com.skinai.controller.auth.VerifyController</servlet-class>
+        <servlet-class>com.dermathologyai.controller.auth.VerifyController</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>VerifyController</servlet-name>
@@ -74,7 +75,7 @@
 
     <servlet>
         <servlet-name>GoogleOAuthController</servlet-name>
-        <servlet-class>com.skinai.controller.auth.GoogleOAuthController</servlet-class>
+        <servlet-class>com.dermathologyai.controller.auth.GoogleOAuthController</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>GoogleOAuthController</servlet-name>
@@ -83,7 +84,7 @@
 
     <servlet>
         <servlet-name>GoogleCallbackController</servlet-name>
-        <servlet-class>com.skinai.controller.auth.GoogleCallbackController</servlet-class>
+        <servlet-class>com.dermathologyai.controller.auth.GoogleCallbackController</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>GoogleCallbackController</servlet-name>
@@ -92,7 +93,7 @@
 
     <servlet>
         <servlet-name>LogoutController</servlet-name>
-        <servlet-class>com.skinai.controller.auth.LogoutController</servlet-class>
+        <servlet-class>com.dermathologyai.controller.auth.LogoutController</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>LogoutController</servlet-name>
@@ -101,7 +102,7 @@
 
     <servlet>
         <servlet-name>ForgotPasswordController</servlet-name>
-        <servlet-class>com.skinai.controller.auth.ForgotPasswordController</servlet-class>
+        <servlet-class>com.dermathologyai.controller.auth.ForgotPasswordController</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>ForgotPasswordController</servlet-name>
@@ -110,7 +111,7 @@
 
     <servlet>
         <servlet-name>ResetPasswordController</servlet-name>
-        <servlet-class>com.skinai.controller.auth.ResetPasswordController</servlet-class>
+        <servlet-class>com.dermathologyai.controller.auth.ResetPasswordController</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>ResetPasswordController</servlet-name>
@@ -119,7 +120,7 @@
 
     <servlet>
         <servlet-name>UnlockAccountController</servlet-name>
-        <servlet-class>com.skinai.controller.auth.UnlockAccountController</servlet-class>
+        <servlet-class>com.dermathologyai.controller.auth.UnlockAccountController</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>UnlockAccountController</servlet-name>
@@ -129,7 +130,7 @@
     <!-- ==================== Public Servlets ==================== -->
     <servlet>
         <servlet-name>HomeController</servlet-name>
-        <servlet-class>com.skinai.controller.pub.HomeController</servlet-class>
+        <servlet-class>com.dermathologyai.controller.guest.HomeController</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>HomeController</servlet-name>
@@ -138,7 +139,7 @@
 
     <servlet>
         <servlet-name>ProfileController</servlet-name>
-        <servlet-class>com.skinai.controller.ProfileController</servlet-class>
+        <servlet-class>com.dermathologyai.controller.patient.ProfileController</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>ProfileController</servlet-name>
@@ -152,7 +153,7 @@
     <!-- ==================== Patient Servlets ==================== -->
     <servlet>
         <servlet-name>DiagnoseController</servlet-name>
-        <servlet-class>com.skinai.controller.patient.DiagnoseController</servlet-class>
+        <servlet-class>com.dermathologyai.controller.patient.DiagnoseController</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>DiagnoseController</servlet-name>
@@ -160,8 +161,17 @@
     </servlet-mapping>
 
     <servlet>
+        <servlet-name>BookingController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.patient.BookingController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>BookingController</servlet-name>
+        <url-pattern>/patient/booking</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
         <servlet-name>ReportDetailController</servlet-name>
-        <servlet-class>com.skinai.controller.patient.ReportDetailController</servlet-class>
+        <servlet-class>com.dermathologyai.controller.patient.ReportDetailController</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>ReportDetailController</servlet-name>
@@ -170,7 +180,7 @@
 
     <servlet>
         <servlet-name>PatientReportsController</servlet-name>
-        <servlet-class>com.skinai.controller.patient.PatientReportsController</servlet-class>
+        <servlet-class>com.dermathologyai.controller.patient.PatientReportsController</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>PatientReportsController</servlet-name>
@@ -180,7 +190,7 @@
     <!-- ==================== Admin Servlets ==================== -->
     <servlet>
         <servlet-name>DashboardController</servlet-name>
-        <servlet-class>com.skinai.controller.admin.DashboardController</servlet-class>
+        <servlet-class>com.dermathologyai.controller.admin.DashboardController</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>DashboardController</servlet-name>
@@ -188,17 +198,17 @@
     </servlet-mapping>
 
     <servlet>
-        <servlet-name>DashboardDataController</servlet-name>
-        <servlet-class>com.skinai.controller.admin.DashboardDataController</servlet-class>
+        <servlet-name>DashboardApiController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.admin.DashboardApiController</servlet-class>
     </servlet>
     <servlet-mapping>
-        <servlet-name>DashboardDataController</servlet-name>
+        <servlet-name>DashboardApiController</servlet-name>
         <url-pattern>/admin/api/dashboard</url-pattern>
     </servlet-mapping>
 
     <servlet>
         <servlet-name>ExportCsvController</servlet-name>
-        <servlet-class>com.skinai.controller.admin.ExportCsvController</servlet-class>
+        <servlet-class>com.dermathologyai.controller.admin.ExportCsvController</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>ExportCsvController</servlet-name>
@@ -207,7 +217,7 @@
 
     <servlet>
         <servlet-name>AuditLogsController</servlet-name>
-        <servlet-class>com.skinai.controller.admin.AuditLogsController</servlet-class>
+        <servlet-class>com.dermathologyai.controller.admin.AuditLogsController</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>AuditLogsController</servlet-name>
@@ -216,7 +226,7 @@
 
     <servlet>
         <servlet-name>AuditLogDetailController</servlet-name>
-        <servlet-class>com.skinai.controller.admin.AuditLogDetailController</servlet-class>
+        <servlet-class>com.dermathologyai.controller.admin.AuditLogDetailController</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>AuditLogDetailController</servlet-name>
@@ -226,7 +236,7 @@
     <!-- Admin User Management -->
     <servlet>
         <servlet-name>AdminUserListController</servlet-name>
-        <servlet-class>com.skinai.controller.admin.AdminUserListController</servlet-class>
+        <servlet-class>com.dermathologyai.controller.admin.AdminUserListController</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>AdminUserListController</servlet-name>
@@ -235,7 +245,7 @@
 
     <servlet>
         <servlet-name>ClinicsController</servlet-name>
-        <servlet-class>com.skinai.controller.admin.ClinicsController</servlet-class>
+        <servlet-class>com.dermathologyai.controller.admin.ClinicsController</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>ClinicsController</servlet-name>
@@ -243,35 +253,17 @@
     </servlet-mapping>
 
     <servlet>
-        <servlet-name>AdminUserLockController</servlet-name>
-        <servlet-class>com.skinai.controller.admin.AdminUserLockController</servlet-class>
+        <servlet-name>UserStatusController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.admin.UserStatusController</servlet-class>
     </servlet>
     <servlet-mapping>
-        <servlet-name>AdminUserLockController</servlet-name>
-        <url-pattern>/admin/users/lock</url-pattern>
-    </servlet-mapping>
-
-    <servlet>
-        <servlet-name>AdminUserUnlockController</servlet-name>
-        <servlet-class>com.skinai.controller.admin.AdminUserUnlockController</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>AdminUserUnlockController</servlet-name>
-        <url-pattern>/admin/users/unlock</url-pattern>
-    </servlet-mapping>
-
-    <servlet>
-        <servlet-name>AdminUserStatusChangeController</servlet-name>
-        <servlet-class>com.skinai.controller.admin.AdminUserStatusChangeController</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>AdminUserStatusChangeController</servlet-name>
-        <url-pattern>/admin/users/status-change</url-pattern>
+        <servlet-name>UserStatusController</servlet-name>
+        <url-pattern>/admin/users/status</url-pattern>
     </servlet-mapping>
 
     <servlet>
         <servlet-name>AdminDiagnosisController</servlet-name>
-        <servlet-class>com.skinai.controller.admin.AdminDiagnosisController</servlet-class>
+        <servlet-class>com.dermathologyai.controller.admin.AdminDiagnosisController</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>AdminDiagnosisController</servlet-name>
@@ -280,11 +272,21 @@
 
     <servlet>
         <servlet-name>ReportDetailAdminController</servlet-name>
-        <servlet-class>com.skinai.controller.admin.ReportDetailAdminController</servlet-class>
+        <servlet-class>com.dermathologyai.controller.admin.ReportDetailAdminController</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>ReportDetailAdminController</servlet-name>
         <url-pattern>/admin/ai-results/detail</url-pattern>
+    </servlet-mapping>
+
+    <!-- ==================== Appeal API ==================== -->
+    <servlet>
+        <servlet-name>AppealController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.auth.AppealController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AppealController</servlet-name>
+        <url-pattern>/api/auth/appeal</url-pattern>
     </servlet-mapping>
 
     <!-- ==================== Welcome File ==================== -->

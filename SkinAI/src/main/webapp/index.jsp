@@ -1,5 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ page import="com.skinai.model.User" %>
+<%@ page import="com.dermathologyai.model.User" %>
 <%
     User user = (User) session.getAttribute("user");
     if (user != null && "ADMIN".equals(user.getRole())) {

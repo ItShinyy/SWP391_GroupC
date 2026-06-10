@@ -19,7 +19,10 @@
                     <a href="${pageContext.request.contextPath}/home" class="text-decoration-none">
                         <h1 class="fw-bold m-0" style="color: var(--skin-primary); font-family: 'Fragment Mono', sans-serif;">Skin<span class="text-dark">AI</span></h1>
                     </a>
-                    <p class="text-muted mt-2">Tạo mật khẩu mới</p>
+                    <p class="text-muted mt-2 mb-1">Tạo mật khẩu mới</p>
+                    <c:if test="${not empty sessionScope.maskedIdentifier}">
+                        <p class="small text-muted mb-0">Mã xác thực đã được gửi đến <strong>${sessionScope.maskedIdentifier}</strong></p>
+                    </c:if>
                 </div>
 
                 <div class="card shadow-sm border-0 rounded-4 p-4 p-md-5">
@@ -35,18 +38,18 @@
 
                         <div class="mb-3">
                             <label class="form-label text-muted fw-semibold small">Mã xác thực OTP (6 số)</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-key"></i></span>
-                                <input type="text" name="token" class="form-control border-start-0 ps-0 text-center fw-bold fs-5" placeholder="------" maxlength="6" required>
-                            </div>
-                            <div class="form-text small">Kiểm tra Email (Console Log) để lấy mã.</div>
+                            <!-- Reusable OTP Component -->
+                            <jsp:include page="/WEB-INF/views/layout/otp-input.jsp">
+                                <jsp:param name="inputName" value="token"/>
+                                <jsp:param name="ttlSeconds" value="300"/>
+                            </jsp:include>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label text-muted fw-semibold small">Mật khẩu mới</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-lock"></i></span>
-                                <input type="password" name="newPassword" class="form-control border-start-0 ps-0" placeholder="••••••••" required minlength="6">
+                                <input type="password" name="newPassword" class="form-control border-start-0 ps-0" placeholder="Nhập mật khẩu" required minlength="6">
                             </div>
                         </div>
 
@@ -54,12 +57,20 @@
                             <label class="form-label text-muted fw-semibold small">Xác nhận mật khẩu</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-lock"></i></span>
-                                <input type="password" name="confirmPassword" class="form-control border-start-0 ps-0" placeholder="••••••••" required minlength="6">
+                                <input type="password" name="confirmPassword" class="form-control border-start-0 ps-0" placeholder="Nhập mật khẩu" required minlength="6">
                             </div>
                         </div>
 
                         <button type="submit" class="btn btn-skin w-100 fw-bold mb-3">Đổi mật khẩu</button>
                     </form>
+
+                    <div class="text-center mt-3">
+                        <span class="text-muted small">Chưa nhận được mã?</span>
+                        <form action="${pageContext.request.contextPath}/auth/forgot-password" method="POST" class="d-inline">
+                            <input type="hidden" name="identifier" value="${identifier}">
+                            <button type="submit" class="btn btn-link btn-sm text-decoration-none fw-bold p-0" formnovalidate>Gửi lại mã</button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>

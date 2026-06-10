@@ -39,14 +39,14 @@
             <h1 class="page-title">Dashboard</h1>
         </div>
         <div class="small text-muted fw-semibold">
-            <i class="fa-regular fa-clock me-1"></i> Data updated at: <span id="last-updated">--:--:--</span>
+            <i class="fa-regular fa-clock me-1"></i> Dữ liệu cập nhật lúc: <span id="last-updated">--:--:--</span>
         </div>
         <div>
             <button id="btn-refresh" class="btn btn-outline-secondary shadow-sm px-4 py-2 me-2" onclick="refreshDashboard()">
-                <i class="fa-solid fa-rotate-right me-2"></i> Refresh
+                <i class="fa-solid fa-rotate-right me-2"></i> Làm mới
             </button>
             <a href="${pageContext.request.contextPath}/admin/export/csv" class="btn btn-custom shadow-sm px-4 py-2" id="btn-export">
-                <i class="fa-solid fa-download me-2"></i> Export CSV
+                <i class="fa-solid fa-download me-2"></i> Xuất CSV
             </a>
         </div>
     </div>
@@ -61,7 +61,7 @@
                         <i class="fa-solid fa-users fa-2x"></i>
                     </div>
                     <div>
-                        <p class="mb-1 text-muted fw-semibold">Active Patients</p>
+                        <p class="mb-1 text-muted fw-semibold">Bệnh nhân hoạt động</p>
                         <h4 class="mb-0 fw-bold text-dark" id="kpi-users">
                             <span class="spinner-border spinner-border-sm text-primary" role="status"></span>
                         </h4>
@@ -75,19 +75,19 @@
             <div class="card bg-white border-0 shadow-sm rounded h-100 p-4">
                 <div class="row h-100 align-items-center">
                     <div class="col-4 border-end text-center">
-                        <p class="mb-2 text-muted fw-semibold"><i class="fa-solid fa-bullseye text-success me-2"></i>Avg. Precision</p>
+                        <p class="mb-2 text-muted fw-semibold"><i class="fa-solid fa-bullseye text-success me-2"></i>Độ chính xác TB</p>
                         <h3 class="mb-0 fw-bold text-dark" id="kpi-accuracy">
                             <span class="spinner-border spinner-border-sm text-success" role="status"></span>
                         </h3>
                     </div>
                     <div class="col-4 border-end text-center">
-                        <p class="mb-2 text-muted fw-semibold"><i class="fa-solid fa-microscope text-warning me-2"></i>Scans</p>
+                        <p class="mb-2 text-muted fw-semibold"><i class="fa-solid fa-microscope text-warning me-2"></i>Lượt quét</p>
                         <h3 class="mb-0 fw-bold text-dark" id="kpi-scans">
                             <span class="spinner-border spinner-border-sm text-warning" role="status"></span>
                         </h3>
                     </div>
                     <div class="col-4 text-center">
-                        <p class="mb-2 text-muted fw-semibold"><i class="fa-solid fa-triangle-exclamation text-info me-2"></i>High Risk</p>
+                        <p class="mb-2 text-muted fw-semibold"><i class="fa-solid fa-triangle-exclamation text-info me-2"></i>Nguy cơ cao</p>
                         <h3 class="mb-0 fw-bold text-dark" id="kpi-high-risk">
                             <span class="spinner-border spinner-border-sm text-info" role="status"></span>
                         </h3>
@@ -103,14 +103,14 @@
         <div class="col-sm-12 col-xl-6">
             <div class="card bg-white border-0 shadow-sm rounded h-100">
                 <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center pt-4 px-4 pb-0">
-                    <h6 class="fw-bold mb-0 text-dark">Diagnosis Trend (30 Days)</h6>
+                    <h6 class="fw-bold mb-0 text-dark">Xu hướng chẩn đoán (30 ngày)</h6>
                 </div>
                 <div class="card-body p-4">
                     <div style="position: relative; height: 300px; width: 100%;">
                         <canvas id="trendChart"></canvas>
                         <div id="trendChart-empty" class="position-absolute top-50 start-50 translate-middle text-center text-muted d-none w-100">
                             <i class="fa-solid fa-chart-line fa-3x mb-3 text-light"></i>
-                            <p class="fw-bold mb-0">No Data</p>
+                            <p class="fw-bold mb-0">Không có dữ liệu</p>
                         </div>
                     </div>
                 </div>
@@ -121,14 +121,14 @@
         <div class="col-sm-12 col-xl-6">
             <div class="card bg-white border-0 shadow-sm rounded h-100">
                 <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center pt-4 px-4 pb-0">
-                    <h6 class="fw-bold mb-0 text-dark">Top Diseases (AI)</h6>
+                    <h6 class="fw-bold mb-0 text-dark">Các bệnh phổ biến (AI)</h6>
                 </div>
                 <div class="card-body p-4">
                     <div style="position: relative; height: 300px; width: 100%;">
                         <canvas id="diseaseChart"></canvas>
                         <div id="diseaseChart-empty" class="position-absolute top-50 start-50 translate-middle text-center text-muted d-none w-100">
                             <i class="fa-solid fa-chart-bar fa-3x mb-3 text-light"></i>
-                            <p class="fw-bold mb-0">No Data</p>
+                            <p class="fw-bold mb-0">Không có dữ liệu</p>
                         </div>
                     </div>
                 </div>
@@ -142,18 +142,18 @@
         <div class="col-12">
             <div class="card bg-white border-0 shadow-sm rounded h-100">
                 <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center pt-4 px-4 pb-0">
-                    <h6 class="fw-bold mb-0 text-dark">AI Diagnosis Results Overview</h6>
+                    <h6 class="fw-bold mb-0 text-dark">Tổng quan kết quả chẩn đoán AI</h6>
                 </div>
                 <div class="card-body p-4">
                     <div class="table-responsive">
                         <table class="table table-custom text-start align-middle table-hover mb-0">
                             <thead>
                                 <tr>
-                                    <th scope="col">Date</th>
-                                    <th scope="col">Patient Name</th>
-                                    <th scope="col">Disease</th>
-                                    <th scope="col">Risk Level</th>
-                                    <th scope="col">Confidence</th>
+                                    <th scope="col">Ngày</th>
+                                    <th scope="col">Tên Bệnh Nhân</th>
+                                    <th scope="col">Bệnh</th>
+                                    <th scope="col">Mức Độ Rủi Ro</th>
+                                    <th scope="col">Độ Tin Cậy</th>
                                 </tr>
                             </thead>
                             <tbody id="recent-scans-tbody">

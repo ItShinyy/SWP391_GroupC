@@ -194,6 +194,9 @@
                             <a class="nav-link ${pageContext.request.requestURI.contains('users') ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/users">Quản Lý Người Dùng</a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link ${pageContext.request.requestURI.contains('clinics') ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/clinics">Quản Lý Phòng Khám</a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link ${pageContext.request.requestURI.contains('audit') ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/audit-logs">Nhật Ký Hoạt Động</a>
                         </li>
 

@@ -74,8 +74,9 @@
                     <h6 class="fw-bold text-dark"><i class="fa-solid fa-pen-to-square me-2 text-warning"></i> Provide Reason</h6>
                 </div>
                 <div class="card-body p-4">
-                    <form action="${pageContext.request.contextPath}/admin/users/${action}" method="post">
+                    <form action="${pageContext.request.contextPath}/admin/users/status" method="post">
                         <input type="hidden" name="id" value="${targetUser.id}">
+                        <input type="hidden" name="action" value="${action}">
                         
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Common Reasons</label>

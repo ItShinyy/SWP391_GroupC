@@ -72,10 +72,10 @@
                                     <c:if test="${u.role != 'ADMIN' || u.id != sessionScope.user.id}">
                                         <c:choose>
                                             <c:when test="${u.status == 'ACTIVE'}">
-                                                <a href="${pageContext.request.contextPath}/admin/users/status-change?id=${u.id}&action=lock" class="btn btn-sm btn-outline-danger">Khóa</a>
+                                                <a href="${pageContext.request.contextPath}/admin/users/status?action=lock&id=${u.id}" class="btn btn-sm btn-outline-danger" title="Lock User">Khóa</a>
                                             </c:when>
                                             <c:otherwise>
-                                                <a href="${pageContext.request.contextPath}/admin/users/status-change?id=${u.id}&action=unlock" class="btn btn-sm btn-outline-success">Mở khóa</a>
+                                                <a href="${pageContext.request.contextPath}/admin/users/status?action=unlock&id=${u.id}" class="btn btn-sm btn-outline-success" title="Unlock User">Mở khóa</a>
                                             </c:otherwise>
                                         </c:choose>
                                     </c:if>

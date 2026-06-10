@@ -5,7 +5,7 @@
         <jsp:include page="/WEB-INF/views/layout/admin-header.jsp" />
     </c:when>
     <c:otherwise>
-        <jsp:include page="/WEB-INF/views/layout/public-header.jsp" />
+        <jsp:include page="/WEB-INF/views/layout/guest-header.jsp" />
     </c:otherwise>
 </c:choose>
 
@@ -21,7 +21,7 @@
                 </div>
                 <div class="card-body p-4">
                     <p class="text-center text-muted mb-4">
-                        Một mã xác thực gồm 6 chữ số đã được gửi đến bạn. Vui lòng nhập mã vào bên dưới để xác nhận thay đổi bảo mật của bạn.
+                        Một mã xác thực gồm 6 chữ số đã được gửi đến <strong>${maskedTarget}</strong>. Vui lòng nhập mã vào bên dưới để xác nhận thay đổi bảo mật của bạn.
                     </p>
                     
                     <c:if test="${not empty successMessage}">
@@ -41,7 +41,9 @@
                         
                         <div class="mb-4">
                             <label class="form-label text-muted fw-semibold small">Nhập mã OTP</label>
-                            <input type="text" name="otp" class="form-control form-control-lg text-center fw-bold fs-4" placeholder="------" maxlength="6" required autofocus autocomplete="off">
+                            <jsp:include page="/WEB-INF/views/layout/otp-input.jsp">
+                                <jsp:param name="inputName" value="otp"/>
+                            </jsp:include>
                         </div>
                         
                         <button type="submit" class="btn btn-warning text-white fw-bold w-100 py-2">Xác nhận & Cập nhật</button>
@@ -50,8 +52,8 @@
                     <form action="${pageContext.request.contextPath}/patient/profile" method="post" id="resendForm">
                         <input type="hidden" name="action" value="resend_otp">
                         <div class="text-center">
-                            <button type="submit" id="resendBtn" class="btn btn-link text-decoration-none p-0 text-muted small" disabled>
-                                <i class="fa-solid fa-rotate-right me-1"></i> Gửi lại mã OTP <span id="timerText">(60s)</span>
+                            <button type="submit" id="resendBtn" class="btn btn-link text-decoration-none p-0 fw-bold small" formnovalidate>
+                                <i class="fa-solid fa-rotate-right me-1"></i> Gửi lại mã OTP
                             </button>
                         </div>
                     </form>
@@ -67,45 +69,13 @@
     </div>
 </div>
 
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        // Calculate remaining time based on server's last sent timestamp
-        var lastSentTime = ${not empty sessionScope.last_otp_sent_at ? sessionScope.last_otp_sent_at : 0};
-        var currentTime = new Date().getTime();
-        var elapsed = currentTime - lastSentTime;
-        var cooldown = 60000; // 60 seconds
-        
-        var remainingSeconds = 0;
-        if (elapsed < cooldown) {
-            remainingSeconds = Math.ceil((cooldown - elapsed) / 1000);
-        }
-
-        var resendBtn = document.getElementById("resendBtn");
-        var timerText = document.getElementById("timerText");
-
-        function updateTimer() {
-            if (remainingSeconds > 0) {
-                resendBtn.disabled = true;
-                timerText.textContent = "(" + remainingSeconds + "s)";
-                remainingSeconds--;
-                setTimeout(updateTimer, 1000);
-            } else {
-                resendBtn.disabled = false;
-                timerText.textContent = "";
-                resendBtn.classList.remove("text-muted");
-                resendBtn.classList.add("text-primary");
-            }
-        }
-
-        updateTimer();
-    });
-</script>
+<!-- JavaScript removed to comply with Non-JS requirement -->
 
 <c:choose>
     <c:when test="${user.role == 'ADMIN'}">
         <jsp:include page="/WEB-INF/views/layout/admin-footer.jsp" />
     </c:when>
     <c:otherwise>
-        <jsp:include page="/WEB-INF/views/layout/public-footer.jsp" />
+        <jsp:include page="/WEB-INF/views/layout/guest-footer.jsp" />
     </c:otherwise>
 </c:choose>

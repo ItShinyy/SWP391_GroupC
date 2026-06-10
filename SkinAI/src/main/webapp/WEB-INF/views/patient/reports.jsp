@@ -1,7 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
-<jsp:include page="/WEB-INF/views/layout/public-header.jsp" />
+<jsp:include page="/WEB-INF/views/layout/guest-header.jsp" />
 
 <div class="container py-5 mt-4">
     <div class="table-container bg-white shadow-sm rounded-4 p-4">
@@ -120,4 +120,4 @@
     </div>
 </div>
 
-<jsp:include page="/WEB-INF/views/layout/public-footer.jsp" />
+<jsp:include page="/WEB-INF/views/layout/guest-footer.jsp" />

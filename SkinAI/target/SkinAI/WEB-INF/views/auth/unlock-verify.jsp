@@ -1,7 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,7 +16,9 @@
         <div class="row justify-content-center">
             <div class="col-md-6 col-lg-4">
                 <div class="text-center mb-4">
-                    <h1 class="fw-bold m-0 text-success" style="font-family: 'Fragment Mono', sans-serif;"><i class="fa-solid fa-unlock-keyhole"></i></h1>
+                    <h1 class="fw-bold m-0 text-success" style="font-family: 'Fragment Mono', sans-serif;">
+                        <i class="fa-solid fa-unlock-keyhole"></i>
+                    </h1>
                     <h4 class="fw-bold mt-2">Xác nhận OTP</h4>
                     <p class="text-muted mt-2">Nhập mã 6 số chúng tôi vừa gửi đến <b>${email}</b></p>
                 </div>
@@ -28,24 +30,34 @@
                         </div>
                     </c:if>
 
-                    <form action="${pageContext.request.contextPath}/auth/unlock-account" method="post">
+                    <form id="unlockVerifyForm" action="${pageContext.request.contextPath}/auth/unlock-account" method="post">
                         <input type="hidden" name="action" value="verify">
                         <input type="hidden" name="email" value="${email}">
 
-                        <div class="mb-4">
-                            <label class="form-label text-muted fw-semibold small">Mã xác thực OTP</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-key"></i></span>
-                                <input type="text" name="token" class="form-control border-start-0 ps-0 text-center fw-bold fs-5" placeholder="------" maxlength="6" required>
-                            </div>
-                            <div class="form-text text-danger small">Mã OTP sẽ hết hạn sau 5 phút.</div>
-                        </div>
+                        <!-- Reusable OTP Component -->
+                        <jsp:include page="/WEB-INF/views/layout/otp-input.jsp">
+                            <jsp:param name="inputName" value="token"/>
+                            <jsp:param name="ttlSeconds" value="300"/>
+                        </jsp:include>
 
-                        <button type="submit" class="btn btn-skin w-100 fw-bold mb-3">Xác thực & Mở khóa</button>
+                        <button type="submit" class="btn btn-skin w-100 fw-bold mb-3">Xác thực &amp; Mở khóa</button>
+                        
+                        <div class="text-center mb-3">
+                            <span class="text-muted small">Chưa nhận được mã?</span>
+                            <button type="submit" name="action" value="resend" class="btn btn-link btn-sm p-0 text-decoration-none fw-bold" formnovalidate>
+                                Gửi lại mã
+                            </button>
+                        </div>
+                        <div class="text-center">
+                            <a href="${pageContext.request.contextPath}/auth/unlock-account" class="text-muted small">
+                                <i class="fa-solid fa-arrow-left me-1"></i> Quay lại
+                            </a>
+                        </div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

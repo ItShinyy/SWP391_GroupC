@@ -69,7 +69,7 @@
                             <label class="form-label text-muted fw-semibold small">Số điện thoại</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-phone"></i></span>
-                                <input type="text" name="phone" class="form-control border-start-0 ps-0" placeholder="0901234567">
+                                <input type="text" name="phone" class="form-control border-start-0 ps-0" placeholder="Nhập số điện thoại">
                             </div>
                             <div class="form-text small text-danger">* Bạn phải nhập ít nhất Email hoặc Số điện thoại.</div>
                         </div>
@@ -79,7 +79,7 @@
                             <label class="form-label text-muted fw-semibold small">Mật khẩu (Ít nhất 6 ký tự)</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-lock"></i></span>
-                                <input type="password" name="password" class="form-control border-start-0 ps-0" placeholder="••••••••" required minlength="6">
+                                <input type="password" name="password" class="form-control border-start-0 ps-0" placeholder="Nhập mật khẩu" required minlength="6">
                             </div>
                         </div>
 

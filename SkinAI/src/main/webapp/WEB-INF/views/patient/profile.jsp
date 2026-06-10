@@ -5,7 +5,7 @@
         <jsp:include page="/WEB-INF/views/layout/admin-header.jsp" />
     </c:when>
     <c:otherwise>
-        <jsp:include page="/WEB-INF/views/layout/public-header.jsp" />
+        <jsp:include page="/WEB-INF/views/layout/guest-header.jsp" />
     </c:otherwise>
 </c:choose>
 
@@ -108,11 +108,11 @@
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold small">Mật khẩu Mới <span class="text-muted fw-normal">(Tùy chọn${empty user.passwordHash ? ' — thiết lập để đăng nhập trực tiếp' : ''})</span></label>
+                                <label class="form-label fw-bold small">Mật khẩu Mới <span class="text-muted fw-normal"></span></label>
                                 <input type="password" name="newPassword" class="form-control" placeholder="Nhập mật khẩu mới">
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold small">Xác nhận Mật khẩu Mới <span class="text-muted fw-normal">(Tùy chọn)</span></label>
+                                <label class="form-label fw-bold small">Xác nhận Mật khẩu Mới <span class="text-muted fw-normal"></span></label>
                                 <input type="password" name="confirmPassword" class="form-control" placeholder="Nhập lại mật khẩu mới">
                             </div>
                         </div>
@@ -148,6 +148,6 @@
         <jsp:include page="/WEB-INF/views/layout/admin-footer.jsp" />
     </c:when>
     <c:otherwise>
-        <jsp:include page="/WEB-INF/views/layout/public-footer.jsp" />
+        <jsp:include page="/WEB-INF/views/layout/guest-footer.jsp" />
     </c:otherwise>
 </c:choose>

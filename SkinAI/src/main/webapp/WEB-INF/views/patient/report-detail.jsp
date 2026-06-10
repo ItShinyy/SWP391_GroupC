@@ -1,7 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
-<jsp:include page="/WEB-INF/views/layout/public-header.jsp" />
+<jsp:include page="/WEB-INF/views/layout/guest-header.jsp" />
 
 <section class="report-header py-4" style="background-color: var(--skin-primary);">
     <div class="container text-center text-white">
@@ -97,4 +97,4 @@
     </div>
 </section>
 
-<jsp:include page="/WEB-INF/views/layout/public-footer.jsp" />
+<jsp:include page="/WEB-INF/views/layout/guest-footer.jsp" />

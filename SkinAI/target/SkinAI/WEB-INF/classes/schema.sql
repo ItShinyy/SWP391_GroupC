@@ -27,17 +27,17 @@ SET ANSI_NULLS ON;
 GO
 
 -- =========================================================
--- DROP TABLES (If exist)
+-- DROP TABLES (Sắp xếp theo thứ tự giải phóng khóa ngoại an toàn)
 -- =========================================================
-DROP TABLE IF EXISTS password_reset_tokens;
-DROP TABLE IF EXISTS audit_logs;
-DROP TABLE IF EXISTS articles;
-DROP TABLE IF EXISTS appointments;
-DROP TABLE IF EXISTS diagnosis_reports;
+DROP TABLE IF EXISTS account_appeals;        -- Chứa FK tới password_reset_tokens & users (Phải xóa đầu tiên)
+DROP TABLE IF EXISTS password_reset_tokens; -- Chứa FK tới users
+DROP TABLE IF EXISTS audit_logs;            -- Chứa FK tới users
+DROP TABLE IF EXISTS appointments;          -- Chứa FK tới patients, clinics, diagnosis_reports
+DROP TABLE IF EXISTS diagnosis_reports;     -- Chứa FK tới patients, diseases, clinics
 DROP TABLE IF EXISTS clinics;
 DROP TABLE IF EXISTS diseases;
-DROP TABLE IF EXISTS patients;
-DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS patients;              -- Chứa FK tới users
+DROP TABLE IF EXISTS users;                 -- Bảng cha cốt lõi (Xóa cuối cùng)
 
 -- =========================================================
 -- 1. USERS
@@ -53,8 +53,11 @@ CREATE TABLE users (
     password_hash VARCHAR(255) NULL, 
     role VARCHAR(20) NOT NULL DEFAULT 'USER',
     status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    lock_reason NVARCHAR(500) NULL,
+    locked_at DATETIME2 NULL,
+    locked_by UNIQUEIDENTIFIER NULL,
     created_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
-    last_login_at DATETIME2 NULL DEFAULT SYSDATETIME(),
+    last_login_at DATETIME2 NULL,
     updated_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
 
     CONSTRAINT PK_users PRIMARY KEY (id),
@@ -65,12 +68,12 @@ CREATE TABLE users (
         email IS NOT NULL OR 
         phone IS NOT NULL OR 
         google_id IS NOT NULL
-    )
+    ),
+    CONSTRAINT FK_users_locked_by FOREIGN KEY (locked_by) REFERENCES users(id) ON DELETE NO ACTION
 );
 
 CREATE UNIQUE NONCLUSTERED INDEX idx_users_email ON users(email) WHERE email IS NOT NULL;
 CREATE UNIQUE NONCLUSTERED INDEX idx_users_phone ON users(phone) WHERE phone IS NOT NULL;
-CREATE UNIQUE NONCLUSTERED INDEX idx_users_google_id ON users(google_id) WHERE google_id IS NOT NULL;
 
 -- =========================================================
 -- 2. PATIENTS
@@ -124,7 +127,8 @@ CREATE TABLE clinics (
     created_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
     updated_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
 
-    CONSTRAINT PK_clinics PRIMARY KEY (id)
+    CONSTRAINT PK_clinics PRIMARY KEY (id),
+    CONSTRAINT CHK_clinics_rating CHECK (rating IS NULL OR rating BETWEEN 0 AND 5)
 );
 
 -- =========================================================
@@ -146,7 +150,9 @@ CREATE TABLE diagnosis_reports (
     CONSTRAINT PK_diagnosis_reports PRIMARY KEY (id),
     CONSTRAINT FK_diagnosis_reports_patients FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,
     CONSTRAINT FK_diagnosis_reports_diseases FOREIGN KEY (disease_id) REFERENCES diseases(id) ON DELETE SET NULL,
-    CONSTRAINT FK_diagnosis_reports_clinics FOREIGN KEY (clinic_id) REFERENCES clinics(id) ON DELETE SET NULL
+    CONSTRAINT FK_diagnosis_reports_clinics FOREIGN KEY (clinic_id) REFERENCES clinics(id) ON DELETE SET NULL,
+    CONSTRAINT CHK_reports_confidence CHECK (confidence_score IS NULL OR confidence_score BETWEEN 0 AND 100),
+    CONSTRAINT CHK_reports_risk CHECK (risk_level IS NULL OR risk_level IN ('LOW', 'MEDIUM', 'HIGH'))
 );
 
 -- =========================================================
@@ -174,26 +180,7 @@ CREATE TABLE appointments (
 );
 
 -- =========================================================
--- 7. ARTICLES
--- =========================================================
-CREATE TABLE articles (
-    id UNIQUEIDENTIFIER NOT NULL DEFAULT NEWSEQUENTIALID(),
-    title NVARCHAR(200) NOT NULL,
-    slug VARCHAR(220) NOT NULL,
-    thumbnail_url VARCHAR(255) NULL,
-    content NVARCHAR(MAX) NOT NULL,
-    author_user_id UNIQUEIDENTIFIER NULL,
-    status VARCHAR(20) NOT NULL DEFAULT 'DRAFT',
-    created_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
-    updated_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
-
-    CONSTRAINT PK_articles PRIMARY KEY (id),
-    CONSTRAINT UQ_articles_slug UNIQUE (slug),
-    CONSTRAINT FK_articles_users FOREIGN KEY (author_user_id) REFERENCES users(id) ON DELETE SET NULL
-);
-
--- =========================================================
--- 8. AUDIT LOGS
+-- 7. AUDIT LOGS
 -- =========================================================
 CREATE TABLE audit_logs (
     id UNIQUEIDENTIFIER NOT NULL DEFAULT NEWSEQUENTIALID(),
@@ -214,7 +201,7 @@ CREATE TABLE audit_logs (
 );
 
 -- =========================================================
--- 9. PASSWORD RESET TOKENS
+-- 8. PASSWORD RESET TOKENS
 -- =========================================================
 CREATE TABLE password_reset_tokens (
     id INT IDENTITY(1,1) PRIMARY KEY,
@@ -222,10 +209,37 @@ CREATE TABLE password_reset_tokens (
     token VARCHAR(100) NOT NULL UNIQUE,
     purpose VARCHAR(50) NOT NULL DEFAULT 'RESET_PASSWORD',
     attempts INT NOT NULL DEFAULT 0,
-    expires_at DATETIME NOT NULL,
-    CONSTRAINT FK_password_tokens_users FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    created_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
+    used_at DATETIME2 NULL,
+    expires_at DATETIME2 NOT NULL,
+    CONSTRAINT FK_password_tokens_users FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT CHK_password_tokens_purpose CHECK (purpose IN ('RESET_PASSWORD', 'UNLOCK_APPEAL', 'VERIFY_EMAIL')),
+    CONSTRAINT CHK_password_tokens_attempts CHECK (attempts >= 0)
 );
 GO
+
+-- =========================================================
+-- 9. ACCOUNT APPEALS (Yêu cầu giải trình mở khóa)
+-- =========================================================
+CREATE TABLE account_appeals (
+    id UNIQUEIDENTIFIER NOT NULL DEFAULT NEWSEQUENTIALID(),
+    user_id UNIQUEIDENTIFIER NOT NULL,
+    token_id INT NULL,
+    appeal_text NVARCHAR(1000) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    admin_note NVARCHAR(1000) NULL,
+    reviewed_by UNIQUEIDENTIFIER NULL,
+    reviewed_at DATETIME2 NULL,
+    created_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
+    updated_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
+
+    CONSTRAINT PK_account_appeals PRIMARY KEY (id),
+    -- Tránh lỗi "multiple cascade paths" bằng cách sử dụng NO ACTION
+    CONSTRAINT FK_account_appeals_users FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE NO ACTION,
+    CONSTRAINT FK_account_appeals_token FOREIGN KEY (token_id) REFERENCES password_reset_tokens(id) ON DELETE NO ACTION,
+    CONSTRAINT FK_account_appeals_reviewed_by FOREIGN KEY (reviewed_by) REFERENCES users(id) ON DELETE NO ACTION,
+    CONSTRAINT CHK_account_appeals_status CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED'))
+);
 
 -- =========================================================
 -- INDEXES & FILTERED UNIQUE CONSTRAINTS
@@ -243,12 +257,18 @@ CREATE INDEX idx_reports_patient_id ON diagnosis_reports(patient_id);
 CREATE INDEX idx_reports_disease_id ON diagnosis_reports(disease_id);
 CREATE INDEX idx_reports_clinic_id ON diagnosis_reports(clinic_id);
 CREATE INDEX idx_reports_created_at ON diagnosis_reports(created_at);
+CREATE INDEX idx_reports_patient_created_at ON diagnosis_reports(patient_id, created_at DESC);
 CREATE INDEX idx_appointments_patient_id ON appointments(patient_id);
 CREATE INDEX idx_appointments_clinic_id ON appointments(clinic_id);
-CREATE INDEX idx_articles_status ON articles(status);
+CREATE INDEX idx_appointments_clinic_time_status ON appointments(clinic_id, appointment_time, status);
+CREATE INDEX idx_appointments_patient_status_time ON appointments(patient_id, status, appointment_time);
 CREATE INDEX idx_audit_logs_user_id ON audit_logs(user_id);
 CREATE INDEX idx_audit_logs_perf ON audit_logs(created_at DESC, status);
 CREATE INDEX idx_pwd_tokens_user_id ON password_reset_tokens(user_id);
+CREATE INDEX idx_pwd_tokens_token_expiry ON password_reset_tokens(token, expires_at);
+CREATE UNIQUE NONCLUSTERED INDEX UX_account_appeals_pending_user ON account_appeals(user_id) WHERE status = 'PENDING';
+CREATE INDEX idx_account_appeals_status_created_at ON account_appeals(status, created_at DESC);
+CREATE INDEX idx_users_role_status ON users(role, status);
 GO
 
 -- =========================================================
@@ -258,6 +278,7 @@ DECLARE @AdminId UNIQUEIDENTIFIER = NEWID();
 DECLARE @User1Id UNIQUEIDENTIFIER = NEWID();
 DECLARE @User2Id UNIQUEIDENTIFIER = NEWID();
 DECLARE @User3Id UNIQUEIDENTIFIER = NEWID();
+DECLARE @AdminReviewerId UNIQUEIDENTIFIER = @AdminId;
 DECLARE @User4Id UNIQUEIDENTIFIER = NEWID();
 
 DECLARE @Patient1Id UNIQUEIDENTIFIER = NEWID();
@@ -277,15 +298,15 @@ DECLARE @Report2Id UNIQUEIDENTIFIER = NEWID();
 DECLARE @Report3Id UNIQUEIDENTIFIER = NEWID();
 
 -- Insert Users
-INSERT INTO users (id, google_id, username, email, phone, full_name, password_hash, role, status, last_login_at)
+INSERT INTO users (id, google_id, username, email, phone, full_name, password_hash, role, status, lock_reason, locked_at, locked_by, last_login_at)
 VALUES
-(@AdminId, NULL, 'admin', 'admin@skinai.com', '0909999888', N'Super Admin', '$2a$10$jtcCTW/1FJvB0s5D1YeqlOkhcDLZsXxdTJkV8NzTKoaurQXTY26DK', 'ADMIN', 'ACTIVE', SYSDATETIME()),
-(@User1Id, NULL, 'patient1', 'patient.local@gmail.com', '0901000001', N'Nguyễn Văn Local', '$2a$10$samplehashlocal', 'PATIENT', 'ACTIVE', SYSDATETIME()),
-(@User2Id, 'google-id-12345', 'patient2', 'patient.google@gmail.com', '0902000002', N'Trần Thị Google', NULL, 'PATIENT', 'ACTIVE', SYSDATETIME()),
-(@User3Id, NULL, 'patient3', 'patient.locked@gmail.com', '0903000003', N'Lê Văn Locked', '$2a$10$samplehashlocked', 'PATIENT', 'LOCKED', DATEADD(MONTH, -4, SYSDATETIME())),
-(@User4Id, NULL, 'patient4', 'patient.inactive@gmail.com', '0904000004', N'Phạm Thị Inactive', '$2a$10$samplehashinactive', 'PATIENT', 'INACTIVE', SYSDATETIME());
+(@AdminId, NULL, 'admin', 'admin@skinai.com', '0909999888', N'Super Admin', '$2a$10$jtcCTW/1FJvB0s5D1YeqlOkhcDLZsXxdTJkV8NzTKoaurQXTY26DK', 'ADMIN', 'ACTIVE', NULL, NULL, NULL, SYSDATETIME()),
+(@User1Id, NULL, 'patient1', 'patient.local@gmail.com', '0901000001', N'Nguyễn Văn Local', '$2a$10$samplehashlocal', 'PATIENT', 'ACTIVE', NULL, NULL, NULL, SYSDATETIME()),
+(@User2Id, 'google-id-12345', 'patient2', 'patient.google@gmail.com', '0902000002', N'Trần Thị Google', NULL, 'PATIENT', 'ACTIVE', NULL, NULL, NULL, SYSDATETIME()),
+(@User3Id, NULL, 'patient3', 'patient.locked@gmail.com', '0903000003', N'Lê Văn Locked', '$2a$10$samplehashlocked', 'PATIENT', 'LOCKED', N'Vi phạm quy định cộng đồng', DATEADD(MONTH, -4, SYSDATETIME()), @AdminReviewerId, DATEADD(MONTH, -4, SYSDATETIME())),
+(@User4Id, NULL, 'patient4', 'patient.inactive@gmail.com', '0904000004', N'Phạm Thị Inactive', '$2a$10$samplehashinactive', 'PATIENT', 'INACTIVE', NULL, NULL, NULL, SYSDATETIME());
 
--- Insert Patients (phone is now on users table, not here)
+-- Insert Patients
 INSERT INTO patients (id, user_id, gender, dob, address)
 VALUES
 (@Patient1Id, @User1Id, 'MALE', '1995-10-20', N'Quận 1, TP.HCM'),
@@ -320,22 +341,23 @@ VALUES
 (NEWID(), 'req-seed-02', @Patient2Id, @Clinic1Id, @Report2Id, DATEADD(DAY, 1, SYSDATETIME()), 'CONFIRMED', N'Đã liên hệ xác nhận lịch hẹn khẩn cấp cho ca rủi ro cao.'),
 (NEWID(), 'req-seed-03', @Patient1Id, @Clinic1Id, NULL, DATEADD(DAY, -10, SYSDATETIME()), 'COMPLETED', N'Lịch hẹn hoàn thành trong quá khứ.');
 
--- Insert Articles
-INSERT INTO articles (id, title, slug, thumbnail_url, content, author_user_id, status)
+-- Insert Password Reset / Appeal Tokens
+INSERT INTO password_reset_tokens (user_id, token, purpose, attempts, created_at, used_at, expires_at)
 VALUES
-(NEWID(), N'Cách chăm sóc da mụn chuẩn y khoa', 'cach-cham-soc-da-mun', 'img/thumb1.jpg', N'Bài viết chi tiết về các bước chăm sóc da mụn hiệu quả...', @AdminId, 'PUBLISHED'),
-(NEWID(), N'Dấu hiệu nhận biết ung thư hắc tố da', 'dau-hieu-ung-thu-da', 'img/thumb2.jpg', N'Bản thảo phân tích cấu trúc nốt ruồi bất thường...', @AdminId, 'DRAFT'),
-(NEWID(), N'Bài viết lưu trữ nội bộ', 'article-archived', NULL, N'Tài liệu lưu trữ không công khai ra ngoài.', @AdminId, 'ARCHIVED');
+(@User3Id, 'unlock-appeal-token-001', 'UNLOCK_APPEAL', 0, SYSDATETIME(), NULL, DATEADD(MINUTE, 15, SYSDATETIME())),
+(@User1Id, 'verify-email-token-001', 'VERIFY_EMAIL', 0, SYSDATETIME(), NULL, DATEADD(HOUR, 24, SYSDATETIME())),
+(@User1Id, 'valid_token_123456_local_user', 'RESET_PASSWORD', 0, SYSDATETIME(), NULL, DATEADD(HOUR, 2, SYSDATETIME())),
+(@User4Id, 'expired_token_789101_inactive', 'RESET_PASSWORD', 0, SYSDATETIME(), NULL, DATEADD(HOUR, -2, SYSDATETIME()));
+
+-- Insert Account Appeals
+INSERT INTO account_appeals (id, user_id, token_id, appeal_text, status, admin_note, reviewed_by, reviewed_at)
+SELECT NEWID(), @User3Id, prt.id, N'Tôi đã hiểu và cam kết không tái phạm. Mong hệ thống xem xét mở khóa tài khoản.', 'PENDING', NULL, NULL, NULL
+FROM password_reset_tokens prt
+WHERE prt.token = 'unlock-appeal-token-001';
 
 -- Insert Audit Logs
 INSERT INTO audit_logs (id, user_id, action, entity_type, record_id, old_values, new_values, ip_address, user_agent)
 VALUES
 (NEWID(), @AdminId, 'USER_LOGIN', 'users', @AdminId, NULL, N'{"status":"success"}', '127.0.0.1', 'Chrome/120.0'),
 (NEWID(), @User1Id, 'CREATE_DIAGNOSIS_REPORT', 'diagnosis_reports', @Report1Id, NULL, N'{"disease_id":"Acne","score":95.5}', '192.168.1.5', 'iPhone/Safari');
-
--- Insert Password Reset Tokens
-INSERT INTO password_reset_tokens (user_id, token, purpose, attempts, expires_at)
-VALUES
-(@User1Id, 'valid_token_123456_local_user', 'RESET_PASSWORD', 0, DATEADD(HOUR, 2, SYSDATETIME())),
-(@User4Id, 'expired_token_789101_inactive', 'RESET_PASSWORD', 0, DATEADD(HOUR, -2, SYSDATETIME()));
 GO

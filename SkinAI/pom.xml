@@ -60,19 +60,7 @@
             <version>3.0.1</version>
         </dependency>
 
-        <!-- JAXB API -->
-        <dependency>
-            <groupId>jakarta.xml.bind</groupId>
-            <artifactId>jakarta.xml.bind-api</artifactId>
-            <version>4.0.2</version>
-        </dependency>
 
-        <!-- JAXB Runtime -->
-        <dependency>
-            <groupId>org.glassfish.jaxb</groupId>
-            <artifactId>jaxb-runtime</artifactId>
-            <version>4.0.5</version>
-        </dependency>
 
         <!-- Google Gson (JSON parsing) -->
         <dependency>
@@ -143,6 +131,13 @@
             <groupId>com.sun.mail</groupId>
             <artifactId>jakarta.mail</artifactId>
             <version>2.0.1</version>
+        </dependency>
+
+        <!-- HikariCP for Connection Pooling -->
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>5.1.0</version>
         </dependency>
     </dependencies>
 

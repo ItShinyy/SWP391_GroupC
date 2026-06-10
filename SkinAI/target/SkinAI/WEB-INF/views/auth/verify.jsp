@@ -55,22 +55,18 @@
                 </div>
 
                 <div class="verify-card text-center">
-                    <c:choose>
-                        <c:when test="${isPhone}">
-                            <div class="icon-circle">
-                                <i class="fa-solid fa-mobile-screen-button"></i>
-                            </div>
-                            <h3 class="fw-bold mb-3">Xác thực số điện thoại</h3>
-                            <p class="text-muted mb-4">Chúng tôi đã gửi mã OTP 6 số đến <strong>${userPhone}</strong>.</p>
-                        </c:when>
-                        <c:otherwise>
-                            <div class="icon-circle">
-                                <i class="fa-solid fa-envelope-open-text"></i>
-                            </div>
-                            <h3 class="fw-bold mb-3">Xác thực Email</h3>
-                            <p class="text-muted mb-4">Chúng tôi đã gửi một đường dẫn xác thực đến <strong>${userEmail}</strong>. Vui lòng kiểm tra hộp thư của bạn.</p>
-                        </c:otherwise>
-                    </c:choose>
+                    <div class="icon-circle">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <h3 class="fw-bold mb-3">Xác thực tài khoản</h3>
+                    <p class="text-muted mb-4">Chúng tôi đã gửi mã OTP 6 số đến 
+                        <strong>
+                            <c:choose>
+                                <c:when test="${isPhone}">${userPhone}</c:when>
+                                <c:otherwise>${userEmail}</c:otherwise>
+                            </c:choose>
+                        </strong>.
+                    </p>
 
                     <c:if test="${not empty errorMessage}">
                         <div class="alert alert-danger" role="alert">
@@ -84,19 +80,17 @@
                         </div>
                     </c:if>
 
-                    <c:if test="${isPhone}">
-                        <form action="${pageContext.request.contextPath}/auth/verify" method="POST" class="mb-4">
-                            <input type="hidden" name="action" value="verify_otp">
-                            <div class="mb-3">
-                                <input type="text" name="otp" class="form-control otp-input" maxlength="6" placeholder="------" required autofocus autocomplete="off">
-                            </div>
-                            <button type="submit" class="btn btn-primary w-100 py-2 fw-bold" style="background-color: var(--skin-primary); border: none;">Xác Nhận OTP</button>
-                        </form>
-                    </c:if>
-                    
-                    <c:if test="${not isPhone}">
-                        <p class="text-muted small mb-4"><em>Bạn có thể đóng trang này sau khi đã xác thực xong trên điện thoại hoặc trình duyệt khác.</em></p>
-                    </c:if>
+                    <form action="${pageContext.request.contextPath}/auth/verify" method="POST" class="mb-4">
+                        <input type="hidden" name="action" value="verify_otp">
+                        <div class="mb-3">
+                            <!-- Reusable OTP Component -->
+                            <jsp:include page="/WEB-INF/views/layout/otp-input.jsp">
+                                <jsp:param name="inputName" value="otp"/>
+                                <jsp:param name="ttlSeconds" value="300"/>
+                            </jsp:include>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 py-2 fw-bold" style="background-color: var(--skin-primary); border: none;">Xác Nhận OTP</button>
+                    </form>
 
                     <hr class="my-4 text-muted">
                     
@@ -104,7 +98,7 @@
                         <span class="text-muted small">Chưa nhận được mã?</span>
                         <form action="${pageContext.request.contextPath}/auth/verify" method="POST">
                             <input type="hidden" name="action" value="resend">
-                            <button type="submit" class="btn btn-outline-secondary btn-sm" id="resendBtn">Gửi lại mã</button>
+                            <button type="submit" class="btn btn-link btn-sm text-decoration-none fw-bold p-0" id="resendBtn" formnovalidate>Gửi lại mã</button>
                         </form>
                     </div>
 
@@ -120,32 +114,6 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Disable resend button immediately on click to prevent spam
-        const resendBtn = document.getElementById('resendBtn');
-        if (resendBtn) {
-            resendBtn.addEventListener('click', function() {
-                setTimeout(() => {
-                    this.disabled = true;
-                    this.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang gửi...';
-                }, 50);
-            });
-        }
-
-        <c:if test="${not isPhone}">
-        // Tự động kiểm tra trạng thái xác thực mỗi 2 giây
-        setInterval(() => {
-            fetch('${pageContext.request.contextPath}/auth/verify?action=check', {credentials: 'same-origin'})
-                .then(response => response.json())
-                .then(data => {
-                    if (data.verified) {
-                        // Nếu đã xác thực thành công, tự động chuyển về trang chủ
-                        window.location.href = '${pageContext.request.contextPath}/home';
-                    }
-                })
-                .catch(err => console.error("Polling error:", err));
-        }, 2000);
-        </c:if>
-    </script>
+    <!-- JavaScript removed to comply with Non-JS requirement -->
 </body>
 </html>
