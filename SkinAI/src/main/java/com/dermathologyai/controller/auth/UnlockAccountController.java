@@ -1,13 +1,10 @@
 package com.dermathologyai.controller.auth;
 
 import com.dermathologyai.dao.UserDAO;
-import com.dermathologyai.dao.AccountAppealDAO;
 import com.dermathologyai.dao.AuditLogDAO;
-import com.dermathologyai.dao.PasswordResetTokenDAO;
-import com.dermathologyai.model.PasswordResetToken;
+import com.dermathologyai.dao.UserTokenDAO;
+import com.dermathologyai.model.UserToken;
 import com.dermathologyai.model.User;
-import com.dermathologyai.model.AccountAppeal;
-import com.dermathologyai.model.AuditLog;
 import com.dermathologyai.model.AuditLog;
 import com.dermathologyai.service.OtpService;
 import com.dermathologyai.util.RequestUtil;
@@ -21,15 +18,13 @@ import java.time.LocalDateTime;
 
 public class UnlockAccountController extends HttpServlet {
     private UserDAO userDAO;
-    private PasswordResetTokenDAO tokenDAO;
-    private AccountAppealDAO appealDAO;
+    private UserTokenDAO tokenDAO;
     private AuditLogDAO auditLogDAO;
 
     @Override
     public void init() throws ServletException {
         userDAO = new UserDAO();
-        tokenDAO = new PasswordResetTokenDAO();
-        appealDAO = new AccountAppealDAO();
+        tokenDAO = new UserTokenDAO();
         auditLogDAO = new AuditLogDAO();
     }
 
@@ -38,7 +33,7 @@ public class UnlockAccountController extends HttpServlet {
         String action = req.getParameter("action");
         if ("verify".equals(action)) {
             req.setAttribute("email", req.getParameter("email"));
-            req.getRequestDispatcher("/WEB-INF/views/auth/unlock-verify.jsp").forward(req, resp);
+            forwardToVerify(req, resp);
         } else {
             req.getRequestDispatcher("/WEB-INF/views/auth/unlock-account.jsp").forward(req, resp);
         }
@@ -49,8 +44,6 @@ public class UnlockAccountController extends HttpServlet {
         String action = req.getParameter("action");
         if ("verify".equals(action)) {
             verifyOtp(req, resp);
-        } else if ("appeal".equals(action)) {
-            handleAppeal(req, resp);
         } else {
             sendOtp(req, resp);
         }
@@ -85,10 +78,10 @@ public class UnlockAccountController extends HttpServlet {
             }
             String hashedOtp = OtpService.hashOtp(otp);
 
-            tokenDAO.deleteByUserIdAndPurpose(user.getId(), "UNLOCK_APPEAL");
+            tokenDAO.deleteByUserIdAndPurpose(user.getId(), "UNLOCK_ACCOUNT");
 
-            PasswordResetToken token = new PasswordResetToken(
-                user.getId(), hashedOtp, "UNLOCK_APPEAL", LocalDateTime.now().plusMinutes(5)
+            UserToken token = new UserToken(
+                user.getId(), hashedOtp, "UNLOCK_ACCOUNT", LocalDateTime.now().plusMinutes(5)
             );
 
             if (tokenDAO.create(token)) {
@@ -114,25 +107,25 @@ public class UnlockAccountController extends HttpServlet {
         if (tokenStr == null || tokenStr.trim().isEmpty()) {
             req.setAttribute("errorMessage", "Vui lòng nhập mã OTP.");
             req.setAttribute("email", email);
-            req.getRequestDispatcher("/WEB-INF/views/auth/unlock-verify.jsp").forward(req, resp);
+            forwardToVerify(req, resp);
             return;
         }
 
         User user = (email != null) ? userDAO.findByEmail(email.trim()) : null;
         if (user == null) {
             req.setAttribute("errorMessage", "Mã OTP không chính xác.");
-            req.getRequestDispatcher("/WEB-INF/views/auth/unlock-verify.jsp").forward(req, resp);
+            forwardToVerify(req, resp);
             return;
         }
 
-        PasswordResetToken token = tokenDAO.findByUserIdAndPurpose(user.getId(), "UNLOCK_APPEAL");
+        UserToken token = tokenDAO.findByUserIdAndPurpose(user.getId(), "UNLOCK_ACCOUNT");
         if (token != null) {
             if (token.getAttempts() >= 3) {
                 req.setAttribute("errorMessage", "Nhập sai quá nhiều lần. Vui lòng yêu cầu mã mới.");
-                tokenDAO.deleteByUserIdAndPurpose(user.getId(), "UNLOCK_APPEAL");
+                tokenDAO.deleteByUserIdAndPurpose(user.getId(), "UNLOCK_ACCOUNT");
             } else if (token.getExpiresAt().isBefore(LocalDateTime.now())) {
                 req.setAttribute("errorMessage", "Mã OTP đã hết hạn (Quá 5 phút). Vui lòng yêu cầu mã mới.");
-                tokenDAO.deleteByUserIdAndPurpose(user.getId(), "UNLOCK_APPEAL");
+                tokenDAO.deleteByUserIdAndPurpose(user.getId(), "UNLOCK_ACCOUNT");
             } else if (OtpService.verifyOtp(tokenStr.trim(), token.getToken())) {
                 // OTP matches → unlock account
                 userDAO.updateStatus(user.getId(), "ACTIVE");
@@ -141,9 +134,9 @@ public class UnlockAccountController extends HttpServlet {
                 user.setStatus("ACTIVE");
                 user.setLockReason(null);
                 userDAO.update(user);
-                tokenDAO.deleteByUserIdAndPurpose(user.getId(), "UNLOCK_APPEAL");
+                tokenDAO.deleteByUserIdAndPurpose(user.getId(), "UNLOCK_ACCOUNT");
                 
-                auditLogDAO.createLog(user.getId(), "ACCOUNT_UNLOCKED", "users", user.getId(), null, "Mở khóa tài khoản thành công qua OTP", RequestUtil.getClientIp(req), req.getHeader("User-Agent"));
+                auditLogDAO.createLog(user.getId(), "ACCOUNT_UNLOCKED", "users", user.getId(), null, "Mở khóa tài khoản thành công qua OTP", null, RequestUtil.getClientIp(req), req.getHeader("User-Agent"));
 
                 req.setAttribute("successMessage", "Mở khóa tài khoản thành công! Vui lòng đăng nhập.");
                 req.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(req, resp);
@@ -159,79 +152,34 @@ public class UnlockAccountController extends HttpServlet {
                 req.setAttribute("errorMessage", "Mã OTP không chính xác.");
             }
             req.setAttribute("email", email);
-            req.getRequestDispatcher("/WEB-INF/views/auth/unlock-verify.jsp").forward(req, resp);
+            forwardToVerify(req, resp);
             }
         } else {
             req.setAttribute("errorMessage", "Mã OTP không chính xác hoặc đã hết hạn.");
             req.setAttribute("email", email);
-            req.getRequestDispatcher("/WEB-INF/views/auth/unlock-verify.jsp").forward(req, resp);
+            forwardToVerify(req, resp);
         }
     }
 
-    private void handleAppeal(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String appealTokenStr = req.getParameter("appeal_token");
-        String appealText     = req.getParameter("appeal_text");
+    private void forwardToVerify(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        req.setAttribute("pageTitle", "Xác nhận Mở Khóa");
+        req.setAttribute("pageDescription", "Nhập mã 6 số chúng tôi vừa gửi đến");
+        req.setAttribute("maskedTarget", req.getAttribute("email"));
+        req.setAttribute("formAction", req.getContextPath() + "/auth/unlock-account");
+        
+        java.util.Map<String, String> hiddenInputs = new java.util.HashMap<>();
+        hiddenInputs.put("action", "verify");
+        hiddenInputs.put("email", (String) req.getAttribute("email"));
+        req.setAttribute("hiddenInputs", hiddenInputs);
+        
+        java.util.Map<String, String> resendHiddenInputs = new java.util.HashMap<>();
+        resendHiddenInputs.put("action", "resend");
+        resendHiddenInputs.put("email", (String) req.getAttribute("email"));
+        req.setAttribute("resendHiddenInputs", resendHiddenInputs);
+        
+        req.setAttribute("otpInputName", "token");
+        req.setAttribute("backLink", req.getContextPath() + "/auth/unlock-account");
 
-        if (appealTokenStr == null || appealTokenStr.trim().isEmpty()) {
-            req.setAttribute("errorMessage", "Thiếu appeal_token.");
-            req.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(req, resp);
-            return;
-        }
-        if (appealText == null || appealText.trim().length() < 20 || appealText.trim().length() > 1000) {
-            req.setAttribute("errorMessage", "Nội dung kháng cáo phải từ 20 đến 1000 ký tự.");
-            req.setAttribute("isLocked", true);
-            req.setAttribute("isTemporaryLocked", false);
-            req.setAttribute("appealToken", appealTokenStr);
-            req.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(req, resp);
-            return;
-        }
-
-        PasswordResetToken token = tokenDAO.findByToken(appealTokenStr.trim());
-
-        if (token == null || !"UNLOCK_APPEAL".equals(token.getPurpose()) || token.getUsedAt() != null) {
-            req.setAttribute("errorMessage", "Token không hợp lệ hoặc đã được sử dụng.");
-            req.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(req, resp);
-            return;
-        }
-
-        if (token.getExpiresAt() != null && token.getExpiresAt().isBefore(LocalDateTime.now())) {
-            req.setAttribute("errorMessage", "Token đã hết hạn. Vui lòng đăng nhập lại để nhận token mới.");
-            req.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(req, resp);
-            return;
-        }
-
-        String userId = token.getUserId();
-
-        AccountAppeal appeal = new AccountAppeal();
-        appeal.setUserId(userId);
-        appeal.setTokenId(token.getId());
-        appeal.setAppealText(appealText.trim());
-
-        String result = appealDAO.create(appeal);
-
-        if ("DUPLICATE".equals(result)) {
-            req.setAttribute("errorMessage", "Bạn đã có yêu cầu đang được xử lý. Vui lòng chờ Admin xem xét.");
-            req.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(req, resp);
-            return;
-        }
-        if ("ERROR".equals(result)) {
-            req.setAttribute("errorMessage", "Lỗi hệ thống. Vui lòng thử lại sau.");
-            req.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(req, resp);
-            return;
-        }
-
-        tokenDAO.markUsed(token.getId());
-
-        AuditLog log = new AuditLog();
-        log.setUserId(userId);
-        log.setAction("SUBMIT_APPEAL");
-        log.setEntityType("account_appeals");
-        log.setNewValues("{\"status\":\"PENDING\"}");
-        log.setIpAddress(req.getRemoteAddr());
-        log.setUserAgent(req.getHeader("User-Agent"));
-        auditLogDAO.create(log);
-
-        req.setAttribute("successMessage", "Yêu cầu kháng cáo đã được gửi thành công. Admin sẽ xem xét sớm nhất.");
-        req.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(req, resp);
+        req.getRequestDispatcher("/WEB-INF/views/global/global-verify-otp.jsp").forward(req, resp);
     }
 }

@@ -16,7 +16,7 @@ public class OtpService {
 
     // In-memory rate limit store: key -> timestamp of last request (ms)
     private static final Map<String, Long> RATE_LIMIT_MAP = new ConcurrentHashMap<>();
-    private static final long COOLDOWN_MS = 60_000L; // 60 seconds
+    private static final long COOLDOWN_MS = 10_000L; // 10 seconds (reduced for MVP testing)
 
     private static final SecureRandom RANDOM = new SecureRandom();
 

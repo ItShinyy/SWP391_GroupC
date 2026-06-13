@@ -1,11 +1,11 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quên mật khẩu - SkinAI</title>
+    <title>Quên mật khẩu - DermAI</title>
     <link href="https://fonts.googleapis.com/css2?family=Fragment+Mono&family=Rethink+Sans:wght@400..800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
@@ -30,6 +30,7 @@
                     </c:if>
 
                     <form action="${pageContext.request.contextPath}/auth/forgot-password" method="post">
+    <input type="hidden" name="csrf_token" value="${sessionScope.csrfToken}">
                         <div class="mb-4">
                             <label class="form-label text-muted fw-semibold small">Nhập Email hoặc Số điện thoại</label>
                             <div class="input-group">
@@ -49,3 +50,6 @@
     </div>
 </body>
 </html>
+
+
+

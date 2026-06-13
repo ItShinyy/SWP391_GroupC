@@ -27,8 +27,30 @@ public class ClinicsController extends HttpServlet {
             Clinic clinic = clinicDAO.findById(id);
             req.setAttribute("clinic", clinic);
             req.getRequestDispatcher("/WEB-INF/views/admin/clinics/form.jsp").forward(req, resp);
-        } else {
-            req.setAttribute("clinics", clinicDAO.findAll());
+                } else {
+            String keyword = req.getParameter("keyword");
+            String status = req.getParameter("status");
+            
+            java.util.List<Clinic> allClinics = clinicDAO.findAll();
+            
+            if (keyword != null && !keyword.trim().isEmpty() || status != null && !"ALL".equals(status)) {
+                allClinics = allClinics.stream().filter(c -> {
+                    boolean matchKeyword = true;
+                    if (keyword != null && !keyword.trim().isEmpty()) {
+                        String k = keyword.toLowerCase();
+                        matchKeyword = (c.getClinicName() != null && c.getClinicName().toLowerCase().contains(k)) ||
+                                       (c.getAddress() != null && c.getAddress().toLowerCase().contains(k));
+                    }
+                    boolean matchStatus = true;
+                    if (status != null && !"ALL".equals(status)) {
+                        if ("ACTIVE".equals(status)) matchStatus = c.isActive();
+                        if ("INACTIVE".equals(status)) matchStatus = !c.isActive();
+                    }
+                    return matchKeyword && matchStatus;
+                }).collect(java.util.stream.Collectors.toList());
+            }
+            
+            req.setAttribute("clinics", allClinics);
             req.getRequestDispatcher("/WEB-INF/views/admin/clinics/list.jsp").forward(req, resp);
         }
     }
@@ -66,3 +88,4 @@ public class ClinicsController extends HttpServlet {
         resp.sendRedirect(req.getContextPath() + "/admin/clinics");
     }
 }
+

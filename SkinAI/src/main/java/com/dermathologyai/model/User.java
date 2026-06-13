@@ -16,7 +16,12 @@ public class User {
     private String fullName;
     private String role; // PATIENT, ADMIN
     private String status; // ACTIVE, INACTIVE, LOCKED
-    private String lockReason; // null = temporary lock; non-null = permanent ban reason
+    private int failedLoginAttempts;
+    private LocalDateTime lastFailedLoginAt;
+    private String lockType; // ADMIN, BRUTE_FORCE
+    private String lockReason;
+    private LocalDateTime lockedAt;
+    private LocalDateTime passwordChangedAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime lastLoginAt;
@@ -86,8 +91,23 @@ public class User {
     public LocalDateTime getLastLoginAt() { return lastLoginAt; }
     public void setLastLoginAt(LocalDateTime lastLoginAt) { this.lastLoginAt = lastLoginAt; }
 
+    public int getFailedLoginAttempts() { return failedLoginAttempts; }
+    public void setFailedLoginAttempts(int failedLoginAttempts) { this.failedLoginAttempts = failedLoginAttempts; }
+
+    public LocalDateTime getLastFailedLoginAt() { return lastFailedLoginAt; }
+    public void setLastFailedLoginAt(LocalDateTime lastFailedLoginAt) { this.lastFailedLoginAt = lastFailedLoginAt; }
+
+    public String getLockType() { return lockType; }
+    public void setLockType(String lockType) { this.lockType = lockType; }
+
     public String getLockReason() { return lockReason; }
     public void setLockReason(String lockReason) { this.lockReason = lockReason; }
+
+    public LocalDateTime getLockedAt() { return lockedAt; }
+    public void setLockedAt(LocalDateTime lockedAt) { this.lockedAt = lockedAt; }
+
+    public LocalDateTime getPasswordChangedAt() { return passwordChangedAt; }
+    public void setPasswordChangedAt(LocalDateTime passwordChangedAt) { this.passwordChangedAt = passwordChangedAt; }
 
     @Override
     public String toString() {

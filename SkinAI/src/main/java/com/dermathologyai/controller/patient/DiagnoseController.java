@@ -100,7 +100,7 @@ public class DiagnoseController extends HttpServlet {
             
             String reportId = reportDAO.create(report);
             
-            auditLogDAO.createLog(user.getId(), "REPORT_CREATE", "diagnosis_reports", reportId, null, "Độ tin cậy: " + result.getConfidence(), RequestUtil.getClientIp(req), req.getHeader("User-Agent"));
+            auditLogDAO.createLog(user.getId(), "REPORT_CREATE", "diagnosis_reports", reportId, null, null, "Độ tin cậy: " + result.getConfidence(), RequestUtil.getClientIp(req), req.getHeader("User-Agent"));
             
             // Redirect to report view
             resp.sendRedirect(req.getContextPath() + "/patient/reports/view?id=" + reportId);

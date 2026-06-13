@@ -62,7 +62,22 @@ public class VerifyController extends HttpServlet {
                         req.setAttribute("successMessage", "Mã xác thực đã được gửi lại thành công.");
                     }
 
-                    req.getRequestDispatcher("/WEB-INF/views/auth/verify.jsp").forward(req, resp);
+                    req.setAttribute("pageTitle", "Xác thực tài khoản");
+                    req.setAttribute("pageDescription", "Chúng tôi đã gửi mã OTP 6 số đến");
+                    req.setAttribute("maskedTarget", pending.isPhone() ? req.getAttribute("userPhone") : req.getAttribute("userEmail"));
+                    req.setAttribute("formAction", req.getContextPath() + "/auth/verify");
+                    
+                    java.util.Map<String, String> hiddenInputs = new java.util.HashMap<>();
+                    hiddenInputs.put("action", "verify_otp");
+                    req.setAttribute("hiddenInputs", hiddenInputs);
+                    
+                    java.util.Map<String, String> resendHiddenInputs = new java.util.HashMap<>();
+                    resendHiddenInputs.put("action", "resend");
+                    req.setAttribute("resendHiddenInputs", resendHiddenInputs);
+                    
+                    req.setAttribute("backLink", req.getContextPath() + "/auth/login");
+
+                    req.getRequestDispatcher("/WEB-INF/views/global/global-verify-otp.jsp").forward(req, resp);
                     return;
                 }
             }
@@ -105,7 +120,7 @@ public class VerifyController extends HttpServlet {
                     session.setAttribute("user", savedUser);
                     session.removeAttribute("pending_verify_token");
                     
-                    auditLogDAO.createLog(savedUser.getId(), "REGISTER", "users", savedUser.getId(), null, "Đăng ký tài khoản thành công", RequestUtil.getClientIp(req), req.getHeader("User-Agent"));
+                    auditLogDAO.createLog(savedUser.getId(), "REGISTER", "users", savedUser.getId(), null, null, "Đăng ký tài khoản thành công", RequestUtil.getClientIp(req), req.getHeader("User-Agent"));
 
                     resp.sendRedirect(req.getContextPath() + "/home");
                     return;

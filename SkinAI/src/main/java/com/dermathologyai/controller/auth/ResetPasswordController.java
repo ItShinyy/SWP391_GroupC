@@ -1,96 +1,121 @@
 package com.dermathologyai.controller.auth;
 
-import com.dermathologyai.dao.PasswordResetTokenDAO;
+import com.dermathologyai.dao.UserTokenDAO;
 import com.dermathologyai.dao.UserDAO;
 import com.dermathologyai.dao.AuditLogDAO;
-import com.dermathologyai.model.AuditLog;
-import com.dermathologyai.model.PasswordResetToken;
+import com.dermathologyai.model.UserToken;
 import com.dermathologyai.model.User;
+import com.dermathologyai.util.CsrfUtil;
 import com.dermathologyai.util.RequestUtil;
 import org.mindrot.jbcrypt.BCrypt;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
 
 public class ResetPasswordController extends HttpServlet {
     private UserDAO userDAO;
-    private PasswordResetTokenDAO tokenDAO;
+    private UserTokenDAO tokenDAO;
     private AuditLogDAO auditLogDAO;
 
     @Override
     public void init() throws ServletException {
         userDAO = new UserDAO();
-        tokenDAO = new PasswordResetTokenDAO();
+        tokenDAO = new UserTokenDAO();
         auditLogDAO = new AuditLogDAO();
     }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String identifier = req.getParameter("identifier");
+        HttpSession session = req.getSession(true);
+        req.setAttribute("csrfToken", CsrfUtil.getToken(session));
+        
+        String identifier = (String) session.getAttribute("resetIdentifier");
+        if (identifier == null) {
+            resp.sendRedirect(req.getContextPath() + "/auth/forgot-password");
+            return;
+        }
+
+        if (session.getAttribute("resetError") != null) {
+            req.setAttribute("errorMessage", session.getAttribute("resetError"));
+            session.removeAttribute("resetError");
+        }
+        
+        if (session.getAttribute("resetSuccess") != null) {
+            req.setAttribute("successMessage", "Nếu thông tin hợp lệ, bạn sẽ nhận được mã OTP.");
+            session.removeAttribute("resetSuccess");
+        }
+
         req.setAttribute("identifier", identifier);
         req.getRequestDispatcher("/WEB-INF/views/auth/reset-password.jsp").forward(req, resp);
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String identifier = req.getParameter("identifier");
+        HttpSession session = req.getSession(true);
+        String identifier = (String) session.getAttribute("resetIdentifier");
+        
+        if (identifier == null) {
+            resp.sendRedirect(req.getContextPath() + "/auth/forgot-password");
+            return;
+        }
+
         String tokenStr = req.getParameter("token");
         String newPassword = req.getParameter("newPassword");
         String confirmPassword = req.getParameter("confirmPassword");
 
-        if (tokenStr == null || newPassword == null || !newPassword.equals(confirmPassword) || newPassword.length() < 6 || identifier == null) {
-            req.setAttribute("errorMessage", "Mã OTP hoặc mật khẩu không hợp lệ (Mật khẩu phải từ 6 ký tự và khớp nhau).");
-            req.setAttribute("identifier", identifier);
-            req.getRequestDispatcher("/WEB-INF/views/auth/reset-password.jsp").forward(req, resp);
+        if (tokenStr == null || newPassword == null || !newPassword.equals(confirmPassword) || newPassword.length() < 6) {
+            session.setAttribute("resetError", "Mã OTP hoặc mật khẩu không hợp lệ (Mật khẩu phải từ 6 ký tự và khớp nhau).");
+            resp.sendRedirect(req.getContextPath() + "/auth/reset-password");
             return;
         }
 
         User user = userDAO.findByUsernameOrEmail(identifier);
         if (user == null) {
-            req.setAttribute("errorMessage", "Mã OTP không chính xác hoặc đã hết hạn.");
-            req.getRequestDispatcher("/WEB-INF/views/auth/reset-password.jsp").forward(req, resp);
+            session.setAttribute("resetError", "Mã OTP không chính xác hoặc đã hết hạn.");
+            resp.sendRedirect(req.getContextPath() + "/auth/reset-password");
             return;
         }
 
-        PasswordResetToken token = tokenDAO.findByUserIdAndPurpose(user.getId(), "RESET_PASSWORD");
+        UserToken token = tokenDAO.findByUserIdAndPurpose(user.getId(), "RESET_PASSWORD");
         
         if (token != null) {
-            if (token.getAttempts() >= 3) {
-                req.setAttribute("errorMessage", "Bạn đã nhập sai quá nhiều lần. Vui lòng yêu cầu mã OTP mới.");
-                tokenDAO.deleteByUserIdAndPurpose(user.getId(), "RESET_PASSWORD");
-                req.getRequestDispatcher("/WEB-INF/views/auth/forgot-password.jsp").forward(req, resp);
+            if (token.getAttempts() >= 5) {
+                session.setAttribute("forgotError", "Bạn đã nhập sai quá nhiều lần. Vui lòng yêu cầu mã OTP mới.");
+                tokenDAO.invalidateAllByUserAndPurpose(user.getId(), "RESET_PASSWORD");
+                session.removeAttribute("resetIdentifier");
+                resp.sendRedirect(req.getContextPath() + "/auth/forgot-password");
                 return;
             }
 
-            if (token.getExpiresAt().isBefore(LocalDateTime.now())) {
-                req.setAttribute("errorMessage", "Mã OTP đã hết hạn. Vui lòng yêu cầu lại.");
-                tokenDAO.deleteByUserIdAndPurpose(user.getId(), "RESET_PASSWORD");
+            if (token.getExpiresAt().isBefore(LocalDateTime.now()) || token.getUsedAt() != null) {
+                session.setAttribute("resetError", "Mã OTP đã hết hạn hoặc đã được sử dụng. Vui lòng yêu cầu lại.");
+                tokenDAO.invalidateAllByUserAndPurpose(user.getId(), "RESET_PASSWORD");
             } else {
                 // Verify hash
                 if (BCrypt.checkpw(tokenStr, token.getToken())) {
-                    user.setPasswordHash(BCrypt.hashpw(newPassword, BCrypt.gensalt()));
-                    userDAO.update(user);
-                    tokenDAO.deleteByUserIdAndPurpose(user.getId(), "RESET_PASSWORD");
+                    userDAO.updatePassword(user.getId(), BCrypt.hashpw(newPassword, BCrypt.gensalt()));
+                    tokenDAO.markUsed(token.getId());
                     
-                    auditLogDAO.createLog(user.getId(), "PASSWORD_RESET", "users", user.getId(), null, "Thay đổi mật khẩu thành công qua OTP", RequestUtil.getClientIp(req), req.getHeader("User-Agent"));
+                    auditLogDAO.createLog(user.getId(), "PASSWORD_RESET", "users", user.getId(), null, "{\"method\":\"otp\"}", null, RequestUtil.getClientIp(req), req.getHeader("User-Agent"));
 
-                    req.setAttribute("successMessage", "Đổi mật khẩu thành công! Vui lòng đăng nhập.");
-                    req.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(req, resp);
+                    session.removeAttribute("resetIdentifier");
+                    session.setAttribute("loginSuccess", "Đổi mật khẩu thành công! Vui lòng đăng nhập.");
+                    resp.sendRedirect(req.getContextPath() + "/auth/login");
                     return;
                 } else {
-                    tokenDAO.updateAttempts(token.getId(), token.getAttempts() + 1);
-                    req.setAttribute("errorMessage", "Mã OTP không chính xác.");
+                    tokenDAO.incrementAttempts(token.getId());
+                    session.setAttribute("resetError", "Mã OTP không chính xác.");
                 }
             }
         } else {
-            req.setAttribute("errorMessage", "Mã OTP không chính xác hoặc không tồn tại.");
+            session.setAttribute("resetError", "Mã OTP không chính xác hoặc không tồn tại.");
         }
 
-        req.setAttribute("identifier", identifier);
-        req.getRequestDispatcher("/WEB-INF/views/auth/reset-password.jsp").forward(req, resp);
+        resp.sendRedirect(req.getContextPath() + "/auth/reset-password");
     }
 }

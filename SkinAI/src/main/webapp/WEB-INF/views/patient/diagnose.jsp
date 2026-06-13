@@ -1,11 +1,11 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <jsp:include page="/WEB-INF/views/layout/guest-header.jsp" />
 
 <!-- Loading Overlay -->
 <div id="loadingOverlay" class="d-none" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column;">
     <div class="spinner-border text-primary" style="width: 4rem; height: 4rem; margin-bottom: 20px;" role="status">
-        <span class="visually-hidden">Loading...</span>
+        <span class="visually-hidden">Đang tải...</span>
     </div>
     <h3 class="fw-bold" style="color: var(--skin-primary); font-family: 'Fragment Mono', sans-serif;">AI đang phân tích...</h3>
     <p class="text-muted">Vui lòng không đóng trình duyệt (Quá trình này mất khoảng 3-5 giây)</p>
@@ -34,7 +34,7 @@
                         <i class="fa-solid fa-crosshairs text-primary fs-5"></i>
                     </div>
                     <div class="ms-3 flex-grow-1">
-                        <h5 class="fw-bold mb-1">Chụp rõ nét (Focus)</h5>
+                        <h5 class="fw-bold mb-1">Chụp rõ nét</h5>
                         <p class="text-muted small">Đảm bảo camera lấy nét chuẩn vào vùng da tổn thương, không mờ nhòe.</p>
                     </div>
                 </div>
@@ -74,6 +74,7 @@
                         </c:if>
 
                         <form action="${pageContext.request.contextPath}/patient/diagnose" method="POST" enctype="multipart/form-data" onsubmit="document.getElementById('loadingOverlay').classList.remove('d-none'); document.getElementById('loadingOverlay').style.display='flex';">
+    <input type="hidden" name="csrf_token" value="${sessionScope.csrfToken}">
                             
                             <!-- Dropzone -->
                             <div class="upload-dropzone p-5 text-center bg-white shadow-sm mb-4">
@@ -127,3 +128,5 @@
 </script>
 
 <jsp:include page="/WEB-INF/views/layout/guest-footer.jsp" />
+
+

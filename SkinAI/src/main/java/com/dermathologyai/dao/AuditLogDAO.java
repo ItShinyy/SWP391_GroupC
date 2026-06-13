@@ -18,7 +18,7 @@ public class AuditLogDAO extends DBContext {
     private static final String SELECT_COLS =
         "SELECT a.id, a.user_id, a.action, a.entity_type, a.record_id," +
         " a.old_values, a.new_values, a.ip_address, a.user_agent, a.status, a.error_message, a.created_at," +
-        " u.full_name AS user_name, u.email AS user_email" +
+        " u.full_name AS user_name, u.email AS user_email, u.phone AS user_phone, u.role AS user_role" +
         " FROM audit_logs a LEFT JOIN users u ON a.user_id = u.id";
 
     public AuditLog findById(String id) {
@@ -74,12 +74,13 @@ public class AuditLogDAO extends DBContext {
         );
     }
 
-    public String createLog(String userId, String action, String entityType, String recordId, String newValues, String errorMessage, String ipAddress, String userAgent) {
+    public String createLog(String userId, String action, String entityType, String recordId, String oldValues, String newValues, String errorMessage, String ipAddress, String userAgent) {
         AuditLog log = new AuditLog();
         log.setUserId(userId);
         log.setAction(action);
         log.setEntityType(entityType);
         log.setRecordId(recordId);
+        log.setOldValues(oldValues);
         log.setNewValues(newValues);
         log.setErrorMessage(errorMessage);
         log.setIpAddress(ipAddress);
@@ -124,17 +125,10 @@ public class AuditLogDAO extends DBContext {
         a.setStatus(rs.getString("status"));
         a.setErrorMessage(rs.getString("error_message"));
         Timestamp ca = rs.getTimestamp("created_at"); if (ca != null) a.setCreatedAt(ca.toLocalDateTime());
-        
-        String fullName = rs.getString("user_name");
-        String email = rs.getString("user_email");
-        if (fullName != null && email != null) {
-            a.setUserName(fullName + " (" + email + ")");
-        } else if (fullName != null) {
-            a.setUserName(fullName);
-        } else {
-            a.setUserName("System");
-        }
-        
+        a.setUserName(rs.getString("user_name"));
+        a.setUserEmail(rs.getString("user_email"));
+        a.setUserPhone(rs.getString("user_phone"));
+        a.setUserRole(rs.getString("user_role"));
         return a;
     }
 }

@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <jsp:include page="/WEB-INF/views/layout/admin-header.jsp" />
 
@@ -36,7 +36,7 @@
     <!-- Header Actions -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="page-title">Dashboard</h1>
+            <h1 class="page-title">Bảng Điều Khiển</h1>
         </div>
         <div class="small text-muted fw-semibold">
             <i class="fa-regular fa-clock me-1"></i> Dữ liệu cập nhật lúc: <span id="last-updated">--:--:--</span>
@@ -287,7 +287,7 @@
                 
                 // Risk Badge styling
                 let riskBadgeClass = 'bg-secondary';
-                let riskText = 'PENDING';
+                let riskText = 'Đang chờ';
                 if (scan.riskLevel === 'LOW') { riskBadgeClass = 'bg-success'; riskText = 'An toàn'; }
                 else if (scan.riskLevel === 'MEDIUM') { riskBadgeClass = 'bg-warning'; riskText = 'Trung bình'; }
                 else if (scan.riskLevel === 'HIGH') { riskBadgeClass = 'bg-danger'; riskText = 'Nguy cơ cao'; }
@@ -295,7 +295,7 @@
                 tr.innerHTML = `
                     <td>\${scan.createdAt}</td>
                     <td class="fw-semibold text-dark">\${scan.patientName}</td>
-                    <td>\${scan.diseaseName || '<span class="text-muted">Unknown</span>'}</td>
+                    <td>\${scan.diseaseName || '<span class="text-muted">Không xác định</span>'}</td>
                     <td><span class="badge \${riskBadgeClass}">\${riskText}</span></td>
                     <td><span class="badge bg-primary-light px-2 py-1 rounded-pill">\${scan.confidenceScore}%</span></td>
                 `;
@@ -354,3 +354,4 @@
 </script>
 
 <jsp:include page="/WEB-INF/views/layout/admin-footer.jsp" />
+

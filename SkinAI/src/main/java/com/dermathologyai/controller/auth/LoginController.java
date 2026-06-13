@@ -1,14 +1,12 @@
 package com.dermathologyai.controller.auth;
 
-import com.dermathologyai.dao.AccountAppealDAO;
 import com.dermathologyai.dao.AuditLogDAO;
-import com.dermathologyai.dao.PasswordResetTokenDAO;
+import com.dermathologyai.dao.UserTokenDAO;
 import com.dermathologyai.dao.UserDAO;
-import com.dermathologyai.model.AccountAppeal;
-import com.dermathologyai.model.AuditLog;
-import com.dermathologyai.model.PasswordResetToken;
+import com.dermathologyai.model.UserToken;
 import com.dermathologyai.model.User;
 import com.dermathologyai.service.AuthService;
+import com.dermathologyai.util.CsrfUtil;
 import com.dermathologyai.util.MaskUtil;
 import com.dermathologyai.util.RequestUtil;
 import jakarta.servlet.ServletException;
@@ -18,13 +16,10 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.util.UUID;
 
 public class LoginController extends HttpServlet {
     private AuthService authService;
-    private PasswordResetTokenDAO tokenDAO;
-    private AccountAppealDAO appealDAO;
+    private UserTokenDAO tokenDAO;
     private AuditLogDAO auditLogDAO;
     private UserDAO userDAO;
 
@@ -32,8 +27,7 @@ public class LoginController extends HttpServlet {
     public void init() throws ServletException {
         authService = new AuthService();
         userDAO = new UserDAO();
-        tokenDAO    = new PasswordResetTokenDAO();
-        appealDAO   = new AccountAppealDAO();
+        tokenDAO    = new UserTokenDAO();
         auditLogDAO = new AuditLogDAO();
     }
 
@@ -45,26 +39,30 @@ public class LoginController extends HttpServlet {
             resp.sendRedirect(req.getContextPath() + ("ADMIN".equals(role) ? "/admin/dashboard" : "/home"));
             return;
         }
+
+        // Generate CSRF token for the login form
+        req.setAttribute("csrfToken", CsrfUtil.getToken(req.getSession(true)));
+
+        // Handle flash messages
         if (session != null && session.getAttribute("loginError") != null) {
             req.setAttribute("errorMessage", session.getAttribute("loginError"));
             session.removeAttribute("loginError");
         }
+        if (session != null && session.getAttribute("loginSuccess") != null) {
+            req.setAttribute("successMessage", session.getAttribute("loginSuccess"));
+            session.removeAttribute("loginSuccess");
+        }
 
-        String error = req.getParameter("error");
-        if ("account_locked".equals(error)) {
-            String lockedUsername = (session != null) ? (String) session.getAttribute("lockedUsername") : null;
-            if (lockedUsername != null) {
-                User lockedUser = userDAO.findByUsernameOrEmail(lockedUsername);
-                if (lockedUser != null) {
-                    session.removeAttribute("lockedUsername");
-                    handleLockedAccount(req, resp, lockedUser);
-                    req.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(req, resp);
-                    return;
-                }
-            }
-            req.setAttribute("errorMessage", "Tài khoản của bạn đã bị khóa.");
-        } else if (error != null) {
-            req.setAttribute("errorMessage", "Đăng nhập thất bại. Vui lòng thử lại.");
+        if (session != null && session.getAttribute("login_keyword") != null) {
+            req.setAttribute("login_keyword", session.getAttribute("login_keyword"));
+            session.removeAttribute("login_keyword");
+        }
+
+        // Handle locked account display from flash
+        if (session != null && session.getAttribute("lockedUser") != null) {
+            User lockedUser = (User) session.getAttribute("lockedUser");
+            session.removeAttribute("lockedUser");
+            handleLockedAccountDisplay(req, lockedUser);
         }
 
         req.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(req, resp);
@@ -74,43 +72,37 @@ public class LoginController extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String keyword  = req.getParameter("usernameOrEmail");
         String password = req.getParameter("password");
+        HttpSession session = req.getSession(true);
 
         if (keyword == null || password == null || keyword.trim().isEmpty() || password.trim().isEmpty()) {
-            req.setAttribute("errorMessage", "Vui lòng nhập đầy đủ thông tin đăng nhập.");
-            req.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(req, resp);
+            if (keyword != null) {
+                session.setAttribute("login_keyword", keyword);
+            }
+            session.setAttribute("loginError", "Vui lòng nhập đầy đủ thông tin đăng nhập.");
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
             return;
         }
 
-        User user = authService.loginLocal(keyword, password);
+        session.setAttribute("login_keyword", keyword);
 
-        if (user != null) {
-            // Auto-lock non-ADMIN accounts inactive for > 3 months
-            if (!"ADMIN".equals(user.getRole())) {
-                LocalDateTime lastActivity = user.getLastLoginAt() != null ? user.getLastLoginAt() : user.getCreatedAt();
-                if (lastActivity != null && lastActivity.isBefore(LocalDateTime.now().minusMonths(3))) {
-                    authService.lockAccount(user.getId());
-                    user.setStatus("LOCKED");
-                    user.setLockReason(null); // null = temporary auto-lock
-                }
-            }
+        AuthService.LoginResult result = authService.loginLocal(keyword, password);
+        User user = result.user;
 
+        if (result.status == AuthService.LoginResultStatus.SUCCESS) {
+            // Check manual INACTIVE state (e.g. from registration before verify)
             if (!authService.isAccountActive(user)) {
-                if ("LOCKED".equals(user.getStatus())) {
-                    auditLogDAO.createLog(user.getId(), "LOGIN_LOCKED", "users", user.getId(), null, "Tài khoản bị khóa", RequestUtil.getClientIp(req), req.getHeader("User-Agent"));
-                    handleLockedAccount(req, resp, user);
-                } else {
-                    req.setAttribute("errorMessage", "Tài khoản của bạn chưa được kích hoạt.");
-                    req.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(req, resp);
-                }
+                session.setAttribute("loginError", "Tài khoản của bạn chưa được kích hoạt.");
+                resp.sendRedirect(req.getContextPath() + "/auth/login");
                 return;
             }
 
-            // Successful login
-            auditLogDAO.createLog(user.getId(), "LOGIN_SUCCESS", "users", user.getId(), null, "Đăng nhập bằng form", RequestUtil.getClientIp(req), req.getHeader("User-Agent"));
-            authService.updateLastLogin(user.getId());
+            auditLogDAO.createLog(user.getId(), "LOGIN_SUCCESS", "users", user.getId(), null, "{\"method\":\"local\"}", null, RequestUtil.getClientIp(req), req.getHeader("User-Agent"));
+            
+            // Session fixation protection
             req.changeSessionId();
-            HttpSession session = req.getSession(true);
+            session = req.getSession(true);
             session.setAttribute("user", user);
+            session.removeAttribute("login_keyword");
 
             if ("ADMIN".equals(user.getRole())) {
                 session.removeAttribute("redirectAfterLogin");
@@ -126,59 +118,52 @@ public class LoginController extends HttpServlet {
             }
             resp.sendRedirect(req.getContextPath() + "/home");
 
+        } else if (result.status == AuthService.LoginResultStatus.ACCOUNT_LOCKED) {
+            String reason = "Tài khoản bị khóa";
+            if ("BRUTE_FORCE".equals(user.getLockType())) {
+                reason = "Khóa tự động do nhập sai mật khẩu 5 lần";
+            } else if (user.getLockReason() != null) {
+                reason = "Khóa bởi Admin: " + user.getLockReason();
+            }
+            
+            auditLogDAO.createLog(user.getId(), "LOGIN_LOCKED", "users", user.getId(), null, "{\"reason\":\"" + reason + "\"}", null, RequestUtil.getClientIp(req), req.getHeader("User-Agent"));
+            session.setAttribute("lockedUser", user);
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
+
         } else {
-            auditLogDAO.createLog(null, "LOGIN_FAILED", "users", null, null, "Sai thông tin đăng nhập: " + keyword, RequestUtil.getClientIp(req), req.getHeader("User-Agent"));
-            req.setAttribute("errorMessage", "Tên đăng nhập hoặc mật khẩu không chính xác.");
-            req.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(req, resp);
+            // INVALID_CREDENTIALS
+            auditLogDAO.createLog(user != null ? user.getId() : null, "LOGIN_FAILED", "users", null, null, "{\"keyword\":\"" + keyword + "\"}", null, RequestUtil.getClientIp(req), req.getHeader("User-Agent"));
+            session.setAttribute("loginError", "Tên đăng nhập hoặc mật khẩu không chính xác.");
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
         }
     }
 
     /**
-     * Handles a LOCKED account:
-     *   - lockReason == null → temporary lock (show OTP unlock button)
-     *   - lockReason != null → permanent ban (show appeal form or "đang chờ duyệt")
+     * Prepares request attributes for displaying locked account state (OTP unlock)
      */
-    private void handleLockedAccount(HttpServletRequest req, HttpServletResponse resp, User user)
-            throws ServletException, IOException {
-
-        boolean isTemporaryLocked = (user.getLockReason() == null);
+    private void handleLockedAccountDisplay(HttpServletRequest req, User user) {
+        // If BRUTE_FORCE or lockReason is null, it's considered temporary
+        boolean isTemporaryLocked = "BRUTE_FORCE".equals(user.getLockType()) || user.getLockType() == null;
 
         req.setAttribute("isLocked", true);
         req.setAttribute("isTemporaryLocked", isTemporaryLocked);
         req.setAttribute("lockReason", user.getLockReason());
-        req.setAttribute("maskedEmail", MaskUtil.maskEmail(user.getEmail()));
-        req.setAttribute("maskedPhone", MaskUtil.maskPhone(user.getPhone()));
+        if (user.getEmail() != null) {
+            req.setAttribute("maskedEmail", MaskUtil.maskEmail(user.getEmail()));
+        }
+        if (user.getPhone() != null) {
+            req.setAttribute("maskedPhone", MaskUtil.maskPhone(user.getPhone()));
+        }
         
         // Store email securely in session for OTP send without exposing to UI
         if (isTemporaryLocked) {
             req.getSession().setAttribute("pendingOtpEmail", user.getEmail());
         }
 
-        if (!isTemporaryLocked) {
-            // Permanent ban: check if already has pending appeal
-            AccountAppeal pendingAppeal = appealDAO.findPendingByUserId(user.getId());
-            if (pendingAppeal != null) {
-                req.setAttribute("hasPendingAppeal", true);
-            } else {
-                // Generate a one-time UNLOCK_APPEAL token (15 min TTL)
-                tokenDAO.deleteByUserIdAndPurpose(user.getId(), "UNLOCK_APPEAL");
-                String rawToken = UUID.randomUUID().toString();
-                PasswordResetToken token = new PasswordResetToken();
-                token.setUserId(user.getId());
-                token.setToken(rawToken); // plain UUID, not hashed (used as opaque reference)
-                token.setPurpose("UNLOCK_APPEAL");
-                token.setExpiresAt(LocalDateTime.now().plusMinutes(15));
-                tokenDAO.create(token);
-                req.setAttribute("appealToken", rawToken);
-            }
-        }
-
         req.setAttribute("errorMessage",
             isTemporaryLocked
-                ? "Tài khoản của bạn đang bị tạm khóa. Vui lòng xác minh để mở khóa."
+                ? "Tài khoản của bạn đã bị khóa tạm thời. Vui lòng xác minh để mở khóa."
                 : "Tài khoản của bạn đã bị khóa vĩnh viễn."
         );
-
-        req.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(req, resp);
     }
 }

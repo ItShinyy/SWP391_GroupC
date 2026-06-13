@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <jsp:include page="/WEB-INF/views/layout/admin-header.jsp" />
 
@@ -18,6 +18,7 @@
     <div class="card border-0 shadow-sm rounded-4">
         <div class="card-body p-4">
             <form action="${pageContext.request.contextPath}/admin/clinics" method="post">
+    <input type="hidden" name="csrf_token" value="${sessionScope.csrfToken}">
                 <input type="hidden" name="action" value="${empty clinic ? 'create' : 'edit'}">
                 <c:if test="${not empty clinic}">
                     <input type="hidden" name="id" value="${clinic.id}">
@@ -43,20 +44,20 @@
 
                     <!-- Map Coordinates -->
                     <div class="col-12 mt-4">
-                        <h5 class="fw-bold border-bottom pb-2">Tọa độ Bản Đồ (Google Maps)</h5>
+                        <h5 class="fw-bold border-bottom pb-2">Tọa Độ Bản Đồ</h5>
                         <p class="text-muted small mb-3">Thông tin tọa độ được sử dụng để hiển thị phòng khám trên bản đồ cho bệnh nhân.</p>
                     </div>
                     
                     <div class="col-md-4">
-                        <label class="form-label fw-bold text-muted">Google Place ID</label>
+                        <label class="form-label fw-bold text-muted">Mã Google Place</label>
                         <input type="text" name="googlePlaceId" class="form-control" value="${clinic.googlePlaceId}">
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label fw-bold text-muted">Vĩ độ (Latitude)</label>
+                        <label class="form-label fw-bold text-muted">Vĩ độ</label>
                         <input type="text" name="latitude" class="form-control" value="${clinic.latitude}">
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label fw-bold text-muted">Kinh độ (Longitude)</label>
+                        <label class="form-label fw-bold text-muted">Kinh độ</label>
                         <input type="text" name="longitude" class="form-control" value="${clinic.longitude}">
                     </div>
                 </div>
@@ -70,3 +71,5 @@
 </div>
 
 <jsp:include page="/WEB-INF/views/layout/admin-footer.jsp" />
+
+

@@ -23,16 +23,20 @@
                         <option value="ADMIN" ${param.role == 'ADMIN' ? 'selected' : ''}>ADMIN</option>
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <select name="status" class="form-select">
                         <option value="">Tất cả trạng thái</option>
                         <option value="ACTIVE" ${param.status == 'ACTIVE' ? 'selected' : ''}>ACTIVE</option>
                         <option value="LOCKED" ${param.status == 'LOCKED' ? 'selected' : ''}>LOCKED</option>
                     </select>
                 </div>
-                <div class="col-md-2 d-flex gap-2">
-                    <button type="submit" class="btn btn-primary flex-grow-1"><i class="fa-solid fa-magnifying-glass"></i> Tìm kiếm</button>
-                    <a href="${pageContext.request.contextPath}/admin/users" class="btn btn-outline-secondary">Xóa Bộ Lọc</a>
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fa-solid fa-magnifying-glass me-1"></i> Tìm kiếm
+                    </button>
+                    <a href="${pageContext.request.contextPath}/admin/users" class="btn btn-outline-secondary w-100">
+                        <i class="fa-solid fa-eraser me-1"></i> Xóa bộ lọc
+                    </a>
                 </div>
             </form>
         </div>
@@ -72,10 +76,10 @@
                                     <c:if test="${u.role != 'ADMIN' || u.id != sessionScope.user.id}">
                                         <c:choose>
                                             <c:when test="${u.status == 'ACTIVE'}">
-                                                <a href="${pageContext.request.contextPath}/admin/users/status?action=lock&id=${u.id}" class="btn btn-sm btn-outline-danger" title="Lock User">Khóa</a>
+                                                <a href="${pageContext.request.contextPath}/admin/users/status?action=lock&id=${u.id}" class="btn btn-sm btn-outline-danger" title="Khóa tài khoản">Khóa</a>
                                             </c:when>
                                             <c:otherwise>
-                                                <a href="${pageContext.request.contextPath}/admin/users/status?action=unlock&id=${u.id}" class="btn btn-sm btn-outline-success" title="Unlock User">Mở khóa</a>
+                                                <a href="${pageContext.request.contextPath}/admin/users/status?action=unlock&id=${u.id}" class="btn btn-sm btn-outline-success" title="Mở khóa tài khoản">Mở khóa</a>
                                             </c:otherwise>
                                         </c:choose>
                                     </c:if>
@@ -115,3 +119,4 @@
 </div>
 
 <jsp:include page="/WEB-INF/views/layout/admin-footer.jsp" />
+

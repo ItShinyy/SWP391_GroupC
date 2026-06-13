@@ -32,7 +32,7 @@ public class LogoutController extends HttpServlet {
         if (session != null) {
             User user = (User) session.getAttribute("user");
             if (user != null) {
-                auditLogDAO.createLog(user.getId(), "LOGOUT", "users", user.getId(), null, null, RequestUtil.getClientIp(req), req.getHeader("User-Agent"));
+                auditLogDAO.createLog(user.getId(), "LOGOUT", "users", user.getId(), null, null, null, RequestUtil.getClientIp(req), req.getHeader("User-Agent"));
             }
             session.invalidate();
         }

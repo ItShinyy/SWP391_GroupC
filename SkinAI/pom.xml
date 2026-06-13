@@ -10,7 +10,7 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>war</packaging>
 
-    <name>SkinAI - AI Dermatology Diagnosis System</name>
+    <name>DermaAI - AI Dermatology Diagnosis System</name>
     <description>AI-powered skin disease diagnosis system with Jakarta EE 10</description>
 
     <properties>

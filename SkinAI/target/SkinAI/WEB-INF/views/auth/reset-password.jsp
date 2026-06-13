@@ -1,11 +1,11 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đặt lại mật khẩu - SkinAI</title>
+    <title>Đặt lại mật khẩu - DermAI</title>
     <link href="https://fonts.googleapis.com/css2?family=Fragment+Mono&family=Rethink+Sans:wght@400..800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
@@ -33,13 +33,14 @@
                     </c:if>
 
                     <form action="${pageContext.request.contextPath}/auth/reset-password" method="post">
+    <input type="hidden" name="csrf_token" value="${sessionScope.csrfToken}">
                         <!-- Hidden identifier -->
                         <input type="hidden" name="identifier" value="${identifier}">
 
                         <div class="mb-3">
                             <label class="form-label text-muted fw-semibold small">Mã xác thực OTP (6 số)</label>
                             <!-- Reusable OTP Component -->
-                            <jsp:include page="/WEB-INF/views/layout/otp-input.jsp">
+                            <jsp:include page="/WEB-INF/views/global/otp-input.jsp">
                                 <jsp:param name="inputName" value="token"/>
                                 <jsp:param name="ttlSeconds" value="300"/>
                             </jsp:include>
@@ -67,6 +68,7 @@
                     <div class="text-center mt-3">
                         <span class="text-muted small">Chưa nhận được mã?</span>
                         <form action="${pageContext.request.contextPath}/auth/forgot-password" method="POST" class="d-inline">
+    <input type="hidden" name="csrf_token" value="${sessionScope.csrfToken}">
                             <input type="hidden" name="identifier" value="${identifier}">
                             <button type="submit" class="btn btn-link btn-sm text-decoration-none fw-bold p-0" formnovalidate>Gửi lại mã</button>
                         </form>
@@ -77,3 +79,6 @@
     </div>
 </body>
 </html>
+
+
+

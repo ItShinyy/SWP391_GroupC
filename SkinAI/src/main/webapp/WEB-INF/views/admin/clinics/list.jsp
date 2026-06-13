@@ -12,6 +12,32 @@
             </a>
         </div>
 
+        <!-- Search and Filter Bar -->
+        <div class="card shadow-sm mb-4 border-0 rounded-4 bg-light">
+            <div class="card-body">
+                <form action="${pageContext.request.contextPath}/admin/clinics" method="get" class="mb-0 row g-3">
+                    <div class="col-md-5">
+                        <input type="text" class="form-control" name="keyword" value="${param.keyword}" placeholder="Tìm theo tên phòng khám, địa chỉ...">
+                    </div>
+                    <div class="col-md-4">
+                        <select class="form-select" name="status">
+                            <option value="">-- Tất cả trạng thái --</option>
+                            <option value="ACTIVE" ${param.status == 'ACTIVE' ? 'selected' : ''}>Đang hoạt động</option>
+                            <option value="INACTIVE" ${param.status == 'INACTIVE' ? 'selected' : ''}>Đã đóng cửa</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fa-solid fa-magnifying-glass me-1"></i> Tìm kiếm
+                        </button>
+                        <a href="${pageContext.request.contextPath}/admin/clinics" class="btn btn-outline-secondary w-100">
+                            <i class="fa-solid fa-eraser me-1"></i> Xóa bộ lọc
+                        </a>
+                    </div>
+                </form>  
+            </div>
+        </div>
+
         <div class="table-responsive">
             <table class="table table-hover table-striped align-middle">
                 <thead class="table-dark">

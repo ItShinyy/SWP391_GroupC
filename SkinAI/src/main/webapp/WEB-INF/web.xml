@@ -24,6 +24,7 @@
         <filter-name>AuthenticationFilter</filter-name>
         <url-pattern>/patient/*</url-pattern>
         <url-pattern>/admin/*</url-pattern>
+        <url-pattern>/account/*</url-pattern>
     </filter-mapping>
 
     <filter>
@@ -130,7 +131,7 @@
     <!-- ==================== Public Servlets ==================== -->
     <servlet>
         <servlet-name>HomeController</servlet-name>
-        <servlet-class>com.dermathologyai.controller.guest.HomeController</servlet-class>
+        <servlet-class>com.dermathologyai.controller.global.HomeController</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>HomeController</servlet-name>
@@ -139,15 +140,15 @@
 
     <servlet>
         <servlet-name>ProfileController</servlet-name>
-        <servlet-class>com.dermathologyai.controller.patient.ProfileController</servlet-class>
+        <servlet-class>com.dermathologyai.controller.account.ProfileController</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>ProfileController</servlet-name>
-        <url-pattern>/patient/profile</url-pattern>
+        <url-pattern>/account/profile</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>ProfileController</servlet-name>
-        <url-pattern>/patient/verify-otp</url-pattern>
+        <url-pattern>/account/verify-otp</url-pattern>
     </servlet-mapping>
 
     <!-- ==================== Patient Servlets ==================== -->
@@ -253,6 +254,16 @@
     </servlet-mapping>
 
     <servlet>
+        <servlet-name>AdminBookingController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.admin.AdminBookingController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AdminBookingController</servlet-name>
+        <url-pattern>/admin/bookings/*</url-pattern>
+    </servlet-mapping>
+
+
+    <servlet>
         <servlet-name>UserStatusController</servlet-name>
         <servlet-class>com.dermathologyai.controller.admin.UserStatusController</servlet-class>
     </servlet>
@@ -277,16 +288,6 @@
     <servlet-mapping>
         <servlet-name>ReportDetailAdminController</servlet-name>
         <url-pattern>/admin/ai-results/detail</url-pattern>
-    </servlet-mapping>
-
-    <!-- ==================== Appeal API ==================== -->
-    <servlet>
-        <servlet-name>AppealController</servlet-name>
-        <servlet-class>com.dermathologyai.controller.auth.AppealController</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>AppealController</servlet-name>
-        <url-pattern>/api/auth/appeal</url-pattern>
     </servlet-mapping>
 
     <!-- ==================== Welcome File ==================== -->

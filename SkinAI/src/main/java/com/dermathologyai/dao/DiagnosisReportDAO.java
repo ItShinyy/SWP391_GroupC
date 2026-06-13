@@ -19,7 +19,7 @@ public class DiagnosisReportDAO extends DBContext {
     private static final String SELECT_COLS =
         "SELECT dr.id, dr.patient_id, dr.disease_id, dr.clinic_id, dr.image_url, dr.heatmap_url," +
         " dr.confidence_score, dr.risk_level, dr.recommendation, dr.model_version, dr.created_at," +
-        " d.disease_name, u.full_name AS patient_name" +
+        " d.disease_name, u.full_name AS patient_name, u.email AS patient_email, u.phone AS patient_phone" +
         " FROM diagnosis_reports dr" +
         " LEFT JOIN diseases d ON dr.disease_id = d.id" +
         " LEFT JOIN patients p ON dr.patient_id = p.id" +
@@ -183,6 +183,8 @@ public class DiagnosisReportDAO extends DBContext {
         Timestamp ca = rs.getTimestamp("created_at"); if (ca != null) dr.setCreatedAt(ca.toLocalDateTime());
         dr.setDiseaseName(rs.getString("disease_name"));
         dr.setPatientName(rs.getString("patient_name"));
+        dr.setPatientEmail(rs.getString("patient_email"));
+        dr.setPatientPhone(rs.getString("patient_phone"));
         return dr;
     }
 }

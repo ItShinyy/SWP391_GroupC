@@ -18,8 +18,7 @@
             .lock-temp  { border-color: #f59e0b; background: #fffbeb; }
             .lock-perm  { border-color: #ef4444; background: #fef2f2; }
             .masked-info { font-family: 'Fragment Mono', monospace; font-size: .9rem; background: #f8f9fa; border-radius: 6px; padding: 4px 10px; display: inline-block; }
-            .appeal-textarea { resize: vertical; min-height: 100px; font-size: .9rem; }
-            #charCount { font-size: .75rem; }
+
         </style>
     </head>
     <body class="d-flex align-items-center justify-content-center min-vh-100 bg-light">
@@ -90,28 +89,6 @@
                                     </c:if>
                                 </div>
 
-                                <!-- Has pending appeal -->
-                                <c:if test="${hasPendingAppeal}">
-                                    <div class="alert alert-info py-2 small mb-0">
-                                        <i class="fa-solid fa-hourglass-half me-2"></i>Yêu cầu mở khóa của bạn đang được duyệt.
-                                    </div>
-                                </c:if>
-
-                                <!-- Appeal form -->
-                                <c:if test="${not hasPendingAppeal and not empty appealToken}">
-                                    <hr class="my-2">
-                                    <p class="small fw-semibold mb-2">Gửi yêu cầu kháng cáo:</p>
-                                    <form action="${pageContext.request.contextPath}/auth/unlock-account" method="POST">
-                                        <input type="hidden" name="action" value="appeal">
-                                        <input type="hidden" name="appeal_token" value="${appealToken}">
-                                        <textarea name="appeal_text" class="form-control appeal-textarea mb-2"
-                                                  placeholder="Giải thích lý do bạn muốn mở khóa tài khoản... (20-1000 ký tự)"
-                                                  minlength="20" maxlength="1000" required></textarea>
-                                        <button type="submit" class="btn btn-danger btn-sm fw-bold w-100">
-                                            <i class="fa-solid fa-paper-plane me-2"></i>Gửi kháng cáo
-                                        </button>
-                                    </form>
-                                </c:if>
                             </div>
                         </c:if>
 

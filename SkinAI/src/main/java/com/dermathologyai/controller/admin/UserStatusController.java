@@ -56,8 +56,12 @@ public class UserStatusController extends HttpServlet {
         String reason = req.getParameter("reason");
         
         if (id != null && !id.trim().isEmpty() && action != null && !action.trim().isEmpty()) {
-            String newStatus = action.equals("lock") ? "LOCKED" : "ACTIVE";
-            boolean success = userDAO.updateStatus(id, newStatus);
+            boolean success = false;
+            if (action.equals("lock")) {
+                success = userDAO.lockWithReason(id, reason != null ? reason.trim() : "Vi phạm chính sách");
+            } else {
+                success = userDAO.unlock(id);
+            }
             if (success) {
                 jakarta.servlet.http.HttpSession session = req.getSession(false);
                 User admin = (session != null) ? (User) session.getAttribute("user") : null;
@@ -66,6 +70,7 @@ public class UserStatusController extends HttpServlet {
                 String ip = (String) req.getAttribute("clientIp");
                 String ua = (String) req.getAttribute("userAgent");
                 
+                String newStatus = action.equals("lock") ? "LOCKED" : "ACTIVE";
                 String newValues = newStatus;
                 if (reason != null && !reason.trim().isEmpty()) {
                     newValues += " (Reason: " + reason.trim() + ")";

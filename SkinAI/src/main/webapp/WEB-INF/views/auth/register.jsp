@@ -1,11 +1,11 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng ký - SkinAI</title>
+    <title>Đăng ký - DermAI</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fragment+Mono&family=Rethink+Sans:wght@400..800&display=swap" rel="stylesheet">
@@ -37,12 +37,14 @@
                     </c:if>
 
                     <form action="${pageContext.request.contextPath}/auth/register" method="post">
+                        <input type="hidden" name="csrf_token" value="${sessionScope.csrfToken}">
+                        
                         <!-- Username -->
                         <div class="mb-3">
                             <label class="form-label text-muted fw-semibold small">Tên đăng nhập (Username)</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-at"></i></span>
-                                <input type="text" name="username" class="form-control border-start-0 ps-0" placeholder="nguyenvana123" required>
+                                <input type="text" name="username" class="form-control border-start-0 ps-0" placeholder="nguyenvana123" value="${reg_username}" required>
                             </div>
                         </div>
 
@@ -51,7 +53,7 @@
                             <label class="form-label text-muted fw-semibold small">Họ và tên</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-regular fa-user"></i></span>
-                                <input type="text" name="fullName" class="form-control border-start-0 ps-0" placeholder="Nguyen Van A" required>
+                                <input type="text" name="fullName" class="form-control border-start-0 ps-0" placeholder="Nguyen Van A" value="${reg_fullName}" required>
                             </div>
                         </div>
 
@@ -60,7 +62,7 @@
                             <label class="form-label text-muted fw-semibold small">Địa chỉ Email</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-regular fa-envelope"></i></span>
-                                <input type="email" name="email" class="form-control border-start-0 ps-0" placeholder="name@example.com">
+                                <input type="email" name="email" class="form-control border-start-0 ps-0" placeholder="name@example.com" value="${reg_email}">
                             </div>
                         </div>
                         
@@ -69,7 +71,7 @@
                             <label class="form-label text-muted fw-semibold small">Số điện thoại</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-phone"></i></span>
-                                <input type="text" name="phone" class="form-control border-start-0 ps-0" placeholder="Nhập số điện thoại">
+                                <input type="text" name="phone" class="form-control border-start-0 ps-0" placeholder="Nhập số điện thoại" value="${reg_phone}">
                             </div>
                             <div class="form-text small text-danger">* Bạn phải nhập ít nhất Email hoặc Số điện thoại.</div>
                         </div>
@@ -108,5 +110,6 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

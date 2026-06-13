@@ -81,7 +81,7 @@ public class BookingController extends HttpServlet {
             String appointmentId = bookingService.bookAppointment(user.getId(), appointment);
             
             if (appointmentId != null) {
-                auditLogDAO.createLog(user.getId(), "APPOINTMENT_CREATE", "appointments", appointmentId, null, "Clinic ID: " + clinicId, RequestUtil.getClientIp(req), req.getHeader("User-Agent"));
+                auditLogDAO.createLog(user.getId(), "APPOINTMENT_CREATE", "appointments", appointmentId, null, null, "Clinic ID: " + clinicId, RequestUtil.getClientIp(req), req.getHeader("User-Agent"));
                 resp.sendRedirect(req.getContextPath() + "/patient/reports?success=booking_created");
             } else {
                 req.setAttribute("errorMessage", "Could not book appointment.");
@@ -90,15 +90,16 @@ public class BookingController extends HttpServlet {
         } catch (IllegalStateException e) {
             // Probably no patient profile
             if (e.getMessage().contains("profile")) {
-                req.getSession().setAttribute("errorMessage", "Vui lòng cập nhật hồ sơ cá nhân trước khi đặt lịch.");
-                resp.sendRedirect(req.getContextPath() + "/patient/profile");
+                req.getSession().setAttribute("errorMessage", "Vui lÃ²ng cáº­p nháº­t há»“ sÆ¡ cÃ¡ nhÃ¢n trÆ°á»›c khi Ä‘áº·t lá»‹ch.");
+                resp.sendRedirect(req.getContextPath() + "/account/profile");
             } else {
                 req.setAttribute("errorMessage", e.getMessage());
                 doGet(req, resp);
             }
         } catch (Exception e) {
-            req.setAttribute("errorMessage", "Lỗi: " + e.getMessage());
+            req.setAttribute("errorMessage", "Lá»—i: " + e.getMessage());
             doGet(req, resp);
         }
     }
 }
+

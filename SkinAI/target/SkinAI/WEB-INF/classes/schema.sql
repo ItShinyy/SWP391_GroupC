@@ -29,8 +29,7 @@ GO
 -- =========================================================
 -- DROP TABLES (Sắp xếp theo thứ tự giải phóng khóa ngoại an toàn)
 -- =========================================================
-DROP TABLE IF EXISTS account_appeals;        -- Chứa FK tới password_reset_tokens & users (Phải xóa đầu tiên)
-DROP TABLE IF EXISTS password_reset_tokens; -- Chứa FK tới users
+DROP TABLE IF EXISTS user_tokens; -- Chứa FK tới users
 DROP TABLE IF EXISTS audit_logs;            -- Chứa FK tới users
 DROP TABLE IF EXISTS appointments;          -- Chứa FK tới patients, clinics, diagnosis_reports
 DROP TABLE IF EXISTS diagnosis_reports;     -- Chứa FK tới patients, diseases, clinics
@@ -53,9 +52,13 @@ CREATE TABLE users (
     password_hash VARCHAR(255) NULL, 
     role VARCHAR(20) NOT NULL DEFAULT 'USER',
     status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    failed_login_attempts INT NOT NULL DEFAULT 0,
+    last_failed_login_at DATETIME2 NULL,
+    lock_type VARCHAR(20) NULL,
     lock_reason NVARCHAR(500) NULL,
     locked_at DATETIME2 NULL,
     locked_by UNIQUEIDENTIFIER NULL,
+    password_changed_at DATETIME2 NULL,
     created_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
     last_login_at DATETIME2 NULL,
     updated_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
@@ -201,9 +204,9 @@ CREATE TABLE audit_logs (
 );
 
 -- =========================================================
--- 8. PASSWORD RESET TOKENS
+-- 8. USER TOKENS
 -- =========================================================
-CREATE TABLE password_reset_tokens (
+CREATE TABLE user_tokens (
     id INT IDENTITY(1,1) PRIMARY KEY,
     user_id UNIQUEIDENTIFIER NOT NULL,
     token VARCHAR(100) NOT NULL UNIQUE,
@@ -212,34 +215,11 @@ CREATE TABLE password_reset_tokens (
     created_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
     used_at DATETIME2 NULL,
     expires_at DATETIME2 NOT NULL,
-    CONSTRAINT FK_password_tokens_users FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    CONSTRAINT CHK_password_tokens_purpose CHECK (purpose IN ('RESET_PASSWORD', 'UNLOCK_APPEAL', 'VERIFY_EMAIL')),
-    CONSTRAINT CHK_password_tokens_attempts CHECK (attempts >= 0)
+    CONSTRAINT FK_user_tokens_users FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT CHK_user_tokens_purpose CHECK (purpose IN ('RESET_PASSWORD', 'UNLOCK_ACCOUNT', 'VERIFY_EMAIL', 'VERIFY_PHONE')),
+    CONSTRAINT CHK_user_tokens_attempts CHECK (attempts >= 0)
 );
 GO
-
--- =========================================================
--- 9. ACCOUNT APPEALS (Yêu cầu giải trình mở khóa)
--- =========================================================
-CREATE TABLE account_appeals (
-    id UNIQUEIDENTIFIER NOT NULL DEFAULT NEWSEQUENTIALID(),
-    user_id UNIQUEIDENTIFIER NOT NULL,
-    token_id INT NULL,
-    appeal_text NVARCHAR(1000) NOT NULL,
-    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
-    admin_note NVARCHAR(1000) NULL,
-    reviewed_by UNIQUEIDENTIFIER NULL,
-    reviewed_at DATETIME2 NULL,
-    created_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
-    updated_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
-
-    CONSTRAINT PK_account_appeals PRIMARY KEY (id),
-    -- Tránh lỗi "multiple cascade paths" bằng cách sử dụng NO ACTION
-    CONSTRAINT FK_account_appeals_users FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE NO ACTION,
-    CONSTRAINT FK_account_appeals_token FOREIGN KEY (token_id) REFERENCES password_reset_tokens(id) ON DELETE NO ACTION,
-    CONSTRAINT FK_account_appeals_reviewed_by FOREIGN KEY (reviewed_by) REFERENCES users(id) ON DELETE NO ACTION,
-    CONSTRAINT CHK_account_appeals_status CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED'))
-);
 
 -- =========================================================
 -- INDEXES & FILTERED UNIQUE CONSTRAINTS
@@ -264,10 +244,8 @@ CREATE INDEX idx_appointments_clinic_time_status ON appointments(clinic_id, appo
 CREATE INDEX idx_appointments_patient_status_time ON appointments(patient_id, status, appointment_time);
 CREATE INDEX idx_audit_logs_user_id ON audit_logs(user_id);
 CREATE INDEX idx_audit_logs_perf ON audit_logs(created_at DESC, status);
-CREATE INDEX idx_pwd_tokens_user_id ON password_reset_tokens(user_id);
-CREATE INDEX idx_pwd_tokens_token_expiry ON password_reset_tokens(token, expires_at);
-CREATE UNIQUE NONCLUSTERED INDEX UX_account_appeals_pending_user ON account_appeals(user_id) WHERE status = 'PENDING';
-CREATE INDEX idx_account_appeals_status_created_at ON account_appeals(status, created_at DESC);
+CREATE INDEX idx_user_tokens_user_id ON user_tokens(user_id);
+CREATE INDEX idx_user_tokens_token_expiry ON user_tokens(token, expires_at);
 CREATE INDEX idx_users_role_status ON users(role, status);
 GO
 
@@ -341,19 +319,12 @@ VALUES
 (NEWID(), 'req-seed-02', @Patient2Id, @Clinic1Id, @Report2Id, DATEADD(DAY, 1, SYSDATETIME()), 'CONFIRMED', N'Đã liên hệ xác nhận lịch hẹn khẩn cấp cho ca rủi ro cao.'),
 (NEWID(), 'req-seed-03', @Patient1Id, @Clinic1Id, NULL, DATEADD(DAY, -10, SYSDATETIME()), 'COMPLETED', N'Lịch hẹn hoàn thành trong quá khứ.');
 
--- Insert Password Reset / Appeal Tokens
-INSERT INTO password_reset_tokens (user_id, token, purpose, attempts, created_at, used_at, expires_at)
+-- Insert User Tokens
+INSERT INTO user_tokens (user_id, token, purpose, attempts, created_at, used_at, expires_at)
 VALUES
-(@User3Id, 'unlock-appeal-token-001', 'UNLOCK_APPEAL', 0, SYSDATETIME(), NULL, DATEADD(MINUTE, 15, SYSDATETIME())),
 (@User1Id, 'verify-email-token-001', 'VERIFY_EMAIL', 0, SYSDATETIME(), NULL, DATEADD(HOUR, 24, SYSDATETIME())),
 (@User1Id, 'valid_token_123456_local_user', 'RESET_PASSWORD', 0, SYSDATETIME(), NULL, DATEADD(HOUR, 2, SYSDATETIME())),
 (@User4Id, 'expired_token_789101_inactive', 'RESET_PASSWORD', 0, SYSDATETIME(), NULL, DATEADD(HOUR, -2, SYSDATETIME()));
-
--- Insert Account Appeals
-INSERT INTO account_appeals (id, user_id, token_id, appeal_text, status, admin_note, reviewed_by, reviewed_at)
-SELECT NEWID(), @User3Id, prt.id, N'Tôi đã hiểu và cam kết không tái phạm. Mong hệ thống xem xét mở khóa tài khoản.', 'PENDING', NULL, NULL, NULL
-FROM password_reset_tokens prt
-WHERE prt.token = 'unlock-appeal-token-001';
 
 -- Insert Audit Logs
 INSERT INTO audit_logs (id, user_id, action, entity_type, record_id, old_values, new_values, ip_address, user_agent)

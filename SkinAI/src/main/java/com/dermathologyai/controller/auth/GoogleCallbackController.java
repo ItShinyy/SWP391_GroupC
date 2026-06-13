@@ -71,12 +71,24 @@ public class GoogleCallbackController extends HttpServlet {
                 String name = userInfo.get("name");
                 String picture = userInfo.get("picture");
 
-                User user = authService.loginWithGoogle(googleId, email, name);
+                User user = null;
+                try {
+                    user = authService.loginWithGoogle(googleId, email, name);
+                } catch (IllegalArgumentException e) {
+                    logger.warn("Google Login rejected: {}", e.getMessage());
+                    req.getSession(true).setAttribute("loginError", e.getMessage());
+                    resp.sendRedirect(req.getContextPath() + "/auth/login");
+                    return;
+                }
 
                 if (user != null) {
                     if (!authService.isAccountActive(user)) {
-                        req.getSession(true).setAttribute("lockedUsername", user.getUsername());
-                        resp.sendRedirect(req.getContextPath() + "/auth/login?error=account_locked");
+                        if ("LOCKED".equals(user.getStatus())) {
+                            req.getSession(true).setAttribute("lockedUser", user);
+                        } else {
+                            req.getSession(true).setAttribute("loginError", "Tài khoản của bạn chưa được kích hoạt.");
+                        }
+                        resp.sendRedirect(req.getContextPath() + "/auth/login");
                         return;
                     }
 
@@ -88,7 +100,7 @@ public class GoogleCallbackController extends HttpServlet {
                     session.setAttribute("user", user);
                     
                     // Audit log
-                    auditLogDAO.createLog(user.getId(), "LOGIN_SUCCESS", "users", user.getId(), null, "Đăng nhập bằng Google", RequestUtil.getClientIp(req), req.getHeader("User-Agent"));
+                    auditLogDAO.createLog(user.getId(), "LOGIN_SUCCESS", "users", user.getId(), null, null, "Đăng nhập bằng Google", RequestUtil.getClientIp(req), req.getHeader("User-Agent"));
 
                     if ("ADMIN".equals(user.getRole())) {
                         session.removeAttribute("redirectAfterLogin");

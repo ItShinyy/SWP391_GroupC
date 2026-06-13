@@ -17,8 +17,9 @@ public class UserDAO extends DBContext {
 
     // Full column list reused across all SELECT queries
     private static final String SELECT_COLS =
-        "SELECT id, google_id, username, email, pending_email, phone, password_hash, full_name, role, status, lock_reason," +
-        " created_at, updated_at, last_login_at FROM users";
+        "SELECT id, google_id, username, email, pending_email, phone, password_hash, full_name, role, status, " +
+        "failed_login_attempts, last_failed_login_at, lock_type, lock_reason, locked_at, password_changed_at, " +
+        "created_at, updated_at, last_login_at FROM users";
 
     // ─── Lookup methods ────────────────────────────────────────────────────────
 
@@ -125,6 +126,38 @@ public class UserDAO extends DBContext {
         return executeUpdate("UPDATE users SET last_login_at = GETDATE() WHERE id = ?", id);
     }
 
+    public boolean incrementFailedLogin(String userId) {
+        String sql = "UPDATE users SET failed_login_attempts = failed_login_attempts + 1, " +
+                     "last_failed_login_at = SYSDATETIME(), " +
+                     "status = CASE WHEN failed_login_attempts + 1 >= 5 THEN 'LOCKED' ELSE status END, " +
+                     "lock_type = CASE WHEN failed_login_attempts + 1 >= 5 THEN 'BRUTE_FORCE' ELSE lock_type END, " +
+                     "locked_at = CASE WHEN failed_login_attempts + 1 >= 5 THEN SYSDATETIME() ELSE locked_at END " +
+                     "WHERE id = ?";
+        return executeUpdate(sql, userId);
+    }
+
+    public boolean recordSuccessfulLogin(String userId) {
+        String sql = "UPDATE users SET failed_login_attempts = 0, last_failed_login_at = NULL, last_login_at = SYSDATETIME() WHERE id = ?";
+        return executeUpdate(sql, userId);
+    }
+
+    public boolean lockWithReason(String userId, String reason) {
+        String sql = "UPDATE users SET status = 'LOCKED', lock_type = 'ADMIN', lock_reason = ?, locked_at = SYSDATETIME() WHERE id = ?";
+        return executeUpdate(sql, reason, userId);
+    }
+
+    public boolean unlock(String userId) {
+        String sql = "UPDATE users SET status = 'ACTIVE', failed_login_attempts = 0, lock_type = NULL, lock_reason = NULL, locked_at = NULL WHERE id = ?";
+        return executeUpdate(sql, userId);
+    }
+
+    public boolean updatePassword(String userId, String hashedPassword) {
+        String sql = "UPDATE users SET password_hash = ?, password_changed_at = SYSDATETIME(), " +
+                     "failed_login_attempts = 0, lock_type = NULL, lock_reason = NULL, locked_at = NULL, status = 'ACTIVE' " +
+                     "WHERE id = ?";
+        return executeUpdate(sql, hashedPassword, userId);
+    }
+
     // ─── Internal helpers ──────────────────────────────────────────────────────
 
     private static void appendFilters(StringBuilder sql, List<Object> params,
@@ -156,7 +189,14 @@ public class UserDAO extends DBContext {
         u.setFullName(rs.getString("full_name"));
         u.setRole(rs.getString("role"));
         u.setStatus(rs.getString("status"));
+        u.setFailedLoginAttempts(rs.getInt("failed_login_attempts"));
+        u.setLockType(rs.getString("lock_type"));
         u.setLockReason(rs.getString("lock_reason"));
+        
+        Timestamp lfa = rs.getTimestamp("last_failed_login_at"); if (lfa != null) u.setLastFailedLoginAt(lfa.toLocalDateTime());
+        Timestamp lka = rs.getTimestamp("locked_at"); if (lka != null) u.setLockedAt(lka.toLocalDateTime());
+        Timestamp pca = rs.getTimestamp("password_changed_at"); if (pca != null) u.setPasswordChangedAt(pca.toLocalDateTime());
+
         Timestamp ca = rs.getTimestamp("created_at");   if (ca != null) u.setCreatedAt(ca.toLocalDateTime());
         Timestamp ua = rs.getTimestamp("updated_at");   if (ua != null) u.setUpdatedAt(ua.toLocalDateTime());
         Timestamp la = rs.getTimestamp("last_login_at"); if (la != null) u.setLastLoginAt(la.toLocalDateTime());

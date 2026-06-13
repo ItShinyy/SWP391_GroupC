@@ -24,15 +24,19 @@
                             <option value="HIGH" ${param.risk == 'HIGH' ? 'selected' : ''}>HIGH</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <select name="sort" class="form-select">
-                            <option value="date" ${param.sort == 'date' || empty param.sort ? 'selected' : ''}>Sắp xếp theo ngày (Mới nhất)</option>
-                            <option value="precision" ${param.sort == 'precision' ? 'selected' : ''}>Sắp xếp theo độ tin cậy (Cao nhất)</option>
+                            <option value="date" ${param.sort == 'date' || empty param.sort ? 'selected' : ''}>Ngày (Mới nhất)</option>
+                            <option value="precision" ${param.sort == 'precision' ? 'selected' : ''}>Độ tin cậy</option>
                         </select>
                     </div>
-                    <div class="col-md-2 d-flex gap-2">
-                        <button type="submit" class="btn btn-primary flex-grow-1"><i class="fa-solid fa-magnifying-glass"></i> Tìm kiếm</button>
-                        <a href="${pageContext.request.contextPath}/admin/ai-results" class="btn btn-outline-secondary">Xóa Bộ Lọc</a>
+                    <div class="col-md-3 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fa-solid fa-magnifying-glass me-1"></i> Tìm kiếm
+                        </button>
+                        <a href="${pageContext.request.contextPath}/admin/ai-results" class="btn btn-outline-secondary w-100">
+                            <i class="fa-solid fa-eraser me-1"></i> Xóa bộ lọc
+                        </a>
                     </div>
                 </form>
             </div>
@@ -70,10 +74,10 @@
                                     <td>
                                         <c:choose>
                                             <c:when test="${r.diseaseName != null}">
-                                                <span class="badge bg-secondary p-1">SYS</span> ${r.diseaseName}
+                                                <span class="badge bg-secondary p-1">HỆ THỐNG</span> ${r.diseaseName}
                                             </c:when>
                                             <c:otherwise>
-                                                <span class="text-muted">Unknown</span>
+                                                <span class="text-muted">Không xác định</span>
                                             </c:otherwise>
                                         </c:choose>
                                     </td>
@@ -144,3 +148,4 @@
 </div>
 
 <jsp:include page="/WEB-INF/views/layout/admin-footer.jsp" />
+

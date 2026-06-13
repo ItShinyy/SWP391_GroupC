@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import com.dermathologyai.util.PageUtil;
 
 public class AuditLogsController extends HttpServlet {
     private AuditLogDAO auditLogDAO;
@@ -51,7 +52,7 @@ public class AuditLogsController extends HttpServlet {
         req.setAttribute("auditLogs", auditLogDAO.findAll(keyword, status, startDate, endDate, page, pageSize));
         
         int total = auditLogDAO.countAll(keyword, status, startDate, endDate);
-        req.setAttribute("totalPages", (int) Math.ceil((double) total / pageSize));
+        req.setAttribute("totalPages", PageUtil.getTotalPages(total, pageSize));
         req.setAttribute("currentPage", page);
         
         req.setAttribute("keyword", keyword);

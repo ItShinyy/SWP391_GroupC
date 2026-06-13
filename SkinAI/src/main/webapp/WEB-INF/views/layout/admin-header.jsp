@@ -1,11 +1,11 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>SkinAI - Admin Portal</title>
+        <title>DermAI - Admin Portal</title>
 
         <!-- Bootstrap 5 & Font Awesome -->
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -159,7 +159,7 @@
                 <div class="d-flex align-items-center gap-4">
                     <a class="navbar-brand d-flex align-items-center fw-bold text-dark m-0" href="${pageContext.request.contextPath}/home">
                         <i class="fa-solid fa-leaf text-success me-2 fs-4"></i>
-                        <span class="fs-4">SkinAI</span>
+                        <span class="fs-4">DermAI</span>
                     </a>
                 </div>
 
@@ -194,6 +194,9 @@
                             <a class="nav-link ${pageContext.request.requestURI.contains('users') ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/users">Quản Lý Người Dùng</a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link ${pageContext.request.requestURI.contains('bookings') ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/bookings">Quản Lý Đặt Lịch</a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link ${pageContext.request.requestURI.contains('clinics') ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/clinics">Quản Lý Phòng Khám</a>
                         </li>
                         <li class="nav-item">
@@ -211,13 +214,14 @@
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end dropdown-menu-custom mt-2 border-0 shadow-sm">
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center" href="${pageContext.request.contextPath}/patient/profile">
+                                    <a class="dropdown-item d-flex align-items-center" href="${pageContext.request.contextPath}/account/profile">
                                         <i class="fa-regular fa-id-badge fa-fw me-2 text-muted"></i> Hồ Sơ
                                     </a>
                                 </li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <form action="${pageContext.request.contextPath}/auth/logout" method="post" class="m-0 p-0">
+    <input type="hidden" name="csrf_token" value="${sessionScope.csrfToken}">
                                         <button type="submit" class="dropdown-item d-flex align-items-center text-danger w-100 bg-transparent border-0">
                                             <i class="fa-solid fa-arrow-right-from-bracket fa-fw me-2"></i> Đăng Xuất
                                         </button>
@@ -229,3 +233,6 @@
                 </div>
             </div>
         </nav>
+
+
+

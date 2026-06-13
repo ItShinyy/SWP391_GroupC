@@ -21,6 +21,8 @@ public class DiagnosisReport {
     // Transient fields for display
     private String diseaseName;
     private String patientName;
+    private String patientEmail;
+    private String patientPhone;
 
     public DiagnosisReport() {
     }
@@ -77,6 +79,12 @@ public class DiagnosisReport {
 
     public String getPatientName() { return patientName; }
     public void setPatientName(String patientName) { this.patientName = patientName; }
+
+    public String getPatientEmail() { return patientEmail; }
+    public void setPatientEmail(String patientEmail) { this.patientEmail = patientEmail; }
+
+    public String getPatientPhone() { return patientPhone; }
+    public void setPatientPhone(String patientPhone) { this.patientPhone = patientPhone; }
 
     @Override
     public String toString() {
