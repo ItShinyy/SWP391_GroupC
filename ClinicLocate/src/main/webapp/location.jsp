@@ -11,7 +11,7 @@
 </head>
 <body class="map-page">
     <div class="loading-overlay" id="loading-overlay">
-        <div class="loading-logo">+</div>
+        <div class="loading-logo">⏳</div>
         <div class="spinner"></div>
         <p id="loading-text">Đang xác định vị trí...</p>
         <button type="button" class="primary-btn hidden" id="retry-button" onclick="locateUser()">
@@ -57,9 +57,10 @@
         const CONFIG = {
             radius: 10000,
             recommendationRadius: 25000,
-            zoom: 14,
+            zoom: 16,
             maptilerKey: 'DQhKue8zixGpuVf943EY',
             overpassUrl: 'https://overpass-api.de/api/interpreter',
+            databaseUrl: '${pageContext.request.contextPath}/api/clinic-fallback',
             ipLocationUrls: [
                 'https://ipapi.co/json/',
                 'https://ipwho.is/'
@@ -81,7 +82,7 @@
             showLoading('Đang xác định vị trí...');
 
             if (!navigator.geolocation) {
-                suggestHealthcareByCity();
+                showDatabaseClinics('Trình duyệt không hỗ trợ định vị.');
                 return;
             }
 
@@ -95,11 +96,11 @@
                 },
                 function (error) {
                     if (error.code === 1) {
-                        suggestHealthcareByCity();
+                        showDatabaseClinics('Bạn đã từ chối chia sẻ vị trí.');
                         return;
                     }
 
-                    showError('Không thể lấy vị trí hiện tại. Vui lòng thử lại.');
+                    showDatabaseClinics('Không thể lấy vị trí hiện tại.');
                 },
                 {
                     enableHighAccuracy: true,
@@ -192,11 +193,75 @@
                 }
 
                 const data = await response.json();
-                displayClinics(data.elements || []);
+                const displayedCount = displayClinics(data.elements || []);
+                if (displayedCount === 0) {
+                    await showDatabaseClinics('Không tìm thấy cơ sở phù hợp trên OpenStreetMap.');
+                    return;
+                }
                 hideLoading();
             } catch (error) {
                 console.error(error);
-                showError(error.message || 'Không thể tìm cơ sở y tế.');
+                await showDatabaseClinics('Không thể tải dữ liệu từ OpenStreetMap.');
+            }
+        }
+
+        // Dùng dữ liệu đã lưu trong SQL Server khi không thể định vị hoặc Overpass không có kết quả.
+        async function showDatabaseClinics(reason) {
+            try {
+                showLoading('Đang tải danh sách cơ sở y tế dự phòng...');
+                const response = await fetch(CONFIG.databaseUrl);
+                if (!response.ok) {
+                    throw new Error('Database API không phản hồi.');
+                }
+
+                const clinics = await response.json();
+                recommendationMode = true;
+                detectedCity = 'dữ liệu hệ thống';
+
+                const elements = clinics.map(function (clinic) {
+                    return {
+                        lat: Number(clinic.latitude),
+                        lon: Number(clinic.longitude),
+                        tags: {
+                            name: clinic.name,
+                            amenity: clinic.type === 'HOSPITAL' ? 'hospital' : 'clinic',
+                            'contact:address': clinic.address,
+                            'contact:phone': clinic.phone
+                        }
+                    };
+                });
+
+                ensureFallbackMap();
+                const displayedCount = displayClinics(elements);
+                document.getElementById('main-title').textContent = 'Cơ sở y tế từ dữ liệu hệ thống';
+                document.getElementById('location-text').textContent = reason;
+
+                if (displayedCount === 0) {
+                    showError('Database chưa có cơ sở y tế có tọa độ hợp lệ.');
+                    return;
+                }
+                hideLoading();
+            } catch (error) {
+                console.error(error);
+                showError('Không thể tải dữ liệu cơ sở y tế dự phòng.');
+            }
+        }
+
+        function ensureFallbackMap() {
+            if (!map) {
+                map = L.map('map').setView([16.0, 106.0], 6);
+                L.tileLayer(
+                    'https://api.maptiler.com/maps/streets-v4/{z}/{x}/{y}.png?key=' + CONFIG.maptilerKey,
+                    {
+                        attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
+                        maxZoom: 20
+                    }
+                ).addTo(map);
+            }
+
+            if (userMarker) {
+                map.removeLayer(userMarker);
+                userMarker = null;
             }
         }
 
@@ -252,7 +317,9 @@
                     ? element.lon
                     : element.center && element.center.lon;
 
-                if (lat === undefined || lng === undefined || !tags.name) {
+                if (!Number.isFinite(Number(lat))
+                        || !Number.isFinite(Number(lng))
+                        || !tags.name) {
                     return null;
                 }
 
@@ -263,9 +330,10 @@
                 return {
                     name: tags.name,
                     address: buildAddress(tags),
+                    phone: buildPhone(tags),
                     type: isHospital ? 'hospital' : 'clinic',
-                    lat: lat,
-                    lng: lng,
+                    lat: Number(lat),
+                    lng: Number(lng),
                     score: calculateFacilityScore(tags)
                 };
             }).filter(Boolean);
@@ -287,16 +355,23 @@
 
             if (clinics.length === 0) {
                 clinicList.innerHTML = '<p class="empty">Không tìm thấy bệnh viện hoặc phòng khám trong khu vực này.</p>';
-                return;
+                return 0;
             }
 
-            const bounds = L.latLngBounds([[userLat, userLng]]);
+            const hasUserLocation = Number.isFinite(userLat) && Number.isFinite(userLng);
+            const bounds = hasUserLocation
+                ? L.latLngBounds([[userLat, userLng]])
+                : L.latLngBounds([]);
             let html = '';
 
             clinics.forEach(function (clinic) {
                 const marker = L.marker([clinic.lat, clinic.lng])
                     .addTo(map)
-                    .bindPopup('<b>' + escapeHtml(clinic.name) + '</b><br>' + escapeHtml(clinic.address));
+                    .bindPopup(
+                        '<b>' + escapeHtml(clinic.name) + '</b><br>'
+                        + 'Địa chỉ: ' + escapeHtml(clinic.address) + '<br>'
+                        + 'Điện thoại: ' + escapeHtml(clinic.phone)
+                    );
 
                 clinicMarkers.push(marker);
                 bounds.extend([clinic.lat, clinic.lng]);
@@ -308,11 +383,13 @@
                     + '</span>'
                     + '<span class="card-name">' + escapeHtml(clinic.name) + '</span>'
                     + '<span class="card-address">' + escapeHtml(clinic.address) + '</span>'
+                    + '<span class="card-address">Điện thoại: ' + escapeHtml(clinic.phone) + '</span>'
                     + '</button>';
             });
 
             clinicList.innerHTML = html;
             map.fitBounds(bounds, { padding: [40, 40] });
+            return clinics.length;
         }
 
         // Di chuyển bản đồ đến cơ sở được chọn trong danh sách.
@@ -322,6 +399,7 @@
 
         // Ghép các trường địa chỉ rời rạc của OpenStreetMap thành một chuỗi dễ đọc.
         function buildAddress(tags) {
+            // Loại bỏ các phần bị thiếu trước khi ghép để địa chỉ không có khoảng trắng hoặc dấu phẩy thừa.
             const street = [tags['addr:housenumber'], tags['addr:street']]
                 .filter(Boolean)
                 .join(' ');
@@ -330,6 +408,14 @@
             const address = [street, area, city].filter(Boolean).join(', ');
 
             return address || tags['contact:address'] || 'Chưa có địa chỉ chi tiết';
+        }
+
+        // Lấy số điện thoại từ các khóa OSM thường dùng; hiển thị thông báo nếu cơ sở chưa cung cấp số.
+        function buildPhone(tags) {
+            return tags.phone
+                || tags['contact:phone']
+                || tags['contact:mobile']
+                || 'Chưa có số điện thoại';
         }
 
         // Chấm điểm mức độ đầy đủ/nổi bật của cơ sở để sắp xếp danh sách gợi ý thành phố.
