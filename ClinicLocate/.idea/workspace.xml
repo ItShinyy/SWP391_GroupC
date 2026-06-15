@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="2b5e838e-9391-4418-8b6e-1baaf54a78b2" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/LanguageServersSettings.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/encodings.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/webapp/WEB-INF/web.xml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/webapp/WEB-INF/web.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/webapp/js/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/webapp/js/app.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/webapp/location.jsp" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/webapp/location.jsp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ClinicMap/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ClinicMap/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ClinicMap/.idea/misc.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ClinicMap/pom.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ClinicMap/src/main/webapp/WEB-INF/web.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ClinicMap/src/main/webapp/index.jsp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/SkinAI/META-INF/context.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/SkinAI/Tomcat.dpf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/SkinAI/WEB-INF/lib/checker-qual-3.12.0.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/SkinAI/WEB-INF/lib/commons-codec-1.15.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/SkinAI/WEB-INF/lib/commons-fileupload2-core-2.0.0-M2.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/SkinAI/WEB-INF/lib/commons-fileupload2-jakarta-servlet6-2.0.0-M2.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/SkinAI/WEB-INF/lib/commons-io-2.15.1.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/SkinAI/WEB-INF/lib/commons-logging-1.2.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/SkinAI/WEB-INF/lib/error_prone_annotations-2.11.0.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/SkinAI/WEB-INF/lib/failureaccess-1.0.1.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/SkinAI/WEB-INF/lib/google-api-client-2.2.0.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/SkinAI/WEB-INF/lib/google-http-client-1.42.3.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/SkinAI/WEB-INF/lib/google-http-client-apache-v2-1.42.3.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/SkinAI/WEB-INF/lib/google-http-client-gson-1.43.3.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/SkinAI/WEB-INF/lib/google-oauth-client-1.35.0.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/SkinAI/WEB-INF/lib/grpc-context-1.27.2.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/SkinAI/WEB-INF/lib/gson-2.10.1.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/SkinAI/WEB-INF/lib/guava-31.1-jre.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/SkinAI/WEB-INF/lib/httpclient-4.5.14.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/SkinAI/WEB-INF/lib/httpcore-4.4.16.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/SkinAI/WEB-INF/lib/j2objc-annotations-1.3.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/SkinAI/WEB-INF/lib/jakarta.activation-2.0.1.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/SkinAI/WEB-INF/lib/jakarta.el-api-5.0.0.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/SkinAI/WEB-INF/lib/jakarta.mail-2.0.1.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/SkinAI/WEB-INF/lib/jakarta.servlet.jsp.jstl-3.0.1.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/SkinAI/WEB-INF/lib/jakarta.servlet.jsp.jstl-api-3.0.2.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/SkinAI/WEB-INF/lib/jbcrypt-0.4.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/SkinAI/WEB-INF/lib/jsr305-3.0.2.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/SkinAI/WEB-INF/lib/listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/SkinAI/WEB-INF/lib/logback-classic-1.4.14.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/SkinAI/WEB-INF/lib/logback-core-1.4.14.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/SkinAI/WEB-INF/lib/mssql-jdbc-12.10.0.jre11.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/SkinAI/WEB-INF/lib/opencensus-api-0.31.1.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/SkinAI/WEB-INF/lib/opencensus-contrib-http-util-0.31.1.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/SkinAI/WEB-INF/lib/slf4j-api-2.0.9.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/SkinAI/WEB-INF/views/admin/audit-logs/detail.jsp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/SkinAI/WEB-INF/views/admin/audit-logs/list.jsp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/SkinAI/WEB-INF/views/admin/reports/ai-results-detail.jsp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/SkinAI/WEB-INF/views/admin/reports/ai-results.jsp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/SkinAI/WEB-INF/views/auth/forgot-password.jsp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/SkinAI/WEB-INF/views/auth/unlock-account.jsp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/SkinAI/WEB-INF/views/layout/admin-footer.jsp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/SkinAI/assets/css/style.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/classes/.netbeans_automatic_build" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/maven-archiver/pom.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SkinAI/target/test-classes/.netbeans_automatic_build" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Test/src/main/webapp/index.jsp" beforeDir="false" afterPath="$PROJECT_DIR$/../Test/src/main/webapp/index.jsp" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+        <option value="JavaScript File" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="LogFilters">
+    <option name="FILTER_ERRORS" value="false" />
+    <option name="FILTER_WARNINGS" value="false" />
+    <option name="FILTER_INFO" value="true" />
+    <option name="FILTER_DEBUG" value="true" />
+    <option name="CUSTOM_FILTER" />
+  </component>
+  <component name="MavenImportPreferences">
+    <option name="generalSettings">
+      <MavenGeneralSettings>
+        <option name="mavenHomeTypeForPersistence" value="WRAPPER" />
+      </MavenGeneralSettings>
+    </option>
+  </component>
+  <component name="NextEditCompletionFeaturesState">
+    <decayedCancelled>
+      <entry key="MS100" value="6.920371763337041E-16" />
+      <entry key="MS500" value="9.54787378322513E-4" />
+      <entry key="S2" value="0.25920960184118585" />
+      <entry key="S5" value="1.0232658932388017" />
+      <entry key="S10" value="1.717012863608502" />
+      <entry key="S30" value="2.478808867219091" />
+      <entry key="S60" value="2.725290608260715" />
+      <entry key="M2" value="2.859459575462935" />
+      <entry key="M5" value="3.0378635258572992" />
+      <entry key="M10" value="3.5090537407597244" />
+      <entry key="M15" value="4.01227997139982" />
+      <entry key="M30" value="7.0466748154423335" />
+      <entry key="H1" value="23.67331595296555" />
+      <entry key="H2" value="64.27952880444462" />
+      <entry key="H4" value="114.22719067475829" />
+      <entry key="D1" value="190.03299593932994" />
+      <entry key="W1" value="207.85730211635084" />
+    </decayedCancelled>
+    <decayedSelected>
+      <entry key="MS100" value="1.0" />
+      <entry key="MS500" value="1.0000000003013167" />
+      <entry key="S2" value="1.004166350706374" />
+      <entry key="S5" value="1.1116612100017635" />
+      <entry key="S10" value="1.334157462885035" />
+      <entry key="S30" value="1.6939322235889123" />
+      <entry key="S60" value="1.8330262959025698" />
+      <entry key="M2" value="1.914355551426222" />
+      <entry key="M5" value="2.231684535862287" />
+      <entry key="M10" value="3.4444766732333805" />
+      <entry key="M15" value="4.573907313632578" />
+      <entry key="M30" value="6.807728661736414" />
+      <entry key="H1" value="10.15898128201165" />
+      <entry key="H2" value="16.04705453980462" />
+      <entry key="H4" value="23.078089413401088" />
+      <entry key="D1" value="33.944603860305286" />
+      <entry key="W1" value="36.540699787553294" />
+    </decayedSelected>
+    <decayedShown>
+      <entry key="MS100" value="0.0011140270662777572" />
+      <entry key="MS500" value="0.2567778009625906" />
+      <entry key="S2" value="0.8899312463977411" />
+      <entry key="S5" value="1.8579418088399864" />
+      <entry key="S10" value="2.844532039790414" />
+      <entry key="S30" value="4.074253934740299" />
+      <entry key="S60" value="4.503777981732802" />
+      <entry key="M2" value="4.745043937680143" />
+      <entry key="M5" value="5.256454236537223" />
+      <entry key="M10" value="6.94406340741468" />
+      <entry key="M15" value="8.578001145601963" />
+      <entry key="M30" value="13.847918735968955" />
+      <entry key="H1" value="33.82551482338337" />
+      <entry key="H2" value="80.31913127435114" />
+      <entry key="H4" value="137.29902656601163" />
+      <entry key="D1" value="223.97590751123474" />
+      <entry key="W1" value="244.39773810125303" />
+    </decayedShown>
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 2,
+  &quot;fromUser&quot;: false
+}</component>
+  <component name="ProjectId" id="3EwomRrpXg8z0q6o5UBWShYHAXf" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Maven. [org.apache.maven.plugins:maven-archetype-plugin:RELEASE:generate].executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;Smart Tomcat.Tomcat: ClinicLocate.executor&quot;: &quot;Run&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;ClinicMap&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="RunManager">
+    <configuration name="Tomcat: ClinicLocate" type="com.poratu.idea.plugins.tomcat">
+      <predefined_log_file enabled="true" id="Tomcat Localhost Log" />
+      <predefined_log_file enabled="true" id="Tomcat Access Log" />
+      <predefined_log_file id="Tomcat Catalina Log" />
+      <predefined_log_file id="Tomcat Manager Log" />
+      <predefined_log_file id="Tomcat Host Manager Log" />
+      <option name="catalinaBase" value="C:\Users\Hoang Minh\.SmartTomcat\ClinicLocate" />
+      <option name="contextPath" value="/ClinicLocate" />
+      <option name="docBase" value="C:\Users\Hoang Minh\OneDrive\Documents\Minh_SE2014_2025\SWP299\Gitz\SWP391_GroupC\ClinicLocate\src\main\webapp" />
+      <option name="extraClassPath" value="" />
+      <option name="tomcatInfo">
+        <TomcatInfo>
+          <option name="name" value="Apache Tomcat 10" />
+          <option name="path" value="$PROJECT_DIR$/../../../../../../../../../Program Files/Apache Software Foundation/Tomcat 10.1" />
+          <option name="version" value="10.1.17.0" />
+        </TomcatInfo>
+      </option>
+      <option name="vmOptions" value="" />
+      <module name="ClinicLocate" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-30f59d01ecdd-37e91769500f-intellij.indexing.shared.core-IU-261.25134.95" />
+        <option value="bundled-js-predefined-d6986cc7102b-31caf2ab9e3c-JavaScript-IU-261.25134.95" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="2b5e838e-9391-4418-8b6e-1baaf54a78b2" name="Changes" comment="" />
+      <created>1781099154919</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1781099154919</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>
