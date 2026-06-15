@@ -170,6 +170,15 @@
     </servlet-mapping>
 
     <servlet>
+        <servlet-name>AppointmentsController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.patient.AppointmentsController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AppointmentsController</servlet-name>
+        <url-pattern>/patient/appointments</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
         <servlet-name>ReportDetailController</servlet-name>
         <servlet-class>com.dermathologyai.controller.patient.ReportDetailController</servlet-class>
     </servlet>

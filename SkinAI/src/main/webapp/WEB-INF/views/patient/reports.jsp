@@ -13,28 +13,28 @@
             <div class="card-body">
                 <form action="${pageContext.request.contextPath}/patient/reports" method="get" class="row g-3 align-items-center">
                     <div class="col-md-3">
-                        <input type="text" name="search" class="form-control" placeholder="Search by disease" value="${param.search}">
+                        <input type="text" name="search" class="form-control" placeholder="Tìm kiếm theo tên bệnh" value="${param.search}">
                     </div>
                     
                     <div class="col-md-2">
-                        <input type="date" name="fromDate" class="form-control" value="${param.fromDate}" title="From date">
+                        <input type="date" name="fromDate" class="form-control" value="${param.fromDate}" title="Từ ngày">
                     </div>
                     
                     <div class="col-md-2">
-                        <input type="date" name="toDate" class="form-control" value="${param.toDate}" title="To date">
+                        <input type="date" name="toDate" class="form-control" value="${param.toDate}" title="Đến ngày">
                     </div>
                     
                     <div class="col-md-3">
                         <select name="sort" class="form-select">
-                            <option value="date" ${param.sort == 'date' || empty param.sort ? 'selected' : ''}>Sort by Date (Newest)</option>
-                            <option value="confidence" ${param.sort == 'confidence' ? 'selected' : ''}>Sort by Confidence (Highest)</option>
-                            <option value="risk" ${param.sort == 'risk' ? 'selected' : ''}>Sort by Risk (High to Low)</option>
+                            <option value="date" ${param.sort == 'date' || empty param.sort ? 'selected' : ''}>Sắp xếp theo Ngày (Mới nhất)</option>
+                            <option value="confidence" ${param.sort == 'confidence' ? 'selected' : ''}>Sắp xếp theo Độ tin cậy (Cao nhất)</option>
+                            <option value="risk" ${param.sort == 'risk' ? 'selected' : ''}>Sắp xếp theo Mức độ rủi ro (Cao đến Thấp)</option>
                         </select>
                     </div>
                     
                     <div class="col-md-2 d-flex gap-2">
-                        <button type="submit" class="btn btn-primary flex-grow-1"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
-                        <a href="${pageContext.request.contextPath}/patient/reports" class="btn btn-outline-secondary">Clear</a>
+                        <button type="submit" class="btn btn-primary flex-grow-1"><i class="fa-solid fa-magnifying-glass"></i> Tìm kiếm</button>
+                        <a href="${pageContext.request.contextPath}/patient/reports" class="btn btn-outline-secondary">Xóa bộ lọc</a>
                     </div>
                 </form>
             </div>
@@ -44,19 +44,19 @@
             <table class="table table-hover table-striped align-middle">
                 <thead class="table-dark">
                     <tr>
-                        <th scope="col" style="width: 12%">ID</th>
-                        <th scope="col" style="width: 38%">Disease Detected</th>
-                        <th scope="col" style="width: 12%">Confidence</th>
-                        <th scope="col" style="width: 13%">Risk Level</th>
-                        <th scope="col" style="width: 15%">Date Scanned</th>
-                        <th scope="col" style="width: 10%" class="text-center">Action</th>
+                        <th scope="col" style="width: 12%">Mã ID</th>
+                        <th scope="col" style="width: 38%">Bệnh được phát hiện</th>
+                        <th scope="col" style="width: 12%">Độ tin cậy</th>
+                        <th scope="col" style="width: 13%">Mức độ rủi ro</th>
+                        <th scope="col" style="width: 15%">Ngày quét</th>
+                        <th scope="col" style="width: 10%" class="text-center">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
                     <c:choose>
                         <c:when test="${empty reports}">
                             <tr>
-                                <td colspan="6" class="text-center py-4 text-muted">No diagnosis results found.</td>
+                                <td colspan="6" class="text-center py-4 text-muted">Không tìm thấy kết quả chẩn đoán nào.</td>
                             </tr>
                         </c:when>
                         <c:otherwise>
@@ -73,7 +73,7 @@
                                                 <span class="badge bg-secondary p-1">SYS</span> ${r.diseaseName}
                                             </c:when>
                                             <c:otherwise>
-                                                <span class="text-muted">Unknown</span>
+                                                <span class="text-muted">Không rõ</span>
                                             </c:otherwise>
                                         </c:choose>
                                     </td>
@@ -88,16 +88,16 @@
                                     <td>
                                         <c:choose>
                                             <c:when test="${r.riskLevel == 'HIGH'}">
-                                                <span class="badge bg-danger px-3 py-2 text-uppercase" style="font-size: 85%;">High Risk</span>
+                                                <span class="badge bg-danger px-3 py-2 text-uppercase" style="font-size: 85%;">Nguy cơ cao</span>
                                             </c:when>
                                             <c:when test="${r.riskLevel == 'MEDIUM'}">
-                                                <span class="badge bg-warning text-white px-3 py-2 text-uppercase" style="font-size: 85%;">Medium Risk</span>
+                                                <span class="badge bg-warning text-white px-3 py-2 text-uppercase" style="font-size: 85%;">Nguy cơ trung bình</span>
                                             </c:when>
                                             <c:when test="${r.riskLevel == 'LOW'}">
-                                                <span class="badge bg-success px-3 py-2 text-uppercase" style="font-size: 85%;">Low Risk</span>
+                                                <span class="badge bg-success px-3 py-2 text-uppercase" style="font-size: 85%;">Nguy cơ thấp</span>
                                             </c:when>
                                             <c:otherwise>
-                                                <span class="badge bg-secondary px-3 py-2">PENDING</span>
+                                                <span class="badge bg-secondary px-3 py-2">ĐANG CHỜ</span>
                                             </c:otherwise>
                                         </c:choose>
                                     </td>
@@ -108,9 +108,14 @@
                                         </small>
                                     </td>
                                     <td class="text-center">
-                                        <a href="${pageContext.request.contextPath}/patient/reports/view?id=${r.id}" class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-eye"></i> View Details
-                                        </a>
+                                        <div class="btn-group" role="group">
+                                            <a href="${pageContext.request.contextPath}/patient/reports/view?id=${r.id}" class="btn btn-sm btn-outline-primary" title="Xem chi tiết">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="${pageContext.request.contextPath}/patient/booking?reportId=${r.id}" class="btn btn-sm btn-outline-success" title="Đặt lịch hẹn">
+                                                <i class="fas fa-calendar-plus"></i>
+                                            </a>
+                                        </div>
                                     </td>
                                 </tr>
                             </c:forEach>
@@ -125,7 +130,7 @@
                 <nav aria-label="Page navigation">
                     <ul class="pagination justify-content-center mb-0">
                         <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
-                            <a class="page-link" href="?page=${currentPage - 1}&search=${param.search}&fromDate=${param.fromDate}&toDate=${param.toDate}&sort=${param.sort}">Previous</a>
+                            <a class="page-link" href="?page=${currentPage - 1}&search=${param.search}&fromDate=${param.fromDate}&toDate=${param.toDate}&sort=${param.sort}">Trước</a>
                         </li>
                         <c:forEach begin="1" end="${totalPages}" var="i">
                             <li class="page-item ${i == currentPage ? 'active' : ''}">
@@ -133,7 +138,7 @@
                             </li>
                         </c:forEach>
                         <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
-                            <a class="page-link" href="?page=${currentPage + 1}&search=${param.search}&fromDate=${param.fromDate}&toDate=${param.toDate}&sort=${param.sort}">Next</a>
+                            <a class="page-link" href="?page=${currentPage + 1}&search=${param.search}&fromDate=${param.fromDate}&toDate=${param.toDate}&sort=${param.sort}">Sau</a>
                         </li>
                     </ul>
                 </nav>

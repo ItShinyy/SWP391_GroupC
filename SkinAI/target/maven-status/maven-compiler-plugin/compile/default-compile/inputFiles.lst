@@ -8,6 +8,8 @@ C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathol
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\service\OtpService.java
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\filter\EncodingFilter.java
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\dao\PasswordResetTokenDAO.java
+C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\controller\TestController.java
+C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\controller\patient\AppointmentsController.java
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\service\AuthService.java
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\controller\patient\DiagnoseController.java
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\config\AppShutdownListener.java

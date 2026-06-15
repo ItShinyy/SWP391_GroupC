@@ -32,6 +32,7 @@ com\dermathologyai\model\DiagnosisReport.class
 com\dermathologyai\controller\patient\BookingController.class
 com\dermathologyai\filter\EncodingFilter.class
 com\dermathologyai\controller\auth\GoogleCallbackController.class
+com\dermathologyai\controller\TestController.class
 com\dermathologyai\model\Clinic.class
 com\dermathologyai\util\AuthUtil.class
 com\dermathologyai\controller\auth\UnlockAccountController.class
@@ -60,6 +61,7 @@ com\dermathologyai\service\OtpService.class
 com\dermathologyai\config\AppConfig.class
 com\dermathologyai\controller\patient\PatientReportsController.class
 com\dermathologyai\util\RegistrationCache.class
+com\dermathologyai\controller\patient\AppointmentsController.class
 com\dermathologyai\util\PageUtil.class
 com\dermathologyai\controller\patient\DiagnoseController.class
 com\dermathologyai\notification\MailService.class

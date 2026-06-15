@@ -34,8 +34,16 @@ public class BookingController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String clinicId = req.getParameter("clinicId");
+        String reportId = req.getParameter("reportId");
+        
         if (clinicId != null && !clinicId.trim().isEmpty()) {
             req.setAttribute("selectedClinic", clinicDAO.findById(clinicId));
+        }
+        
+        // If reportId is provided, get the report details for context
+        if (reportId != null && !reportId.trim().isEmpty()) {
+            req.setAttribute("reportId", reportId);
+            // TODO: Load report details if needed for better display
         }
         
         req.setAttribute("clinics", clinicDAO.findActive());
@@ -61,6 +69,7 @@ public class BookingController extends HttpServlet {
         String appointmentTimeStr = req.getParameter("appointmentTime");
         String notes = req.getParameter("notes");
         String requestId = req.getParameter("requestId");
+        String reportId = req.getParameter("reportId");
         
         if (clinicId == null || appointmentTimeStr == null || requestId == null) {
             req.setAttribute("errorMessage", "Missing required fields.");
@@ -78,11 +87,21 @@ public class BookingController extends HttpServlet {
             appointment.setRequestId(requestId);
             appointment.setStatus("CREATED");
             
+            // Set diagnosis report ID if booking from a report
+            if (reportId != null && !reportId.trim().isEmpty()) {
+                appointment.setDiagnosisReportId(reportId);
+            }
+            
             String appointmentId = bookingService.bookAppointment(user.getId(), appointment);
             
             if (appointmentId != null) {
-                auditLogDAO.createLog(user.getId(), "APPOINTMENT_CREATE", "appointments", appointmentId, null, "Clinic ID: " + clinicId, RequestUtil.getClientIp(req), req.getHeader("User-Agent"));
-                resp.sendRedirect(req.getContextPath() + "/patient/reports?success=booking_created");
+                String auditDetails = "Clinic ID: " + clinicId;
+                if (reportId != null && !reportId.trim().isEmpty()) {
+                    auditDetails += ", Report ID: " + reportId;
+                }
+                auditLogDAO.createLog(user.getId(), "APPOINTMENT_CREATE", "appointments", appointmentId, null, auditDetails, RequestUtil.getClientIp(req), req.getHeader("User-Agent"));
+                req.getSession().setAttribute("successMessage", "Appointment booked successfully!");
+                resp.sendRedirect(req.getContextPath() + "/patient/appointments");
             } else {
                 req.setAttribute("errorMessage", "Could not book appointment.");
                 doGet(req, resp);
