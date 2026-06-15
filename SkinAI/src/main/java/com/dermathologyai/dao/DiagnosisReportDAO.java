@@ -39,10 +39,65 @@ public class DiagnosisReportDAO extends DBContext {
         );
     }
 
+    /**
+     * Find reports by patient ID with filters and sorting.
+     */
+    public List<DiagnosisReport> findByPatientIdFiltered(String patientId, String search, 
+                                                         String fromDate, String toDate,
+                                                         String riskLevel, String sort,
+                                                         int page, int pageSize) {
+        StringBuilder sql = new StringBuilder(SELECT_COLS + " WHERE dr.patient_id = ?");
+        List<Object> params = new ArrayList<>();
+        params.add(patientId);
+        
+        appendPatientFilters(sql, params, search, fromDate, toDate, riskLevel);
+        
+        // Sorting
+        String orderBy;
+        switch (sort != null ? sort : "date") {
+            case "confidence":
+                orderBy = "dr.confidence_score DESC";
+                break;
+            case "risk":
+                orderBy = "CASE dr.risk_level WHEN 'HIGH' THEN 1 WHEN 'MEDIUM' THEN 2 WHEN 'LOW' THEN 3 ELSE 4 END";
+                break;
+            default: // "date"
+                orderBy = "dr.created_at DESC";
+                break;
+        }
+        
+        sql.append(" ORDER BY ").append(orderBy).append(" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+        params.add((page - 1) * pageSize);
+        params.add(pageSize);
+        
+        logger.debug("findByPatientIdFiltered SQL: {}", sql.toString());
+        logger.debug("findByPatientIdFiltered params: {}", params);
+        
+        return queryList(sql.toString(), DiagnosisReportDAO::mapRow, params.toArray());
+    }
+
     public int countByPatientId(String patientId) {
         return queryScalar(
             "SELECT COUNT(*) FROM diagnosis_reports WHERE patient_id = ?", patientId
         );
+    }
+
+    /**
+     * Count reports by patient ID with filters.
+     */
+    public int countByPatientIdFiltered(String patientId, String search, 
+                                        String fromDate, String toDate, String riskLevel) {
+        StringBuilder sql = new StringBuilder(
+            "SELECT COUNT(*) FROM diagnosis_reports dr" +
+            " LEFT JOIN diseases d ON dr.disease_id = d.id" +
+            " WHERE dr.patient_id = ?"
+        );
+        List<Object> params = new ArrayList<>();
+        params.add(patientId);
+        
+        appendPatientFilters(sql, params, search, fromDate, toDate, riskLevel);
+        
+        return queryScalar(sql.toString(), params.toArray());
     }
 
     // ─── Filtered / paginated queries ─────────────────────────────────────────
@@ -161,6 +216,30 @@ public class DiagnosisReportDAO extends DBContext {
             sql.append(" AND (u.full_name LIKE ? OR d.disease_name LIKE ?)");
             String p = "%" + search.trim() + "%";
             params.add(p); params.add(p);
+        }
+        if (riskLevel != null && !riskLevel.isBlank()) {
+            sql.append(" AND dr.risk_level = ?");
+            params.add(riskLevel.trim());
+        }
+    }
+
+    /**
+     * Append filters for patient-specific queries (no patient name search needed).
+     */
+    private static void appendPatientFilters(StringBuilder sql, List<Object> params,
+                                            String search, String fromDate, String toDate, 
+                                            String riskLevel) {
+        if (search != null && !search.isBlank()) {
+            sql.append(" AND d.disease_name LIKE ?");
+            params.add("%" + search.trim() + "%");
+        }
+        if (fromDate != null && !fromDate.isBlank()) {
+            sql.append(" AND CAST(dr.created_at AS DATE) >= ?");
+            params.add(fromDate.trim());
+        }
+        if (toDate != null && !toDate.isBlank()) {
+            sql.append(" AND CAST(dr.created_at AS DATE) <= ?");
+            params.add(toDate.trim());
         }
         if (riskLevel != null && !riskLevel.isBlank()) {
             sql.append(" AND dr.risk_level = ?");
