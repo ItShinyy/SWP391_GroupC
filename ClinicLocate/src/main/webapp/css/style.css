@@ -127,6 +127,8 @@ button, a { font: inherit; }
 .card-type.clinic { color: #087f8c; background: var(--primary-soft); }
 .card-name { margin-bottom: 5px; color: var(--navy); font-size: 13px; font-weight: 800; line-height: 1.45; }
 .card-address { color: var(--muted); font-size: 10px; line-height: 1.5; }
+.card-website { display: inline-block; margin-top: 8px; color: var(--primary); font-size: 10px; font-weight: 800; text-decoration: none; }
+.card-website:hover { color: var(--primary-dark); text-decoration: underline; }
 .empty { padding: 30px 18px; color: var(--muted); text-align: center; font-size: 12px; line-height: 1.6; }
 .map-container { flex: 1; position: relative; }
 #map { width: 100%; height: 100%; }

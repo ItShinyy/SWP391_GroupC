@@ -5,14 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2b5e838e-9391-4418-8b6e-1baaf54a78b2" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/LanguageServersSettings.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/encodings.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/webapp/WEB-INF/web.xml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/webapp/WEB-INF/web.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/webapp/js/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/webapp/js/app.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/Ctrller/ClinicFallbackServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/Ctrller/ClinicFallbackServlet.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/webapp/css/style.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/webapp/css/style.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/webapp/index.jsp" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/webapp/index.jsp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/webapp/js/locate.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/webapp/js/locate.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/webapp/location.jsp" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/webapp/location.jsp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/webapp/search.jsp" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/webapp/search.jsp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../ClinicMap/.gitignore" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/../ClinicMap/.idea/.gitignore" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/../ClinicMap/.idea/misc.xml" beforeDir="false" />
@@ -101,61 +100,61 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="6.920371763337041E-16" />
-      <entry key="MS500" value="9.54787378322513E-4" />
-      <entry key="S2" value="0.25920960184118585" />
-      <entry key="S5" value="1.0232658932388017" />
-      <entry key="S10" value="1.717012863608502" />
-      <entry key="S30" value="2.478808867219091" />
-      <entry key="S60" value="2.725290608260715" />
-      <entry key="M2" value="2.859459575462935" />
-      <entry key="M5" value="3.0378635258572992" />
-      <entry key="M10" value="3.5090537407597244" />
-      <entry key="M15" value="4.01227997139982" />
-      <entry key="M30" value="7.0466748154423335" />
-      <entry key="H1" value="23.67331595296555" />
-      <entry key="H2" value="64.27952880444462" />
-      <entry key="H4" value="114.22719067475829" />
-      <entry key="D1" value="190.03299593932994" />
-      <entry key="W1" value="207.85730211635084" />
+      <entry key="MS100" value="1.0193704328115467" />
+      <entry key="MS500" value="1.45438905822426" />
+      <entry key="S2" value="1.8210261054732233" />
+      <entry key="S5" value="1.9241506780543953" />
+      <entry key="S10" value="1.9613275602282476" />
+      <entry key="S30" value="1.986939348763311" />
+      <entry key="S60" value="1.993448211414823" />
+      <entry key="M2" value="1.996718732864845" />
+      <entry key="M5" value="2.0101734666247406" />
+      <entry key="M10" value="3.631032550059903" />
+      <entry key="M15" value="11.972409892910798" />
+      <entry key="M30" value="75.83908404798147" />
+      <entry key="H1" value="228.80372942234894" />
+      <entry key="H2" value="428.91321689213066" />
+      <entry key="H4" value="616.4933552158815" />
+      <entry key="D1" value="876.0768619977302" />
+      <entry key="W1" value="936.3582410695948" />
     </decayedCancelled>
     <decayedSelected>
-      <entry key="MS100" value="1.0" />
-      <entry key="MS500" value="1.0000000003013167" />
-      <entry key="S2" value="1.004166350706374" />
-      <entry key="S5" value="1.1116612100017635" />
-      <entry key="S10" value="1.334157462885035" />
-      <entry key="S30" value="1.6939322235889123" />
-      <entry key="S60" value="1.8330262959025698" />
-      <entry key="M2" value="1.914355551426222" />
-      <entry key="M5" value="2.231684535862287" />
-      <entry key="M10" value="3.4444766732333805" />
-      <entry key="M15" value="4.573907313632578" />
-      <entry key="M30" value="6.807728661736414" />
-      <entry key="H1" value="10.15898128201165" />
-      <entry key="H2" value="16.04705453980462" />
-      <entry key="H4" value="23.078089413401088" />
-      <entry key="D1" value="33.944603860305286" />
-      <entry key="W1" value="36.540699787553294" />
+      <entry key="MS100" value="0.0" />
+      <entry key="MS500" value="0.0" />
+      <entry key="S2" value="0.0" />
+      <entry key="S5" value="1.0797455775107028E-238" />
+      <entry key="S10" value="1.0839076361693679E-119" />
+      <entry key="S30" value="3.4517864359631858E-40" />
+      <entry key="S60" value="3.30081587090647E-20" />
+      <entry key="M2" value="3.686814020651845E-10" />
+      <entry key="M5" value="5.082905642009021E-4" />
+      <entry key="M10" value="0.07512782096418416" />
+      <entry key="M15" value="0.4688627065669562" />
+      <entry key="M30" value="3.7836619355900813" />
+      <entry key="H1" value="12.958242692192822" />
+      <entry key="H2" value="27.151968303516828" />
+      <entry key="H4" value="42.76480150619319" />
+      <entry key="D1" value="67.64855204318488" />
+      <entry key="W1" value="73.88363640237476" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="0.0011140270662777572" />
-      <entry key="MS500" value="0.2567778009625906" />
-      <entry key="S2" value="0.8899312463977411" />
-      <entry key="S5" value="1.8579418088399864" />
-      <entry key="S10" value="2.844532039790414" />
-      <entry key="S30" value="4.074253934740299" />
-      <entry key="S60" value="4.503777981732802" />
-      <entry key="M2" value="4.745043937680143" />
-      <entry key="M5" value="5.256454236537223" />
-      <entry key="M10" value="6.94406340741468" />
-      <entry key="M15" value="8.578001145601963" />
-      <entry key="M30" value="13.847918735968955" />
-      <entry key="H1" value="33.82551482338337" />
-      <entry key="H2" value="80.31913127435114" />
-      <entry key="H4" value="137.29902656601163" />
-      <entry key="D1" value="223.97590751123474" />
-      <entry key="W1" value="244.39773810125303" />
+      <entry key="MS100" value="0.8381696577603357" />
+      <entry key="MS500" value="1.3912101728836515" />
+      <entry key="S2" value="1.799785088480433" />
+      <entry key="S5" value="1.9150387830332145" />
+      <entry key="S10" value="1.956660508545388" />
+      <entry key="S30" value="1.9853581345265303" />
+      <entry key="S60" value="1.9926543591458645" />
+      <entry key="M2" value="1.9963209916815219" />
+      <entry key="M5" value="2.010507035078284" />
+      <entry key="M10" value="3.7050983322632884" />
+      <entry key="M15" value="12.43742789446507" />
+      <entry key="M30" value="79.60916927545289" />
+      <entry key="H1" value="241.74078547095579" />
+      <entry key="H2" value="456.0441326171261" />
+      <entry key="H4" value="659.2419975148252" />
+      <entry key="D1" value="943.7212383831262" />
+      <entry key="W1" value="1010.2412281448044" />
     </decayedShown>
   </component>
   <component name="ProjectColorInfo">{
