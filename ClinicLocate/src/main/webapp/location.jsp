@@ -1,6 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-    <!DOCTYPE html>
-    <html lang="vi">
+<!DOCTYPE html>
+<html lang="vi">
 
     <head>
         <meta charset="UTF-8">
@@ -83,12 +83,14 @@
                 }
 
                 navigator.geolocation.getCurrentPosition(
+                    // Lưu tọa độ khi trình duyệt trả về vị trí thành công.
                     function (position) {
                         fallbackMode = false;
                         userLat = position.coords.latitude;
                         userLng = position.coords.longitude;
                         findNearbyClinics();
                     },
+                    // Nếu người dùng từ chối hoặc trình duyệt lỗi, chuyển sang dữ liệu dự phòng.
                     function (error) {
                         if (error.code === 1) {
                             showDatabaseClinics('Bạn đã từ chối chia sẻ vị trí.');
@@ -98,7 +100,7 @@
                     },
                     {
                         enableHighAccuracy: true,
-                        timeout: 15000,
+                        timeout: 25000,
                         maximumAge: 0
                     }
                 );
@@ -209,6 +211,7 @@
                 }
             }
 
+            // Khởi tạo bản đồ mặc định khi phải hiển thị dữ liệu dự phòng từ database.
             function ensureFallbackMap() {
                 if (!map) {
                     map = L.map('map').setView([16.0, 106.0], 6);
@@ -261,11 +264,13 @@
             // Chuẩn hóa dữ liệu OSM, tạo marker và dựng danh sách bệnh viện/phòng khám.
             function displayClinics(elements) {
                 // Xóa marker của lần tìm trước để tránh hiển thị dữ liệu cũ trên bản đồ.
+                // Duyệt từng marker cũ để xóa khỏi bản đồ.
                 clinicMarkers.forEach(function (marker) {
                     map.removeLayer(marker);
                 });
                 clinicMarkers = [];
 
+                // Chuyển dữ liệu API về cùng một cấu trúc clinic để dễ hiển thị.
                 let clinics = elements.map(function (element) {
                     const tags = element.tags || {};
                     const lat = element.lat !== undefined
@@ -299,6 +304,7 @@
                 }).filter(Boolean);
 
                 if (fallbackMode) {
+                    // Sắp xếp dữ liệu dự phòng theo điểm ưu tiên giảm dần.
                     clinics.sort(function (first, second) {
                         return second.score - first.score;
                     });
@@ -324,6 +330,7 @@
                     : L.latLngBounds([]);
                 let html = '';
 
+                // Tạo marker trên bản đồ và thẻ thông tin trong sidebar cho từng cơ sở.
                 clinics.forEach(function (clinic) {
                     const externalUrl = clinic.website || clinic.searchUrl;
                     const externalLabel = clinic.website ? 'Website' : 'Tìm website';
@@ -366,8 +373,11 @@
             // Di chuyển bản đồ đến cơ sở được chọn trong danh sách.
             function focusClinic(lat, lng) {
                 map.flyTo([lat, lng], 17);
+
+
             }
 
+            // Cho phép mở vị trí cơ sở bằng phím Enter hoặc Space trên thẻ kết quả.
             function handleClinicCardKey(event, lat, lng) {
                 if (event.key === 'Enter' || event.key === ' ') {
                     event.preventDefault();
@@ -420,6 +430,7 @@
                 return 'https://' + normalized;
             }
 
+            // Tạo link tìm kiếm Google khi cơ sở chưa có website trực tiếp.
             function buildClinicSearchUrl(name, address) {
                 const query = [name, address, 'website']
                     .filter(Boolean)
@@ -461,6 +472,7 @@
 
             // Mã hóa dữ liệu lấy từ API trước khi chèn vào HTML để tránh chèn mã độc vào trang.
             function escapeHtml(value) {
+                // Thay các ký tự nguy hiểm bằng HTML entity trước khi đưa vào DOM.
                 return String(value).replace(/[&<>"']/g, function (character) {
                     return {
                         '&': '&amp;',
@@ -477,4 +489,4 @@
         </script>
     </body>
 
-    </html>
+</html>

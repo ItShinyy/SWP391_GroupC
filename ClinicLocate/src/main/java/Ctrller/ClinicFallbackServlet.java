@@ -58,11 +58,49 @@ public class ClinicFallbackServlet extends HttpServlet {
 
         // Escape các ký tự đặc biệt để value không làm hỏng cú pháp JSON:
         // \ thành \\, " thành \", ký tự xuống dòng CR/LF thành chuỗi \r và \n.
-        String escaped = value
-                .replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-                .replace("\r", "\\r")
-                .replace("\n", "\\n");
-        out.print("\"" + escaped + "\"");
+        out.print("\"" + escapeJson(value) + "\"");
+    }
+
+    private String escapeJson(String value) {
+        StringBuilder escaped = new StringBuilder(value.length() + 16);
+        for (int index = 0; index < value.length(); index++) {
+            char character = value.charAt(index);
+            switch (character) {
+                case '"':
+                    escaped.append("\\\"");
+                    break;
+                case '\\':
+                    escaped.append("\\\\");
+                    break;
+                case '\b':
+                    escaped.append("\\b");
+                    break;
+                case '\f':
+                    escaped.append("\\f");
+                    break;
+                case '\n':
+                    escaped.append("\\n");
+                    break;
+                case '\r':
+                    escaped.append("\\r");
+                    break;
+                case '\t':
+                    escaped.append("\\t");
+                    break;
+                default:
+                    if (character < 0x20) {
+                        String hex = Integer.toHexString(character);
+                        escaped.append("\\u");
+                        for (int padding = hex.length(); padding < 4; padding++) {
+                            escaped.append('0');
+                        }
+                        escaped.append(hex);
+                    } else {
+                        escaped.append(character);
+                    }
+                    break;
+            }
+        }
+        return escaped.toString();
     }
 }
