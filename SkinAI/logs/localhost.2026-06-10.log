@@ -1,0 +1,3 @@
+10-Jun-2026 10:05:08.289 INFO [main] org.apache.catalina.core.ApplicationContext.log Filter:Initializing filter
+10-Jun-2026 10:05:12.584 INFO [main] org.apache.catalina.core.ApplicationContext.log userFilter:Initializing filter
+10-Jun-2026 10:05:12.584 INFO [main] org.apache.catalina.core.ApplicationContext.log AdminFilter:Initializing filter
