@@ -50,16 +50,16 @@ public class VerifyController extends HttpServlet {
                     req.setAttribute("userEmail", pending.getUser().getEmail() != null ? MaskUtil.maskEmail(pending.getUser().getEmail()) : "");
                     req.setAttribute("userPhone", pending.getUser().getPhone() != null ? MaskUtil.maskPhone(pending.getUser().getPhone()) : "");
                     
-                    String error = req.getParameter("error");
-                    if ("invalid_otp".equals(error)) {
-                        req.setAttribute("errorMessage", "Mã OTP không chính xác.");
-                    } else if ("cooldown".equals(error)) {
-                        req.setAttribute("errorMessage", "Vui lòng đợi 60 giây trước khi yêu cầu gửi lại mã.");
+                    String errorMsg = (String) session.getAttribute("verifyError");
+                    if (errorMsg != null) {
+                        req.setAttribute("errorMessage", errorMsg);
+                        session.removeAttribute("verifyError");
                     }
                     
-                    String success = req.getParameter("success");
-                    if ("resent".equals(success)) {
-                        req.setAttribute("successMessage", "Mã xác thực đã được gửi lại thành công.");
+                    String successMsg = (String) session.getAttribute("verifySuccess");
+                    if (successMsg != null) {
+                        req.setAttribute("successMessage", successMsg);
+                        session.removeAttribute("verifySuccess");
                     }
 
                     req.setAttribute("pageTitle", "Xác thực tài khoản");
@@ -111,10 +111,17 @@ public class VerifyController extends HttpServlet {
         // Handle OTP Submit
         if ("verify_otp".equals(action)) {
             String otpInput = req.getParameter("otp");
+            
+            if (pending.getAttempts() >= 3) {
+                session.setAttribute("verifyError", "Bạn đã nhập sai quá 3 lần. Mã OTP đã bị vô hiệu hóa. Vui lòng yêu cầu gửi lại.");
+                RegistrationCache.remove(pendingToken);
+                resp.sendRedirect(req.getContextPath() + "/auth/verify");
+                return;
+            }
+            
             if (otpInput != null && otpInput.trim().equals(pending.getExpectedOtp())) {
                 try {
                     User savedUser = authService.finalizeRegistration(pending.getUser());
-                    RegistrationCache.remove(pendingToken);
                     
                     req.changeSessionId();
                     session.setAttribute("user", savedUser);
@@ -125,31 +132,41 @@ public class VerifyController extends HttpServlet {
                     resp.sendRedirect(req.getContextPath() + "/home");
                     return;
                 } catch (IllegalArgumentException e) {
-                    // E.g. email was taken while waiting
-                    resp.sendRedirect(req.getContextPath() + "/auth/register?error=email_exists");
+                    session.setAttribute("registerError", "Email hoặc SĐT đã được sử dụng.");
+                    resp.sendRedirect(req.getContextPath() + "/auth/register");
                     return;
                 }
             } else {
-                resp.sendRedirect(req.getContextPath() + "/auth/verify?error=invalid_otp");
+                pending.incrementAttempts();
+                int newAttempts = pending.getAttempts();
+                if (newAttempts >= 3) {
+                    session.setAttribute("verifyError", "Sai OTP lần thứ 3. Mã OTP đã bị vô hiệu hóa. Vui lòng yêu cầu gửi lại.");
+                } else {
+                    session.setAttribute("verifyError", "Mã OTP không chính xác. Bạn còn " + (3 - newAttempts) + " lần thử.");
+                }
+                resp.sendRedirect(req.getContextPath() + "/auth/verify");
                 return;
             }
-        } 
+        }  
         // Handle Resend
         else if ("resend".equals(action)) {
             try {
-                // Resend Logic
                 String newOtp = com.dermathologyai.service.OtpService.generateAndSendOtp(
                     pending.getUser().getEmail(), 
                     pending.getUser().getPhone(), 
                     pending.isPhone(), 
                     15
                 );
+                // Reset expected OTP and attempts
                 pending.setExpectedOtp(newOtp);
+                // Resetting attempts internally
+                RegistrationCache.put(pendingToken, newOtp, pending.getUser(), pending.isPhone());
                 
-                resp.sendRedirect(req.getContextPath() + "/auth/verify?success=resent");
+                session.setAttribute("verifySuccess", "Mã xác thực đã được gửi lại thành công.");
+                resp.sendRedirect(req.getContextPath() + "/auth/verify");
             } catch (com.dermathologyai.service.CooldownException e) {
-                // Cooldown exception
-                resp.sendRedirect(req.getContextPath() + "/auth/verify?error=cooldown");
+                session.setAttribute("verifyError", e.getMessage());
+                resp.sendRedirect(req.getContextPath() + "/auth/verify");
             }
         }
     }

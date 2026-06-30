@@ -14,6 +14,7 @@ public class RegistrationCache {
         private boolean isPhone; // true if OTP flow via phone, false if Email
         private long createdAt;
         private long lastSentAt;
+        private int attempts;
 
         public PendingRegistration(String token, String expectedOtp, User user, boolean isPhone) {
             this.token = token;
@@ -23,6 +24,7 @@ public class RegistrationCache {
             long now = System.currentTimeMillis();
             this.createdAt = now;
             this.lastSentAt = now;
+            this.attempts = 0;
         }
 
         public String getToken() { return token; }
@@ -34,6 +36,8 @@ public class RegistrationCache {
         public long getCreatedAt() { return createdAt; }
         public long getLastSentAt() { return lastSentAt; }
         public void setLastSentAt(long lastSentAt) { this.lastSentAt = lastSentAt; }
+        public int getAttempts() { return attempts; }
+        public void incrementAttempts() { this.attempts++; }
         
         public boolean isExpired(long ttlMillis) {
             return (System.currentTimeMillis() - createdAt) > ttlMillis;

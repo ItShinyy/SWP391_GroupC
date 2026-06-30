@@ -157,58 +157,66 @@ public class ProfileController extends HttpServlet {
             String otpStr = req.getParameter("otp");
             String otpMethod = (String) session.getAttribute("otpMethod");
             String purpose = "phone".equals(otpMethod) ? "VERIFY_PHONE" : "VERIFY_EMAIL";
-            
-            UserToken token = tokenDAO.findByUserIdTokenAndPurpose(currentUser.getId(), otpStr, purpose);
-            if (token != null) {
-                if (token.getAttempts() >= 3) {
-                    req.setAttribute("errorMessage", "Quá nhiều lần thử thất bại. Vui lòng yêu cầu OTP mới.");
+
+            // 1. Lookup token by userId + purpose (not by OTP value)
+            UserToken activeToken = tokenDAO.findByUserIdAndPurpose(currentUser.getId(), purpose);
+
+            if (activeToken == null) {
+                req.setAttribute("errorMessage", "Không tìm thấy mã OTP. Vui lòng yêu cầu gửi lại.");
+            } else if (activeToken.getExpiresAt().isBefore(LocalDateTime.now())) {
+                // Expired → delete and force resend
+                tokenDAO.deleteByUserIdAndPurpose(currentUser.getId(), purpose);
+                req.setAttribute("errorMessage", "Mã OTP đã hết hạn. Vui lòng yêu cầu gửi lại.");
+            } else if (activeToken.getAttempts() >= 3) {
+                // Already locked → delete and force resend
+                tokenDAO.deleteByUserIdAndPurpose(currentUser.getId(), purpose);
+                req.setAttribute("errorMessage", "Bạn đã nhập sai quá 3 lần. Mã OTP đã bị vô hiệu hóa. Vui lòng yêu cầu gửi lại.");
+            } else if (!otpStr.equals(activeToken.getToken())) {
+                // Wrong OTP → increment attempts
+                int newAttempts = activeToken.getAttempts() + 1;
+                tokenDAO.updateAttempts(activeToken.getId(), newAttempts);
+
+                if (newAttempts >= 3) {
+                    // Just hit the limit → delete and inform user
                     tokenDAO.deleteByUserIdAndPurpose(currentUser.getId(), purpose);
-                } else if (token.getExpiresAt().isBefore(LocalDateTime.now())) {
-                    req.setAttribute("errorMessage", "OTP đã hết hạn.");
-                    tokenDAO.deleteByUserIdAndPurpose(currentUser.getId(), purpose);
+                    req.setAttribute("errorMessage", "Sai OTP lần thứ 3. Mã OTP đã bị vô hiệu hóa. Vui lòng yêu cầu gửi lại.");
                 } else {
-                    // OTP matches apply pending changes
-                    boolean updated = false;
-                    String pendingNewEmail = (String) session.getAttribute("pendingNewEmail");
-                    if (pendingNewEmail != null) {
-                        currentUser.setEmail(pendingNewEmail);
-                        updated = true;
-                    }
-                    
-                    String pendingNewPhone = (String) session.getAttribute("pendingNewPhone");
-                    if (pendingNewPhone != null) {
-                        currentUser.setPhone(pendingNewPhone);
-                        updated = true;
-                    }
-                    
-                    String pendingNewPassword = (String) session.getAttribute("pendingNewPassword");
-                    if (pendingNewPassword != null) {
-                        currentUser.setPasswordHash(BCrypt.hashpw(pendingNewPassword, BCrypt.gensalt()));
-                        updated = true;
-                    }
-                    
-                    if (updated && userDAO.update(currentUser)) {
-                        session.setAttribute("user", currentUser);
-                        session.removeAttribute("pendingNewEmail");
-                        session.removeAttribute("pendingNewPhone");
-                        session.removeAttribute("pendingNewPassword");
-                        tokenDAO.deleteByUserIdAndPurpose(currentUser.getId(), purpose);
-                        session.removeAttribute("otpMethod");
-                        
-                        resp.sendRedirect(req.getContextPath() + "/account/profile?success=security_updated");
-                        return;
-                    } else {
-                        req.setAttribute("errorMessage", "Không có thông tin nào cần cập nhật hoặc cập nhật thất bại.");
-                    }
+                    req.setAttribute("errorMessage", "Mã OTP không chính xác. Bạn còn " + (3 - newAttempts) + " lần thử.");
                 }
             } else {
-                // If token by that OTP string doesn't exist, it means wrong OTP (or expired/deleted)
-                // We should increment attempts. But since we need the token record to do so, we must look it up by purpose
-                UserToken activeToken = tokenDAO.findByUserIdAndPurpose(currentUser.getId(), purpose);
-                if (activeToken != null) {
-                    tokenDAO.updateAttempts(activeToken.getId(), activeToken.getAttempts() + 1);
+                // Correct OTP → apply pending changes
+                boolean updated = false;
+                String pendingNewEmail = (String) session.getAttribute("pendingNewEmail");
+                if (pendingNewEmail != null) {
+                    currentUser.setEmail(pendingNewEmail);
+                    updated = true;
                 }
-                req.setAttribute("errorMessage", "Mã OTP không chính xác.");
+
+                String pendingNewPhone = (String) session.getAttribute("pendingNewPhone");
+                if (pendingNewPhone != null) {
+                    currentUser.setPhone(pendingNewPhone);
+                    updated = true;
+                }
+
+                String pendingNewPassword = (String) session.getAttribute("pendingNewPassword");
+                if (pendingNewPassword != null) {
+                    currentUser.setPasswordHash(BCrypt.hashpw(pendingNewPassword, BCrypt.gensalt()));
+                    updated = true;
+                }
+
+                if (updated && userDAO.update(currentUser)) {
+                    session.setAttribute("user", currentUser);
+                    session.removeAttribute("pendingNewEmail");
+                    session.removeAttribute("pendingNewPhone");
+                    session.removeAttribute("pendingNewPassword");
+                    session.removeAttribute("otpMethod");
+                    tokenDAO.deleteByUserIdAndPurpose(currentUser.getId(), purpose);
+
+                    resp.sendRedirect(req.getContextPath() + "/account/profile?success=security_updated");
+                    return;
+                } else {
+                    req.setAttribute("errorMessage", "Không có thông tin nào cần cập nhật hoặc cập nhật thất bại.");
+                }
             }
         } else if ("resend_otp".equals(action)) {
             String otpMethod = (String) session.getAttribute("otpMethod");

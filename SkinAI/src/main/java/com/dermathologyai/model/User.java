@@ -9,6 +9,7 @@ public class User {
     private String id;
     private String googleId;
     private String username;
+    private String avatar;
     private String email;
     private String pendingEmail;
     private String phone;
@@ -59,6 +60,10 @@ public class User {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+       
+    public String getAvatar() {
+        return avatar;
     }
 
     public String getEmail() { return email; }

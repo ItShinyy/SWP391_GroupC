@@ -121,10 +121,10 @@ public class UnlockAccountController extends HttpServlet {
         UserToken token = tokenDAO.findByUserIdAndPurpose(user.getId(), "UNLOCK_ACCOUNT");
         if (token != null) {
             if (token.getAttempts() >= 3) {
-                req.setAttribute("errorMessage", "Nhập sai quá nhiều lần. Vui lòng yêu cầu mã mới.");
+                req.setAttribute("errorMessage", "Bạn đã nhập sai quá 3 lần. Mã OTP đã bị vô hiệu hóa. Vui lòng yêu cầu gửi lại.");
                 tokenDAO.deleteByUserIdAndPurpose(user.getId(), "UNLOCK_ACCOUNT");
             } else if (token.getExpiresAt().isBefore(LocalDateTime.now())) {
-                req.setAttribute("errorMessage", "Mã OTP đã hết hạn (Quá 5 phút). Vui lòng yêu cầu mã mới.");
+                req.setAttribute("errorMessage", "Mã OTP đã hết hạn (Quá 5 phút). Vui lòng yêu cầu gửi lại.");
                 tokenDAO.deleteByUserIdAndPurpose(user.getId(), "UNLOCK_ACCOUNT");
             } else if (OtpService.verifyOtp(tokenStr.trim(), token.getToken())) {
                 // OTP matches → unlock account
@@ -142,23 +142,20 @@ public class UnlockAccountController extends HttpServlet {
                 req.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(req, resp);
                 return;
             } else {
-               if (tokenDAO.updateAttempts(token.getId(), token.getAttempts() + 1)) {
-                if (token.getAttempts() + 1 >= 5) {
-                    req.setAttribute("errorMessage", "Đã quá số lần nhập sai. Vui lòng gửi lại OTP.");
+                int newAttempts = tokenDAO.incrementAttempts(token.getId());
+                if (newAttempts >= 3) {
+                    tokenDAO.deleteByUserIdAndPurpose(user.getId(), "UNLOCK_ACCOUNT");
+                    req.setAttribute("errorMessage", "Sai OTP lần thứ 3. Mã OTP đã bị vô hiệu hóa. Vui lòng yêu cầu gửi lại.");
                 } else {
-                    req.setAttribute("errorMessage", "Mã OTP không chính xác.");
+                    req.setAttribute("errorMessage", "Mã OTP không chính xác. Bạn còn " + (3 - newAttempts) + " lần thử.");
                 }
-            } else {
-                req.setAttribute("errorMessage", "Mã OTP không chính xác.");
-            }
-            req.setAttribute("email", email);
-            forwardToVerify(req, resp);
             }
         } else {
             req.setAttribute("errorMessage", "Mã OTP không chính xác hoặc đã hết hạn.");
-            req.setAttribute("email", email);
-            forwardToVerify(req, resp);
         }
+        
+        req.setAttribute("email", email);
+        forwardToVerify(req, resp);
     }
 
     private void forwardToVerify(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {

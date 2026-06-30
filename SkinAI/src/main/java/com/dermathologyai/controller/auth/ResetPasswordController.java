@@ -84,8 +84,8 @@ public class ResetPasswordController extends HttpServlet {
         UserToken token = tokenDAO.findByUserIdAndPurpose(user.getId(), "RESET_PASSWORD");
         
         if (token != null) {
-            if (token.getAttempts() >= 5) {
-                session.setAttribute("forgotError", "Bạn đã nhập sai quá nhiều lần. Vui lòng yêu cầu mã OTP mới.");
+            if (token.getAttempts() >= 3) {
+                session.setAttribute("forgotError", "Bạn đã nhập sai quá 3 lần. Mã OTP đã bị vô hiệu hóa. Vui lòng yêu cầu gửi lại.");
                 tokenDAO.invalidateAllByUserAndPurpose(user.getId(), "RESET_PASSWORD");
                 session.removeAttribute("resetIdentifier");
                 resp.sendRedirect(req.getContextPath() + "/auth/forgot-password");
@@ -95,21 +95,26 @@ public class ResetPasswordController extends HttpServlet {
             if (token.getExpiresAt().isBefore(LocalDateTime.now()) || token.getUsedAt() != null) {
                 session.setAttribute("resetError", "Mã OTP đã hết hạn hoặc đã được sử dụng. Vui lòng yêu cầu lại.");
                 tokenDAO.invalidateAllByUserAndPurpose(user.getId(), "RESET_PASSWORD");
-            } else {
-                // Verify hash
-                if (BCrypt.checkpw(tokenStr, token.getToken())) {
-                    userDAO.updatePassword(user.getId(), BCrypt.hashpw(newPassword, BCrypt.gensalt()));
-                    tokenDAO.markUsed(token.getId());
-                    
-                    auditLogDAO.createLog(user.getId(), "PASSWORD_RESET", "users", user.getId(), null, "{\"method\":\"otp\"}", null, RequestUtil.getClientIp(req), req.getHeader("User-Agent"));
+            } else if (BCrypt.checkpw(tokenStr, token.getToken())) {
+                userDAO.updatePassword(user.getId(), BCrypt.hashpw(newPassword, BCrypt.gensalt()));
+                tokenDAO.markUsed(token.getId());
+                
+                auditLogDAO.createLog(user.getId(), "PASSWORD_RESET", "users", user.getId(), null, "{\"method\":\"otp\"}", null, RequestUtil.getClientIp(req), req.getHeader("User-Agent"));
 
+                session.removeAttribute("resetIdentifier");
+                session.setAttribute("loginSuccess", "Đổi mật khẩu thành công! Vui lòng đăng nhập.");
+                resp.sendRedirect(req.getContextPath() + "/auth/login");
+                return;
+            } else {
+                int newAttempts = tokenDAO.incrementAttempts(token.getId());
+                if (newAttempts >= 3) {
+                    session.setAttribute("forgotError", "Sai OTP lần thứ 3. Mã OTP đã bị vô hiệu hóa. Vui lòng yêu cầu gửi lại.");
+                    tokenDAO.invalidateAllByUserAndPurpose(user.getId(), "RESET_PASSWORD");
                     session.removeAttribute("resetIdentifier");
-                    session.setAttribute("loginSuccess", "Đổi mật khẩu thành công! Vui lòng đăng nhập.");
-                    resp.sendRedirect(req.getContextPath() + "/auth/login");
+                    resp.sendRedirect(req.getContextPath() + "/auth/forgot-password");
                     return;
                 } else {
-                    tokenDAO.incrementAttempts(token.getId());
-                    session.setAttribute("resetError", "Mã OTP không chính xác.");
+                    session.setAttribute("resetError", "Mã OTP không chính xác. Bạn còn " + (3 - newAttempts) + " lần thử.");
                 }
             }
         } else {
