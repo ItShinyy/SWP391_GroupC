@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
+         version="6.0">
+
+    <display-name>SkinAI Web Application</display-name>
+
+    <!-- ==================== Filters ==================== -->
+    <filter>
+        <filter-name>EncodingFilter</filter-name>
+        <filter-class>com.dermathologyai.filter.EncodingFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>EncodingFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+    <filter>
+        <filter-name>AuthenticationFilter</filter-name>
+        <filter-class>com.dermathologyai.filter.AuthenticationFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>AuthenticationFilter</filter-name>
+        <url-pattern>/patient/*</url-pattern>
+        <url-pattern>/admin/*</url-pattern>
+        <url-pattern>/account/*</url-pattern>
+    </filter-mapping>
+
+    <filter>
+        <filter-name>AuthorizationFilter</filter-name>
+        <filter-class>com.dermathologyai.filter.AuthorizationFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>AuthorizationFilter</filter-name>
+        <url-pattern>/admin/*</url-pattern>
+        <url-pattern>/patient/*</url-pattern>
+    </filter-mapping>
+
+    <filter>
+        <filter-name>AuditFilter</filter-name>
+        <filter-class>com.dermathologyai.filter.AuditFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>AuditFilter</filter-name>
+        <url-pattern>/admin/*</url-pattern>
+    </filter-mapping>
+
+    <!-- ==================== Auth Servlets ==================== -->
+    <servlet>
+        <servlet-name>LoginController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.auth.LoginController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>LoginController</servlet-name>
+        <url-pattern>/auth/login</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>RegisterController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.auth.RegisterController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>RegisterController</servlet-name>
+        <url-pattern>/auth/register</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>VerifyController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.auth.VerifyController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>VerifyController</servlet-name>
+        <url-pattern>/auth/verify</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>GoogleOAuthController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.auth.GoogleOAuthController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>GoogleOAuthController</servlet-name>
+        <url-pattern>/auth/google</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>GoogleCallbackController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.auth.GoogleCallbackController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>GoogleCallbackController</servlet-name>
+        <url-pattern>/auth/google/callback</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>LogoutController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.auth.LogoutController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>LogoutController</servlet-name>
+        <url-pattern>/auth/logout</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>ForgotPasswordController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.auth.ForgotPasswordController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ForgotPasswordController</servlet-name>
+        <url-pattern>/auth/forgot-password</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>ResetPasswordController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.auth.ResetPasswordController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ResetPasswordController</servlet-name>
+        <url-pattern>/auth/reset-password</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>UnlockAccountController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.auth.UnlockAccountController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>UnlockAccountController</servlet-name>
+        <url-pattern>/auth/unlock-account</url-pattern>
+    </servlet-mapping>
+
+    <!-- ==================== Public Servlets ==================== -->
+    <servlet>
+        <servlet-name>HomeController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.global.HomeController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>HomeController</servlet-name>
+        <url-pattern>/home</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>ProfileController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.account.ProfileController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ProfileController</servlet-name>
+        <url-pattern>/account/profile</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ProfileController</servlet-name>
+        <url-pattern>/account/verify-otp</url-pattern>
+    </servlet-mapping>
+
+    <!-- ==================== Patient Servlets ==================== -->
+    <servlet>
+        <servlet-name>DiagnoseController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.patient.DiagnoseController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>DiagnoseController</servlet-name>
+        <url-pattern>/patient/diagnose</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>BookingController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.patient.BookingController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>BookingController</servlet-name>
+        <url-pattern>/patient/booking</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>ReportDetailController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.patient.ReportDetailController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ReportDetailController</servlet-name>
+        <url-pattern>/patient/reports/view</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>PatientReportsController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.patient.PatientReportsController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>PatientReportsController</servlet-name>
+        <url-pattern>/patient/reports</url-pattern>
+    </servlet-mapping>
+
+    <!-- ==================== Admin Servlets ==================== -->
+    <servlet>
+        <servlet-name>DashboardController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.admin.DashboardController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>DashboardController</servlet-name>
+        <url-pattern>/admin/dashboard</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>DashboardApiController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.admin.DashboardApiController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>DashboardApiController</servlet-name>
+        <url-pattern>/admin/api/dashboard</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>ExportCsvController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.admin.ExportCsvController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ExportCsvController</servlet-name>
+        <url-pattern>/admin/export/csv</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>AuditLogsController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.admin.AuditLogsController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AuditLogsController</servlet-name>
+        <url-pattern>/admin/audit-logs</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>AuditLogDetailController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.admin.AuditLogDetailController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AuditLogDetailController</servlet-name>
+        <url-pattern>/admin/audit-logs/detail</url-pattern>
+    </servlet-mapping>
+
+    <!-- Admin User Management -->
+    <servlet>
+        <servlet-name>AdminUserListController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.admin.AdminUserListController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AdminUserListController</servlet-name>
+        <url-pattern>/admin/users</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>ClinicsController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.admin.ClinicsController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ClinicsController</servlet-name>
+        <url-pattern>/admin/clinics</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>AdminBookingController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.admin.AdminBookingController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AdminBookingController</servlet-name>
+        <url-pattern>/admin/bookings/*</url-pattern>
+    </servlet-mapping>
+
+
+    <servlet>
+        <servlet-name>UserStatusController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.admin.UserStatusController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>UserStatusController</servlet-name>
+        <url-pattern>/admin/users/status</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>AdminDiagnosisController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.admin.AdminDiagnosisController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AdminDiagnosisController</servlet-name>
+        <url-pattern>/admin/ai-results</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>ReportDetailAdminController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.admin.ReportDetailAdminController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ReportDetailAdminController</servlet-name>
+        <url-pattern>/admin/ai-results/detail</url-pattern>
+    </servlet-mapping>
+
+    <!-- ==================== Welcome File ==================== -->
+    <welcome-file-list>
+        <welcome-file>index.jsp</welcome-file>
+    </welcome-file-list>
+
+    <!-- ==================== Session Config ==================== -->
+    <session-config>
+        <session-timeout>30</session-timeout>
+    </session-config>
+
+</web-app>
