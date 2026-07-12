@@ -21,16 +21,24 @@ function setStatus(message, type = 'pending') {
     statusBox.textContent = message;
 }
 
+async function readJson(response) {
+    const data = await response.json();
+    if (!response.ok) {
+        throw new Error(data.message || 'Backend không xử lý được yêu cầu.');
+    }
+    return data;
+}
+
 async function loadInvoice() {
+    // Relative URL: Nginx sends /api/* to Node while the JSP stays on Tomcat.
     const response = await fetch('/api/demo/invoice');
-    currentInvoice = await response.json();
+    currentInvoice = await readJson(response);
 
     invoiceIdEl.textContent = currentInvoice.id;
     patientNameEl.textContent = currentInvoice.patientName;
     descriptionEl.textContent = currentInvoice.description;
     invoiceStatusEl.textContent = currentInvoice.status;
     amountEl.textContent = formatMoney(currentInvoice.totalAmount);
-
     payButton.disabled = currentInvoice.status === 'PAID';
 }
 
@@ -40,30 +48,30 @@ async function createPayment() {
     payButton.disabled = true;
     setStatus('Đang tạo giao dịch VNPay...', 'pending');
 
-    const response = await fetch('/api/vnpay/create-payment', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            invoiceId: currentInvoice.id,
-        }),
-    });
+    try {
+        // Node writes a PENDING payment to SQL before returning paymentUrl.
+        const response = await fetch('/api/vnpay/create-payment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                invoiceId: currentInvoice.id,
+            }),
+        });
 
-    const data = await response.json();
+        const data = await readJson(response);
+        setStatus(
+            `Đã tạo giao dịch PENDING.\nTxnRef: ${data.payment.txnRef}\nĐang chuyển sang VNPay...`,
+            'pending',
+        );
 
-    if (!response.ok) {
+        // MOCK returns to this app immediately; VNPAY redirects to the sandbox gateway.
+        window.location.href = data.paymentUrl;
+    } catch (error) {
         payButton.disabled = false;
-        setStatus(data.message || 'Không tạo được giao dịch.', 'failed');
-        return;
+        setStatus(error.message, 'failed');
     }
-
-    setStatus(
-        `Đã tạo payment PENDING.\nTxnRef: ${data.payment.txnRef}\nĐang chuyển sang VNPay...`,
-        'pending',
-    );
-
-    window.location.href = data.paymentUrl;
 }
 
 async function loadPaymentResultFromQuery() {
@@ -72,14 +80,9 @@ async function loadPaymentResultFromQuery() {
 
     if (!txnRef) return;
 
+    // Do not trust only ?status=...; ask backend for the persisted payment result.
     const response = await fetch(`/api/payments/${encodeURIComponent(txnRef)}`);
-    const data = await response.json();
-
-    if (!response.ok) {
-        setStatus(data.message || 'Không tìm thấy giao dịch.', 'failed');
-        return;
-    }
-
+    const data = await readJson(response);
     const type = data.payment.status === 'SUCCESS' ? 'success' : 'failed';
 
     setStatus(
@@ -100,11 +103,16 @@ async function loadPaymentResultFromQuery() {
 }
 
 async function resetDemo() {
-    await fetch('/api/demo/reset', {
-        method: 'POST',
-    });
-
-    window.location.href = '/';
+    try {
+        // Reset removes payments of only the seeded invoice and returns it to UNPAID.
+        const response = await fetch('/api/demo/reset', {
+            method: 'POST',
+        });
+        await readJson(response);
+        window.location.href = '/';
+    } catch (error) {
+        setStatus(error.message, 'failed');
+    }
 }
 
 payButton.addEventListener('click', createPayment);
