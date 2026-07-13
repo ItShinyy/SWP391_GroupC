@@ -41,11 +41,13 @@
     const result = document.getElementById('result');
     let currentInvoice;
 
+    // Hiển thị lỗi theo một định dạng thống nhất ở vùng kết quả trên trang thanh toán.
     function showError(message) {
         result.className = 'error';
         result.textContent = message;
     }
 
+    // Tải hóa đơn từ Payment API theo UUID, rồi chỉ mở nút thanh toán khi hóa đơn UNPAID.
     loadButton.addEventListener('click', async () => {
         const invoiceId = invoiceIdInput.value.trim();
         currentInvoice = undefined;
@@ -74,6 +76,7 @@
         }
     });
 
+    // Yêu cầu Node.js tạo URL VNPay và chuyển trình duyệt sang cổng thanh toán trong cùng tab.
     payButton.addEventListener('click', async () => {
         if (!currentInvoice) return;
         payButton.disabled = true;

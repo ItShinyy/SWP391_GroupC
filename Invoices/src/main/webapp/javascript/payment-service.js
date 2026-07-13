@@ -3,6 +3,7 @@ const { VNPay, ProductCode, VnpLocale, dateFormat, ignoreLogger } = require('vnp
 const { sql, getPool } = require('./db');
 
 class PaymentError extends Error {
+    // Lỗi nghiệp vụ có HTTP status và mã lỗi để API phản hồi nhất quán cho frontend.
     constructor(status, code, message) {
         super(message);
         this.name = 'PaymentError';
@@ -11,17 +12,20 @@ class PaymentError extends Error {
     }
 }
 
+// Đọc biến môi trường thanh toán bắt buộc, ví dụ mã TMN và hash secret của VNPay.
 function required(name) {
     const value = process.env[name];
     if (!value) throw new PaymentError(500, 'PAYMENT_CONFIGURATION_ERROR', `Missing ${name}`);
     return value;
 }
 
+// Đọc cờ boolean từ .env, có giá trị mặc định khi biến chưa được khai báo.
 function readBoolean(name, fallback) {
     const value = process.env[name];
     return value === undefined ? fallback : value.toLowerCase() === 'true';
 }
 
+// Khởi tạo client VNPay từ cấu hình sandbox/production trong .env.
 function createVnpayClient() {
     return new VNPay({
         tmnCode: required('VNP_TMN_CODE'),
@@ -33,6 +37,7 @@ function createVnpayClient() {
     });
 }
 
+// Kiểm tra chuỗi có đúng định dạng GUID/UNIQUEIDENTIFIER của SQL Server hay không.
 function assertUuid(value, fieldName) {
     // SQL Server UNIQUEIDENTIFIER values are GUIDs but are not limited to
     // RFC UUID versions 1-5 (for example NEWSEQUENTIALID can use another nibble).
@@ -42,6 +47,7 @@ function assertUuid(value, fieldName) {
     }
 }
 
+// Điểm tích hợp xác thực với dự án lớn: demo cho qua, production phải thay bằng session/JWT đã xác thực.
 function getRequesterUserId() {
     if (readBoolean('PAYMENT_DEMO_MODE', false)) return null;
 
@@ -53,15 +59,18 @@ function getRequesterUserId() {
     );
 }
 
+// Chuẩn hóa IPv6 localhost hoặc IPv4-mapped IPv6 thành IPv4 mà VNPay chấp nhận.
 function normalizeIp(value) {
     if (!value || value === '::1') return '127.0.0.1';
     return value.replace(/^::ffff:/, '');
 }
 
+// Tạo mã tham chiếu duy nhất cho mỗi lần thanh toán, dùng đối chiếu với callback/IPN của VNPay.
 function buildTxnRef() {
     return `PAY-${Date.now()}-${crypto.randomBytes(6).toString('hex').toUpperCase()}`;
 }
 
+// Chuyển bản ghi SQL thành dữ liệu hóa đơn tối thiểu mà giao diện được phép hiển thị.
 function toInvoiceDto(record) {
     return {
         invoiceId: record.invoice_id,
@@ -77,6 +86,7 @@ function toInvoiceDto(record) {
     };
 }
 
+// Lấy hóa đơn và các thông tin liên quan từ SQL Server để người dùng kiểm tra trước khi thanh toán.
 async function findInvoice(invoiceId) {
     assertUuid(invoiceId, 'invoiceId');
     const pool = await getPool();
@@ -102,6 +112,7 @@ async function findInvoice(invoiceId) {
     return toInvoiceDto(result.recordset[0]);
 }
 
+// Tạo giao dịch VNPay an toàn: khóa hóa đơn, kiểm tra UNPAID, lưu PENDING rồi sinh URL đã ký.
 async function createVnPayPayment(invoiceId, clientIp, locale) {
     assertUuid(invoiceId, 'invoiceId');
     const vnpay = createVnpayClient();
@@ -160,7 +171,8 @@ async function createVnPayPayment(invoiceId, clientIp, locale) {
         }
 
         const txnRef = buildTxnRef();
-        const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+        // Hạn thanh toán là 60 phút; giá trị này được lưu DB và gửi đồng thời cho VNPay.
+        const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
         const orderInfo = `Thanh toan hoa don ${invoice.id}`;
         const paymentResult = await transaction.request()
             .input('invoiceId', sql.UniqueIdentifier, invoice.id)
@@ -221,6 +233,7 @@ async function createVnPayPayment(invoiceId, clientIp, locale) {
     }
 }
 
+// Lấy trạng thái payment và invoice hiện tại để trang kết quả hiển thị hoặc tiếp tục polling.
 async function getPaymentStatus(txnRef) {
     const pool = await getPool();
     const result = await pool.request()
@@ -256,10 +269,12 @@ async function getPaymentStatus(txnRef) {
     };
 }
 
+// So sánh tiền từ database với số tiền callback của VNPay, tránh sai lệch số thực nhỏ.
 function sameAmount(first, second) {
     return Math.abs(Number(first) - Number(second)) < 0.001;
 }
 
+// Xử lý IPN từ VNPay: xác thực chữ ký/số tiền, cập nhật payment SUCCESS|FAILED và hóa đơn PAID nếu thành công.
 async function processVnPayIpn(query) {
     let verification;
     try {
@@ -357,10 +372,12 @@ async function processVnPayIpn(query) {
     }
 }
 
+// Xác minh chữ ký Return URL; hàm này không được phép thay đổi dữ liệu database.
 function verifyVnPayReturn(query) {
     return createVnpayClient().verifyReturnUrl(query);
 }
 
+// Gọi stored procedure SQL để đổi mọi payment PENDING có expires_at đã qua thành EXPIRED.
 async function expirePendingPayments() {
     const pool = await getPool();
     await pool.request().query('EXEC dbo.expire_pending_payments;');

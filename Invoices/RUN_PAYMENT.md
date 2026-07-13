@@ -56,11 +56,12 @@ http://localhost/Invoices/
 3. Bấm **Thanh toán bằng VNPay**.
 4. Trình duyệt chuyển cùng tab tới VNPay Sandbox.
 5. VNPay redirect về `/payments/vnpay/return`.
-6. `payment-result.jsp` đọc trạng thái payment từ Node/SQL Server.
+6. Khi `VNP_PROCESS_RETURN=true`, Node xác minh chữ ký rồi cập nhật trạng thái bằng cùng bộ xử lý IPN.
+7. `payment-result.jsp` đọc trạng thái payment từ Node/SQL Server.
 
 ## 5. Callback IPN thật
 
-VNPay không thể gọi IPN vào `localhost`. Khi cần xác nhận thanh toán Sandbox thật, đặt các URL công khai HTTPS:
+VNPay không thể gọi IPN vào `localhost`, vì vậy local dùng `VNP_PROCESS_RETURN=true`. Khi có URL công khai HTTPS, đặt `VNP_PROCESS_RETURN=false` và cấu hình:
 
 ```text
 VNP_RETURN_URL=https://your-public-host/payments/vnpay/return
@@ -68,7 +69,7 @@ IPN URL=https://your-public-host/api/payments/vnpay/ipn
 APP_UI_BASE_URL=https://your-public-host/Invoices
 ```
 
-Đăng ký IPN URL trong cấu hình merchant VNPay Sandbox. IPN là route duy nhất cập nhật `payments` và `invoices`.
+Đăng ký IPN URL trong cấu hình merchant VNPay Sandbox. Ở production, IPN là nguồn chính cập nhật `payments` và `invoices`.
 
 ## 6. Trước production
 

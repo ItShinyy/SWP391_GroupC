@@ -23,6 +23,7 @@
     const txnRef = new URLSearchParams(window.location.search).get('txnRef');
     let attempts = 0;
 
+    // Đọc trạng thái đã được IPN cập nhật; nếu còn PENDING thì hỏi lại tối đa 12 lần, mỗi lần 5 giây.
     async function loadPayment() {
         if (!txnRef) {
             result.className = 'failed';

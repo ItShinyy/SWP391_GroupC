@@ -5,13 +5,18 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="fc9d56e2-4c68-4aba-9e9f-a135dde4619f" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.env.example" beforeDir="false" afterPath="$PROJECT_DIR$/.env.example" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/.package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/RUN_PAYMENT.md" beforeDir="false" afterPath="$PROJECT_DIR$/RUN_PAYMENT.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/webapp/index.jsp" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/webapp/index.jsp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/webapp/javascript/db.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/webapp/javascript/db.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/webapp/javascript/payment-service.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/webapp/javascript/payment-service.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/webapp/javascript/server.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/webapp/javascript/server.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../nginx-1.30.3/conf/nginx.conf" beforeDir="false" afterPath="$PROJECT_DIR$/../nginx-1.30.3/conf/nginx.conf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/webapp/payment-result.jsp" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/webapp/payment-result.jsp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../nginx-1.30.3/logs/access.log" beforeDir="false" afterPath="$PROJECT_DIR$/../nginx-1.30.3/logs/access.log" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../nginx-1.30.3/logs/error.log" beforeDir="false" afterPath="$PROJECT_DIR$/../nginx-1.30.3/logs/error.log" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../nginx-1.30.3/logs/nginx.pid" beforeDir="false" afterPath="$PROJECT_DIR$/../nginx-1.30.3/logs/nginx.pid" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -37,23 +42,23 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.7118670521414687" />
-      <entry key="MS500" value="3.7966306059902513" />
-      <entry key="S2" value="6.972983053281787" />
-      <entry key="S5" value="8.932984403809378" />
-      <entry key="S10" value="9.866132192790753" />
-      <entry key="S30" value="10.596802314035642" />
-      <entry key="S60" value="10.795095357535335" />
-      <entry key="M2" value="10.916171296316312" />
-      <entry key="M5" value="11.623938283525659" />
-      <entry key="M10" value="13.137517529772559" />
-      <entry key="M15" value="14.180921599207217" />
-      <entry key="M30" value="15.72207357560807" />
-      <entry key="H1" value="16.750058237592505" />
-      <entry key="H2" value="17.344499794655576" />
-      <entry key="H4" value="17.664238891719382" />
-      <entry key="D1" value="17.94289350153863" />
-      <entry key="W1" value="17.99181340597536" />
+      <entry key="MS100" value="1.7442528073497363" />
+      <entry key="MS500" value="3.9071605367514" />
+      <entry key="S2" value="9.024756413170845" />
+      <entry key="S5" value="15.203417099279354" />
+      <entry key="S10" value="19.17454918212962" />
+      <entry key="S30" value="22.79760593320518" />
+      <entry key="S60" value="23.862061671369" />
+      <entry key="M2" value="24.440411205758252" />
+      <entry key="M5" value="25.424159256608725" />
+      <entry key="M10" value="27.028750862835942" />
+      <entry key="M15" value="28.104381137625907" />
+      <entry key="M30" value="29.680837546896935" />
+      <entry key="H1" value="30.72845265381766" />
+      <entry key="H2" value="31.333411629816645" />
+      <entry key="H4" value="31.658618079121414" />
+      <entry key="D1" value="31.9419455557596" />
+      <entry key="W1" value="31.991677705688577" />
     </decayedCancelled>
     <decayedSelected>
       <entry key="MS100" value="0.0" />
@@ -75,23 +80,23 @@
       <entry key="W1" value="0.0" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="1.6411400835250585" />
-      <entry key="MS500" value="3.7576158159926556" />
-      <entry key="S2" value="6.954252723203771" />
-      <entry key="S5" value="8.923449053117878" />
-      <entry key="S10" value="9.86088637230816" />
-      <entry key="S30" value="10.594929695791361" />
-      <entry key="S60" value="10.794142249077161" />
-      <entry key="M2" value="10.91568588728529" />
-      <entry key="M5" value="11.623682389107135" />
-      <entry key="M10" value="13.137319218452026" />
-      <entry key="M15" value="14.180756851590578" />
-      <entry key="M30" value="15.721967122313218" />
-      <entry key="H1" value="16.749996971375136" />
-      <entry key="H2" value="17.344466836000148" />
-      <entry key="H4" value="17.664221786825102" />
-      <entry key="D1" value="17.94289055984746" />
-      <entry key="W1" value="17.9918129834545" />
+      <entry key="MS100" value="1.6597737196866909" />
+      <entry key="MS500" value="3.8217867125015084" />
+      <entry key="S2" value="8.922282748439429" />
+      <entry key="S5" value="15.123628559387896" />
+      <entry key="S10" value="19.123244320880186" />
+      <entry key="S30" value="22.777226604117118" />
+      <entry key="S60" value="23.851405474448722" />
+      <entry key="M2" value="24.43495732619425" />
+      <entry key="M5" value="25.421887927530346" />
+      <entry key="M10" value="27.027540220896707" />
+      <entry key="M15" value="28.103540419717078" />
+      <entry key="M30" value="29.68039251887932" />
+      <entry key="H1" value="30.728221937387584" />
+      <entry key="H2" value="31.33329390259533" />
+      <entry key="H4" value="31.658558578671045" />
+      <entry key="D1" value="31.94193554653863" />
+      <entry key="W1" value="31.991676273480802" />
     </decayedShown>
   </component>
   <component name="ProblemsViewState">
@@ -128,6 +133,9 @@
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
     &quot;settings.editor.selected.configurable&quot;: &quot;com.poratu.idea.plugins.tomcat.setting.TomcatServersConfigurable&quot;,
     &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;
   }
@@ -142,9 +150,6 @@
       <option name="catalinaBase" value="C:\Users\Hoang Minh\.SmartTomcat\Invoices\Invoices" />
       <option name="contextPath" value="/Invoices" />
       <option name="docBase" value="$PROJECT_DIR$/src/main/webapp" />
-      <option name="envOptions">
-        <map />
-      </option>
       <option name="extraClassPath" value="" />
       <option name="tomcatInfo">
         <TomcatInfo>
