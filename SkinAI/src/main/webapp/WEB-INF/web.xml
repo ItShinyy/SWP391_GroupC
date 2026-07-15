@@ -24,6 +24,7 @@
         <filter-name>AuthenticationFilter</filter-name>
         <url-pattern>/patient/*</url-pattern>
         <url-pattern>/admin/*</url-pattern>
+        <url-pattern>/doctor/*</url-pattern>
     </filter-mapping>
 
     <filter>
@@ -34,6 +35,7 @@
         <filter-name>AuthorizationFilter</filter-name>
         <url-pattern>/admin/*</url-pattern>
         <url-pattern>/patient/*</url-pattern>
+        <url-pattern>/doctor/*</url-pattern>
     </filter-mapping>
 
     <filter>
@@ -288,6 +290,43 @@
         <url-pattern>/admin/ai-results/detail</url-pattern>
     </servlet-mapping>
 
+    <servlet>
+        <servlet-name>AdminBookingController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.admin.AdminBookingController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AdminBookingController</servlet-name>
+        <url-pattern>/admin/bookings/*</url-pattern>
+    </servlet-mapping>
+
+    <!-- Doctor Controllers -->
+    <servlet>
+        <servlet-name>DoctorDashboardController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.doctor.DoctorDashboardController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>DoctorDashboardController</servlet-name>
+        <url-pattern>/doctor/dashboard</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>DoctorAppointmentDetailController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.doctor.DoctorAppointmentDetailController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>DoctorAppointmentDetailController</servlet-name>
+        <url-pattern>/doctor/appointments/detail</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>DoctorScheduleController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.doctor.DoctorScheduleController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>DoctorScheduleController</servlet-name>
+        <url-pattern>/doctor/schedule</url-pattern>
+    </servlet-mapping>
+
     <!-- ==================== Appeal API ==================== -->
     <servlet>
         <servlet-name>AppealController</servlet-name>
@@ -296,6 +335,44 @@
     <servlet-mapping>
         <servlet-name>AppealController</servlet-name>
         <url-pattern>/api/auth/appeal</url-pattern>
+    </servlet-mapping>
+
+    <!-- ==================== Debug Test ==================== -->
+    <servlet>
+        <servlet-name>TestController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.TestController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>TestController</servlet-name>
+        <url-pattern>/test</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>InitDataController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.InitDataController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>InitDataController</servlet-name>
+        <url-pattern>/init-data</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>DebugScheduleController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.DebugScheduleController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>DebugScheduleController</servlet-name>
+        <url-pattern>/debug-schedule</url-pattern>
+    </servlet-mapping>
+
+    <!-- ==================== API Endpoints ==================== -->
+    <servlet>
+        <servlet-name>DoctorApiController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.api.DoctorApiController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>DoctorApiController</servlet-name>
+        <url-pattern>/api/doctors</url-pattern>
     </servlet-mapping>
 
     <!-- ==================== Welcome File ==================== -->

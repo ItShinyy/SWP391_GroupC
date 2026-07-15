@@ -40,6 +40,10 @@ public class UserDAO extends DBContext {
             UserDAO::mapRow, keyword, keyword, keyword
         );
     }
+
+    public List<User> findByRole(String role) {
+        return queryList(SELECT_COLS + " WHERE role = ?", UserDAO::mapRow, role);
+    }
     
     // ─── Uniqueness Check Methods ──────────────────────────────────────────────
 

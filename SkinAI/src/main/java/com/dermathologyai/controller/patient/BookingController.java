@@ -66,13 +66,15 @@ public class BookingController extends HttpServlet {
         User user = (User) session.getAttribute("user");
         
         String clinicId = req.getParameter("clinicId");
+        String doctorId = req.getParameter("doctorId");
+        String slotId = req.getParameter("slotId");
         String appointmentTimeStr = req.getParameter("appointmentTime");
         String notes = req.getParameter("notes");
         String requestId = req.getParameter("requestId");
         String reportId = req.getParameter("reportId");
         
-        if (clinicId == null || appointmentTimeStr == null || requestId == null) {
-            req.setAttribute("errorMessage", "Missing required fields.");
+        if (clinicId == null || doctorId == null || slotId == null || appointmentTimeStr == null || requestId == null) {
+            req.setAttribute("errorMessage", "Vui lòng điền đầy đủ thông tin bắt buộc.");
             doGet(req, resp);
             return;
         }
@@ -82,10 +84,13 @@ public class BookingController extends HttpServlet {
             
             Appointment appointment = new Appointment();
             appointment.setClinicId(clinicId);
+            appointment.setDoctorId(doctorId);
+            appointment.setSlotId(slotId);
             appointment.setAppointmentTime(appointmentTime);
             appointment.setNotes(notes);
             appointment.setRequestId(requestId);
             appointment.setStatus("CREATED");
+            appointment.setDoctorStatus("PENDING");
             
             // Set diagnosis report ID if booking from a report
             if (reportId != null && !reportId.trim().isEmpty()) {
@@ -95,15 +100,15 @@ public class BookingController extends HttpServlet {
             String appointmentId = bookingService.bookAppointment(user.getId(), appointment);
             
             if (appointmentId != null) {
-                String auditDetails = "Clinic ID: " + clinicId;
+                String auditDetails = "Clinic ID: " + clinicId + ", Doctor ID: " + doctorId;
                 if (reportId != null && !reportId.trim().isEmpty()) {
                     auditDetails += ", Report ID: " + reportId;
                 }
                 auditLogDAO.createLog(user.getId(), "APPOINTMENT_CREATE", "appointments", appointmentId, null, auditDetails, RequestUtil.getClientIp(req), req.getHeader("User-Agent"));
-                req.getSession().setAttribute("successMessage", "Appointment booked successfully!");
+                req.getSession().setAttribute("successMessage", "Đặt lịch hẹn thành công! Bác sĩ sẽ xem xét và phản hồi sớm.");
                 resp.sendRedirect(req.getContextPath() + "/patient/appointments");
             } else {
-                req.setAttribute("errorMessage", "Could not book appointment.");
+                req.setAttribute("errorMessage", "Không thể đặt lịch hẹn. Vui lòng thử lại.");
                 doGet(req, resp);
             }
         } catch (IllegalStateException e) {

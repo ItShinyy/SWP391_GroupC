@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test API</title>
+</head>
+<body>
+    <h1>Test Doctor API</h1>
+    
+    <h3>1. Test Clinics</h3>
+    <button onclick="testClinics()">Test Load Clinics</button>
+    <div id="clinicsResult"></div>
+    
+    <h3>2. Test Doctors</h3>
+    <input type="text" id="clinicIdInput" placeholder="Enter clinic ID">
+    <button onclick="testDoctors()">Test Load Doctors</button>
+    <div id="doctorsResult"></div>
+    
+    <script>
+        function testClinics() {
+            fetch('/SkinAI/patient/booking')
+                .then(r => r.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const select = doc.getElementById('clinicId');
+                    const options = select ? select.querySelectorAll('option') : [];
+                    
+                    document.getElementById('clinicsResult').innerHTML = 
+                        `Found ${options.length} clinic options:<br>` + 
+                        Array.from(options).map(opt => `${opt.value}: ${opt.textContent}`).join('<br>');
+                });
+        }
+        
+        function testDoctors() {
+            const clinicId = document.getElementById('clinicIdInput').value;
+            if (!clinicId) {
+                alert('Please enter clinic ID');
+                return;
+            }
+            
+            fetch(`/SkinAI/api/doctors?action=getByClinic&clinicId=${clinicId}`)
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('doctorsResult').innerHTML = 
+                        `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                })
+                .catch(err => {
+                    document.getElementById('doctorsResult').innerHTML = 
+                        `Error: ${err.message}`;
+                });
+        }
+    </script>
+</body>
+</html>

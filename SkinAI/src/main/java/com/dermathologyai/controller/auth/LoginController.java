@@ -42,7 +42,12 @@ public class LoginController extends HttpServlet {
         HttpSession session = req.getSession(false);
         if (session != null && session.getAttribute("user") != null) {
             String role = ((User) session.getAttribute("user")).getRole();
-            resp.sendRedirect(req.getContextPath() + ("ADMIN".equals(role) ? "/admin/dashboard" : "/home"));
+            String redirectUrl = switch (role) {
+                case "ADMIN" -> "/admin/dashboard";
+                case "DOCTOR" -> "/doctor/dashboard";
+                default -> "/home";
+            };
+            resp.sendRedirect(req.getContextPath() + redirectUrl);
             return;
         }
         if (session != null && session.getAttribute("loginError") != null) {
@@ -112,19 +117,28 @@ public class LoginController extends HttpServlet {
             HttpSession session = req.getSession(true);
             session.setAttribute("user", user);
 
-            if ("ADMIN".equals(user.getRole())) {
-                session.removeAttribute("redirectAfterLogin");
-                resp.sendRedirect(req.getContextPath() + "/admin/dashboard");
-                return;
-            }
-
-            String redirect = (String) session.getAttribute("redirectAfterLogin");
-            if (redirect != null) {
-                session.removeAttribute("redirectAfterLogin");
-                resp.sendRedirect(redirect);
-                return;
-            }
-            resp.sendRedirect(req.getContextPath() + "/home");
+            // Role-based redirect after successful login
+            String redirectUrl = switch (user.getRole()) {
+                case "ADMIN" -> {
+                    session.removeAttribute("redirectAfterLogin");
+                    yield "/admin/dashboard";
+                }
+                case "DOCTOR" -> {
+                    session.removeAttribute("redirectAfterLogin");
+                    yield "/doctor/dashboard";
+                }
+                default -> {
+                    String redirect = (String) session.getAttribute("redirectAfterLogin");
+                    if (redirect != null) {
+                        session.removeAttribute("redirectAfterLogin");
+                        yield redirect.replace(req.getContextPath(), "");
+                    } else {
+                        yield "/home";
+                    }
+                }
+            };
+            resp.sendRedirect(req.getContextPath() + redirectUrl);
+            return;
 
         } else {
             auditLogDAO.createLog(null, "LOGIN_FAILED", "users", null, null, "Sai thông tin đăng nhập: " + keyword, RequestUtil.getClientIp(req), req.getHeader("User-Agent"));

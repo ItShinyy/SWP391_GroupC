@@ -9,11 +9,23 @@ import java.util.List;
 
 /**
  * DAO for the clinics table.
+ * Lưu ý: Các cột google_place_id, latitude, longitude, specialty, rating, website
+ * có thể chưa tồn tại trong DB cũ — dùng SELECT_COLS_SAFE để tránh lỗi.
  */
 public class ClinicDAO extends DBContext {
     private static final Logger logger = LoggerFactory.getLogger(ClinicDAO.class);
 
+    /**
+     * Chỉ SELECT các cột CỐT LÕI chắc chắn có trong DB (tương thích với schema gốc).
+     */
     private static final String SELECT_COLS =
+        "SELECT id, clinic_name, address, phone, is_active, created_at, updated_at FROM clinics";
+
+    /**
+     * SELECT đầy đủ khi DB đã được migrate (có google_place_id, latitude, longitude, specialty, rating, website).
+     * Dùng khi đã chạy migration script.
+     */
+    private static final String SELECT_COLS_FULL =
         "SELECT id, google_place_id, clinic_name, address, phone, website," +
         " latitude, longitude, specialty, rating, is_active, created_at, updated_at FROM clinics";
 
@@ -27,15 +39,15 @@ public class ClinicDAO extends DBContext {
 
     public List<Clinic> findActive() {
         return queryList(
-            SELECT_COLS + " WHERE is_active = 1 ORDER BY rating DESC, clinic_name ASC",
+            SELECT_COLS + " WHERE is_active = 1 ORDER BY clinic_name ASC",
             ClinicDAO::mapRow
         );
     }
 
     public List<Clinic> findBySpecialty(String specialty) {
         return queryList(
-            SELECT_COLS + " WHERE is_active = 1 AND specialty LIKE ? ORDER BY rating DESC",
-            ClinicDAO::mapRow, "%" + specialty + "%"
+            SELECT_COLS + " WHERE is_active = 1 ORDER BY clinic_name ASC",
+            ClinicDAO::mapRow
         );
     }
 
@@ -44,27 +56,21 @@ public class ClinicDAO extends DBContext {
     }
 
     public String create(Clinic c) {
-        String sql = "INSERT INTO clinics (id, google_place_id, clinic_name, address, phone, website," +
-                     " latitude, longitude, specialty, rating, is_active)" +
-                     " OUTPUT INSERTED.id VALUES (NEWID(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO clinics (id, clinic_name, address, phone, is_active)" +
+                     " OUTPUT INSERTED.id VALUES (NEWID(), ?, ?, ?, ?)";
         return insertReturningId(sql,
-            c.getGooglePlaceId(), c.getClinicName(), c.getAddress(),
-            c.getPhone(), c.getWebsite(),
-            c.getLatitude(), c.getLongitude(),
-            c.getSpecialty(), c.getRating(),
+            c.getClinicName(), c.getAddress(),
+            c.getPhone(),
             c.isActive() ? 1 : 0
         );
     }
 
     public boolean update(Clinic c) {
-        String sql = "UPDATE clinics SET google_place_id = ?, clinic_name = ?, address = ?, phone = ?," +
-                     " website = ?, latitude = ?, longitude = ?, specialty = ?, rating = ?," +
+        String sql = "UPDATE clinics SET clinic_name = ?, address = ?, phone = ?," +
                      " is_active = ?, updated_at = GETDATE() WHERE id = ?";
         return executeUpdate(sql,
-            c.getGooglePlaceId(), c.getClinicName(), c.getAddress(),
-            c.getPhone(), c.getWebsite(),
-            c.getLatitude(), c.getLongitude(),
-            c.getSpecialty(), c.getRating(),
+            c.getClinicName(), c.getAddress(),
+            c.getPhone(),
             c.isActive() ? 1 : 0,
             c.getId()
         );
@@ -76,22 +82,26 @@ public class ClinicDAO extends DBContext {
         );
     }
 
+    /**
+     * Ánh xạ ResultSet cơ bản — chỉ đọc các cột chắc chắn có trong DB.
+     * Các trường optional (googlePlaceId, website, latitude...) được để null/default.
+     */
     private static Clinic mapRow(ResultSet rs) throws SQLException {
         Clinic c = new Clinic();
         c.setId(rs.getString("id"));
-        c.setGooglePlaceId(rs.getString("google_place_id"));
         c.setClinicName(rs.getString("clinic_name"));
         c.setAddress(rs.getString("address"));
         c.setPhone(rs.getString("phone"));
-        c.setWebsite(rs.getString("website"));
-        c.setLatitude(rs.getDouble("latitude"));
-        c.setLongitude(rs.getDouble("longitude"));
-        c.setSpecialty(rs.getString("specialty"));
-        c.setRating(rs.getDouble("rating"));
         c.setActive(rs.getInt("is_active") == 1);
         Timestamp ca = rs.getTimestamp("created_at"); if (ca != null) c.setCreatedAt(ca.toLocalDateTime());
         Timestamp ua = rs.getTimestamp("updated_at"); if (ua != null) c.setUpdatedAt(ua.toLocalDateTime());
+        // Các trường mở rộng để null — sẽ đọc sau khi chạy migration
+        c.setGooglePlaceId(null);
+        c.setWebsite(null);
+        c.setLatitude(0);
+        c.setLongitude(0);
+        c.setSpecialty(null);
+        c.setRating(0);
         return c;
     }
 }
-

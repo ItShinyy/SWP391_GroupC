@@ -148,6 +148,14 @@ public class DBContext {
         return 0;
     }
 
+    /**
+     * Overload hỗ trợ truyền Class<T> làm tham số thứ 2 (bỏ qua, chỉ trả về int).
+     * Dùng để tương thích với cách gọi: queryScalar(sql, Integer.class, params)
+     */
+    protected <T> int queryScalar(String sql, Class<T> type, Object... params) {
+        return queryScalar(sql, params);
+    }
+
     protected void setParams(PreparedStatement ps, Object... params) throws SQLException {
         for (int i = 0; i < params.length; i++) {
             ps.setObject(i + 1, params[i]);

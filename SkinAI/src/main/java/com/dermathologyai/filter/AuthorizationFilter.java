@@ -40,15 +40,19 @@ public class AuthorizationFilter implements Filter {
             // Role checks
             boolean isAdminRoute = uri.startsWith(req.getContextPath() + "/admin");
             boolean isPatientRoute = uri.startsWith(req.getContextPath() + "/patient");
+            boolean isDoctorRoute = uri.startsWith(req.getContextPath() + "/doctor");
 
             if (isAdminRoute && !"ADMIN".equals(user.getRole())) {
-                // Send 403 Forbidden
                 res.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied. Admin privileges required.");
                 return;
             }
 
+            if (isDoctorRoute && !"DOCTOR".equals(user.getRole()) && !"ADMIN".equals(user.getRole())) {
+                res.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied. Doctor privileges required.");
+                return;
+            }
+
             if (isPatientRoute && !"PATIENT".equals(user.getRole()) && !"USER".equals(user.getRole()) && !"ADMIN".equals(user.getRole())) {
-                // Assuming admin can also access patient routes, or restrict to just PATIENT
                 res.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied.");
                 return;
             }

@@ -62,7 +62,7 @@ CREATE TABLE users (
 
     CONSTRAINT PK_users PRIMARY KEY (id),
     CONSTRAINT UQ_users_username UNIQUE (username),
-    CONSTRAINT CHK_users_role CHECK (role IN ('USER', 'PATIENT', 'ADMIN')),
+    CONSTRAINT CHK_users_role CHECK (role IN ('USER', 'PATIENT', 'DOCTOR', 'ADMIN')),
     CONSTRAINT CHK_users_status CHECK (status IN ('ACTIVE', 'INACTIVE', 'LOCKED')),
     CONSTRAINT CHK_users_identity CHECK (
         email IS NOT NULL OR 
