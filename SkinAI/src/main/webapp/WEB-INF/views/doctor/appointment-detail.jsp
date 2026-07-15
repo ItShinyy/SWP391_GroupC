@@ -323,13 +323,50 @@
             <c:when test="${appointment.doctorStatus == 'ACCEPTED'}">
                 <div class="status-banner status-banner-accepted">
                     <i class="fa-solid fa-circle-check" style="font-size: 1.5rem;"></i>
-                    <div>
+                    <div class="flex-grow-1">
                         <div class="fw-bold">Hồ sơ đã được chấp nhận</div>
                         <c:if test="${appointment.doctorNotes != null}">
                             <div class="mt-1" style="font-weight: 500; opacity: 0.85;">Nhận xét: ${appointment.doctorNotes}</div>
                         </c:if>
                     </div>
                 </div>
+                
+                <!-- Complete Appointment Section -->
+                <c:if test="${appointment.status != 'COMPLETED'}">
+                    <div class="action-card p-4 mt-3">
+                        <h5 class="fw-bold mb-3">
+                            <i class="fa-solid fa-clipboard-check me-2 text-success"></i>Hoàn Thành Khám Bệnh
+                        </h5>
+                        <form method="post" action="${pageContext.request.contextPath}/doctor/appointments/detail">
+                            <input type="hidden" name="appointmentId" value="${appointment.id}">
+                            <div class="mb-4">
+                                <label for="completionNotes" class="form-label fw-semibold">Kết luận sau khám (tùy chọn)</label>
+                                <textarea class="form-control" id="completionNotes" name="completionNotes" rows="3" 
+                                    placeholder="Nhập kết luận khám bệnh, hướng điều trị hoặc lời khuyên cho bệnh nhân..." 
+                                    style="border-radius: 10px; border: 2px solid #e2e8f0; resize: none;">${appointment.doctorNotes}</textarea>
+                            </div>
+                            <div class="d-flex gap-3">
+                                <button type="submit" name="action" value="complete" class="btn btn-success btn-lg px-4">
+                                    <i class="fa-solid fa-check-double me-2"></i>Đánh Dấu Đã Hoàn Thành
+                                </button>
+                                <div class="text-muted small align-self-center">
+                                    <i class="fa-solid fa-info-circle me-1"></i>
+                                    Bệnh nhân sẽ có thể xem kết quả và thanh toán
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </c:if>
+                
+                <c:if test="${appointment.status == 'COMPLETED'}">
+                    <div class="alert alert-success d-flex align-items-center mt-3" role="alert">
+                        <i class="fa-solid fa-trophy me-2" style="font-size: 1.2rem;"></i>
+                        <div>
+                            <strong>Lịch hẹn đã hoàn thành!</strong>
+                            <div class="small mt-1">Bệnh nhân có thể xem kết quả và thanh toán.</div>
+                        </div>
+                    </div>
+                </c:if>
             </c:when>
             <c:when test="${appointment.doctorStatus == 'REJECTED'}">
                 <div class="status-banner status-banner-rejected">

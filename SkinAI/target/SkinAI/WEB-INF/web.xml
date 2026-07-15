@@ -181,6 +181,46 @@
     </servlet-mapping>
 
     <servlet>
+        <servlet-name>PaymentController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.patient.PaymentController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>PaymentController</servlet-name>
+        <url-pattern>/patient/payment</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>PaymentController</servlet-name>
+        <url-pattern>/patient/payment/vnpay/mock</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>InvoiceController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.patient.InvoiceController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>InvoiceController</servlet-name>
+        <url-pattern>/patient/invoice</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>InitInvoiceController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.InitInvoiceController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>InitInvoiceController</servlet-name>
+        <url-pattern>/admin/init-invoices</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>TestDataController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.TestDataController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>TestDataController</servlet-name>
+        <url-pattern>/admin/test-data</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
         <servlet-name>ReportDetailController</servlet-name>
         <servlet-class>com.dermathologyai.controller.patient.ReportDetailController</servlet-class>
     </servlet>

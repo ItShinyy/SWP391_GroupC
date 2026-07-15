@@ -44,11 +44,11 @@
             <table class="table table-hover table-striped align-middle">
                 <thead class="table-dark">
                     <tr>
-                        <th scope="col" style="width: 12%">Mã ID</th>
+                        <th scope="col" style="width: 12%">Mã (ID)</th>
                         <th scope="col" style="width: 38%">Bệnh được phát hiện</th>
                         <th scope="col" style="width: 12%">Độ tin cậy</th>
                         <th scope="col" style="width: 13%">Mức độ rủi ro</th>
-                        <th scope="col" style="width: 15%">Ngày quét</th>
+                        <th scope="col" style="width: 15%">Ngày tạo</th>
                         <th scope="col" style="width: 10%" class="text-center">Thao tác</th>
                     </tr>
                 </thead>

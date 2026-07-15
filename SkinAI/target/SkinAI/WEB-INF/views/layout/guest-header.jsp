@@ -240,6 +240,11 @@
                                     </a>
                                 </li>
                                 <li>
+                                    <a class="dropdown-item d-flex align-items-center" href="${pageContext.request.contextPath}/patient/invoice">
+                                        <i class="fa-solid fa-credit-card fa-fw me-2 text-success"></i> Hóa Đơn
+                                    </a>
+                                </li>
+                                <li>
                                     <a class="dropdown-item d-flex align-items-center" href="${pageContext.request.contextPath}/patient/reports">
                                         <i class="fa-solid fa-file-medical fa-fw me-2 text-muted"></i> Hồ Sơ Bệnh Án
                                     </a>

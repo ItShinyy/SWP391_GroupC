@@ -169,11 +169,28 @@
                                     </td>
                                     <td class="text-center">
                                         <div class="btn-group" role="group">
+                                            <c:if test="${apt.status == 'CONFIRMED'}">
+                                                <a href="${pageContext.request.contextPath}/patient/payment?action=create&appointmentId=${apt.id}" 
+                                                   class="btn btn-sm btn-success" 
+                                                   title="Thanh toán">
+                                                    <i class="fas fa-credit-card"></i>
+                                                </a>
+                                            </c:if>
+                                            <c:if test="${apt.status == 'COMPLETED'}">
+                                                <span class="badge bg-success px-2 py-1" title="Đã thanh toán">
+                                                    <i class="fas fa-check-circle me-1"></i>Hoàn thành
+                                                </span>
+                                            </c:if>
+                                            <c:if test="${apt.status == 'CREATED'}">
+                                                <span class="badge bg-secondary px-2 py-1" title="Chờ xác nhận">
+                                                    <i class="fas fa-clock me-1"></i>Chờ xác nhận
+                                                </span>
+                                            </c:if>
                                             <c:if test="${apt.status == 'CREATED' or apt.status == 'CONFIRMED'}">
                                                 <button type="button" 
-                                                        class="btn btn-sm btn-outline-danger" 
+                                                        class="btn btn-sm btn-outline-danger ms-1" 
                                                         onclick="cancelAppointment('${apt.id}')" 
-                                                        title="Cancel Appointment">
+                                                        title="Hủy lịch hẹn">
                                                     <i class="fas fa-times"></i>
                                                 </button>
                                             </c:if>
@@ -195,20 +212,20 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">
-                    <i class="fas fa-exclamation-triangle text-warning me-2"></i>Cancel Appointment
+                    <i class="fas fa-exclamation-triangle text-warning me-2"></i>Hủy Lịch Hẹn
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p>Are you sure you want to cancel this appointment?</p>
-                <p class="text-muted small">This action cannot be undone. You will need to book a new appointment if needed.</p>
+                <p>Bạn có chắc chắn muốn hủy lịch hẹn này không?</p>
+                <p class="text-muted small">Hành động này không thể hoàn tác. Bạn sẽ cần đặt lịch hẹn mới nếu cần.</p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Keep Appointment</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Giữ Lịch Hẹn</button>
                 <form id="cancelForm" method="post" style="display: inline;">
                     <input type="hidden" name="action" value="cancel">
                     <input type="hidden" name="appointmentId" id="cancelAppointmentId">
-                    <button type="submit" class="btn btn-danger">Yes, Cancel</button>
+                    <button type="submit" class="btn btn-danger">Xác Nhận Hủy</button>
                 </form>
             </div>
         </div>

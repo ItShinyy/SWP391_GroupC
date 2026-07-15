@@ -24,8 +24,9 @@ public class BookingService {
     /**
      * Creates an appointment atomically, ensuring that:
      * 1. The user has a valid PATIENT profile (Role = USER is fine, but Profile must exist).
-     * 2. The operation is idempotent (blocks duplicate request_id).
-     * 3. Wraps the creation in a manual JDBC transaction.
+     * 2. The patient doesn't have any incomplete appointments.
+     * 3. The operation is idempotent (blocks duplicate request_id).
+     * 4. Wraps the creation in a manual JDBC transaction.
      */
     public String bookAppointment(String userId, Appointment appointment) throws Exception {
         if (appointment.getRequestId() == null || appointment.getRequestId().trim().isEmpty()) {
@@ -38,9 +39,14 @@ public class BookingService {
             throw new IllegalStateException("User does not have a complete patient profile. Cannot book.");
         }
 
+        // 2. Check if patient has any incomplete appointments
+        if (appointmentDAO.hasIncompleteAppointment(patient.getId())) {
+            throw new IllegalStateException("Bạn cần hoàn thành lịch khám cũ trước khi đặt lịch mới.");
+        }
+
         appointment.setPatientId(patient.getId());
 
-        // 2. Atomic Transaction (ACID)
+        // 3. Atomic Transaction (ACID)
         Connection conn = null;
         try {
             conn = appointmentDAO.getConnection();

@@ -1,8 +1,13 @@
 package com.dermathologyai.controller.patient;
 
 import com.dermathologyai.dao.ClinicDAO;
+import com.dermathologyai.dao.DoctorDAO;
+import com.dermathologyai.dao.PatientDAO;
+import com.dermathologyai.dao.AppointmentDAO;
 import com.dermathologyai.model.Appointment;
 import com.dermathologyai.model.User;
+import com.dermathologyai.model.Doctor;
+import com.dermathologyai.model.Patient;
 import com.dermathologyai.dao.AuditLogDAO;
 import com.dermathologyai.model.AuditLog;
 import com.dermathologyai.service.BookingService;
@@ -18,23 +23,58 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
+import java.util.List;
 
 public class BookingController extends HttpServlet {
     private ClinicDAO clinicDAO;
+    private DoctorDAO doctorDAO;
+    private PatientDAO patientDAO;
+    private AppointmentDAO appointmentDAO;
     private BookingService bookingService;
     private AuditLogDAO auditLogDAO;
 
     @Override
     public void init() throws ServletException {
         clinicDAO = new ClinicDAO();
+        doctorDAO = new DoctorDAO();
+        patientDAO = new PatientDAO();
+        appointmentDAO = new AppointmentDAO();
         bookingService = new BookingService();
         auditLogDAO = new AuditLogDAO();
     }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        HttpSession session = req.getSession(false);
+        if (session == null || session.getAttribute("user") == null) {
+            resp.sendRedirect(req.getContextPath() + "/auth/login");
+            return;
+        }
+
+        User user = (User) session.getAttribute("user");
         String clinicId = req.getParameter("clinicId");
         String reportId = req.getParameter("reportId");
+        
+        // Check if user has incomplete appointments before allowing booking
+        try {
+            Patient patient = patientDAO.findByUserId(user.getId());
+            if (patient != null && appointmentDAO.hasIncompleteAppointment(patient.getId())) {
+                Appointment incompleteAppointment = appointmentDAO.findIncompleteAppointmentByPatientId(patient.getId());
+                req.setAttribute("hasIncompleteAppointment", true);
+                req.setAttribute("incompleteAppointment", incompleteAppointment);
+                req.setAttribute("blockBooking", true);
+            }
+        } catch (Exception e) {
+            // Log error but don't block the page
+            System.err.println("Error checking incomplete appointments: " + e.getMessage());
+        }
+        
+        // Handle search parameters
+        String doctorName = req.getParameter("doctorName");
+        String fromDate = req.getParameter("fromDate");
+        String toDate = req.getParameter("toDate");
+        String specialization = req.getParameter("specialization");
+        String timeSlot = req.getParameter("timeSlot");
         
         if (clinicId != null && !clinicId.trim().isEmpty()) {
             req.setAttribute("selectedClinic", clinicDAO.findById(clinicId));
@@ -48,11 +88,37 @@ public class BookingController extends HttpServlet {
         
         req.setAttribute("clinics", clinicDAO.findActive());
         
+        // Load specializations from database
+        try {
+            List<String> specializations = doctorDAO.findAllSpecializations();
+            req.setAttribute("specializations", specializations);
+        } catch (Exception e) {
+            System.err.println("Error loading specializations: " + e.getMessage());
+        }
+        
+        // Handle search functionality
+        if (hasSearchParams(doctorName, fromDate, toDate, specialization, timeSlot)) {
+            try {
+                List<Doctor> searchResults = doctorDAO.searchDoctors(doctorName, fromDate, toDate, specialization, timeSlot);
+                req.setAttribute("searchResults", searchResults);
+            } catch (Exception e) {
+                req.setAttribute("errorMessage", "Lỗi khi tìm kiếm: " + e.getMessage());
+            }
+        }
+        
         // Generate a request ID for idempotency token
         String requestId = UUID.randomUUID().toString();
         req.setAttribute("requestId", requestId);
         
         req.getRequestDispatcher("/WEB-INF/views/patient/booking.jsp").forward(req, resp);
+    }
+    
+    private boolean hasSearchParams(String doctorName, String fromDate, String toDate, String specialization, String timeSlot) {
+        return (doctorName != null && !doctorName.trim().isEmpty()) ||
+               (fromDate != null && !fromDate.trim().isEmpty()) ||
+               (toDate != null && !toDate.trim().isEmpty()) ||
+               (specialization != null && !specialization.trim().isEmpty()) ||
+               (timeSlot != null && !timeSlot.trim().isEmpty());
     }
 
     @Override
@@ -89,8 +155,8 @@ public class BookingController extends HttpServlet {
             appointment.setAppointmentTime(appointmentTime);
             appointment.setNotes(notes);
             appointment.setRequestId(requestId);
-            appointment.setStatus("CREATED");
-            appointment.setDoctorStatus("PENDING");
+            appointment.setStatus("CONFIRMED");
+            appointment.setDoctorStatus("APPROVED");
             
             // Set diagnosis report ID if booking from a report
             if (reportId != null && !reportId.trim().isEmpty()) {
@@ -100,12 +166,12 @@ public class BookingController extends HttpServlet {
             String appointmentId = bookingService.bookAppointment(user.getId(), appointment);
             
             if (appointmentId != null) {
-                String auditDetails = "Clinic ID: " + clinicId + ", Doctor ID: " + doctorId;
+                String auditDetails = "Clinic ID: " + clinicId + ", Doctor ID: " + doctorId + " (Auto-approved)";
                 if (reportId != null && !reportId.trim().isEmpty()) {
                     auditDetails += ", Report ID: " + reportId;
                 }
-                auditLogDAO.createLog(user.getId(), "APPOINTMENT_CREATE", "appointments", appointmentId, null, auditDetails, RequestUtil.getClientIp(req), req.getHeader("User-Agent"));
-                req.getSession().setAttribute("successMessage", "Đặt lịch hẹn thành công! Bác sĩ sẽ xem xét và phản hồi sớm.");
+                auditLogDAO.createLog(user.getId(), "APPOINTMENT_CREATE_APPROVED", "appointments", appointmentId, null, auditDetails, RequestUtil.getClientIp(req), req.getHeader("User-Agent"));
+                req.getSession().setAttribute("successMessage", "Đặt lịch hẹn thành công! Lịch hẹn đã được xác nhận và bạn có thể đến khám theo lịch đã đặt.");
                 resp.sendRedirect(req.getContextPath() + "/patient/appointments");
             } else {
                 req.setAttribute("errorMessage", "Không thể đặt lịch hẹn. Vui lòng thử lại.");

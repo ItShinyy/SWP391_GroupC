@@ -334,7 +334,12 @@
                                         <td>
                                             <c:choose>
                                                 <c:when test="${apt.doctorStatus == 'PENDING'}"><span class="badge-status badge-pending"><i class="fa-solid fa-clock me-1"></i>Chờ duyệt</span></c:when>
-                                                <c:when test="${apt.doctorStatus == 'ACCEPTED'}"><span class="badge-status badge-accepted"><i class="fa-solid fa-check me-1"></i>Đã chấp nhận</span></c:when>
+                                                <c:when test="${apt.doctorStatus == 'ACCEPTED'}">
+                                                    <c:choose>
+                                                        <c:when test="${apt.status == 'COMPLETED'}"><span class="badge-status badge-accepted"><i class="fa-solid fa-check-double me-1"></i>Đã hoàn thành</span></c:when>
+                                                        <c:otherwise><span class="badge-status badge-accepted"><i class="fa-solid fa-check me-1"></i>Đã xác nhận</span></c:otherwise>
+                                                    </c:choose>
+                                                </c:when>
                                                 <c:when test="${apt.doctorStatus == 'REJECTED'}"><span class="badge-status badge-rejected"><i class="fa-solid fa-times me-1"></i>Đã từ chối</span></c:when>
                                                 <c:otherwise><span class="badge-status badge-pending"><i class="fa-solid fa-clock me-1"></i>Chờ duyệt</span></c:otherwise>
                                             </c:choose>

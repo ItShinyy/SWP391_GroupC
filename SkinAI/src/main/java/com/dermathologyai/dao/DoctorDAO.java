@@ -72,4 +72,72 @@ public class DoctorDAO extends DBContext {
         d.setClinicAddress(rs.getString("clinic_address"));
         return d;
     }
+
+    /**
+     * Tìm kiếm bác sĩ theo nhiều tiêu chí
+     */
+    public List<Doctor> searchDoctors(String doctorName, String fromDate, String toDate, String specialization, String timeSlot) {
+        StringBuilder sql = new StringBuilder();
+        sql.append(SELECT_COLS);
+        
+        // Add schedule join if we need to filter by date or time slot
+        if ((fromDate != null && !fromDate.trim().isEmpty()) || 
+            (toDate != null && !toDate.trim().isEmpty()) ||
+            (timeSlot != null && !timeSlot.trim().isEmpty())) {
+            sql.append(" JOIN doctor_schedules ds ON d.id = ds.doctor_id");
+        }
+        
+        sql.append(" WHERE d.is_active = 1");
+        
+        // Build parameters list
+        java.util.List<Object> params = new java.util.ArrayList<>();
+        
+        // Filter by doctor name
+        if (doctorName != null && !doctorName.trim().isEmpty()) {
+            sql.append(" AND u.full_name LIKE ?");
+            params.add("%" + doctorName.trim() + "%");
+        }
+        
+        // Filter by specialization
+        if (specialization != null && !specialization.trim().isEmpty()) {
+            sql.append(" AND d.specialization = ?");
+            params.add(specialization.trim());
+        }
+        
+        // Filter by date range
+        if (fromDate != null && !fromDate.trim().isEmpty()) {
+            sql.append(" AND ds.date >= ?");
+            params.add(fromDate);
+        }
+        
+        if (toDate != null && !toDate.trim().isEmpty()) {
+            sql.append(" AND ds.date <= ?");
+            params.add(toDate);
+        }
+        
+        // Filter by time slot
+        if (timeSlot != null && !timeSlot.trim().isEmpty()) {
+            sql.append(" AND ds.slot = ?");
+            params.add(timeSlot);
+        }
+        
+        // Group by doctor and order by name
+        if ((fromDate != null && !fromDate.trim().isEmpty()) || 
+            (toDate != null && !toDate.trim().isEmpty()) ||
+            (timeSlot != null && !timeSlot.trim().isEmpty())) {
+            sql.append(" GROUP BY d.id, d.user_id, d.clinic_id, d.specialization, d.license_number, d.bio, d.is_active, d.created_at, d.updated_at, u.full_name, u.email, u.phone, c.clinic_name, c.address");
+        }
+        
+        sql.append(" ORDER BY u.full_name");
+        
+        return queryList(sql.toString(), DoctorDAO::mapRow, params.toArray());
+    }
+
+    /**
+     * Lấy danh sách tất cả chuyên khoa có trong hệ thống
+     */
+    public List<String> findAllSpecializations() {
+        String sql = "SELECT DISTINCT d.specialization FROM doctors d WHERE d.is_active = 1 AND d.specialization IS NOT NULL ORDER BY d.specialization";
+        return queryList(sql, (rs) -> rs.getString("specialization"));
+    }
 }

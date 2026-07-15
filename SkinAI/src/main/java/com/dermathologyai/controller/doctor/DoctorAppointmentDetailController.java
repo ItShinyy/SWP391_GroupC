@@ -5,6 +5,7 @@ import com.dermathologyai.dao.DoctorDAO;
 import com.dermathologyai.model.Appointment;
 import com.dermathologyai.model.Doctor;
 import com.dermathologyai.model.User;
+import com.dermathologyai.service.InvoiceService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,11 +20,13 @@ import java.io.IOException;
 public class DoctorAppointmentDetailController extends HttpServlet {
     private DoctorDAO doctorDAO;
     private AppointmentDAO appointmentDAO;
+    private InvoiceService invoiceService;
 
     @Override
     public void init() throws ServletException {
         doctorDAO = new DoctorDAO();
         appointmentDAO = new AppointmentDAO();
+        invoiceService = new InvoiceService();
     }
 
     @Override
@@ -84,25 +87,42 @@ public class DoctorAppointmentDetailController extends HttpServlet {
         
         // Đọc dữ liệu từ form xử lý (ID lịch hẹn, hành động duyệt, và ghi chú)
         String appointmentId = req.getParameter("appointmentId");
-        String action = req.getParameter("action"); // "accept" (Xác nhận) hoặc "reject" (Từ chối)
+        String action = req.getParameter("action"); // "accept", "reject", hoặc "complete"
         String doctorNotes = req.getParameter("doctorNotes");
+        String completionNotes = req.getParameter("completionNotes");
         
         if (appointmentId == null || action == null) {
             resp.sendRedirect(req.getContextPath() + "/doctor/dashboard");
             return;
         }
         
-        // Xác định trạng thái bác sĩ duyệt tương ứng
-        String doctorStatus = "accept".equals(action) ? "ACCEPTED" : "REJECTED";
+        boolean success = false;
         
-        // Cập nhật trạng thái duyệt của bác sĩ và ghi chú nhận xét vào DB
-        boolean success = appointmentDAO.updateDoctorStatus(appointmentId, doctorStatus, doctorNotes);
-        
-        if (success) {
-            // Nếu bác sĩ đồng ý tiếp nhận, cũng cập nhật trạng thái lịch hẹn chung thành CONFIRMED
-            if ("ACCEPTED".equals(doctorStatus)) {
+        if ("complete".equals(action)) {
+            // Xử lý hoàn thành appointment
+            success = appointmentDAO.updateStatus(appointmentId, "COMPLETED");
+            
+            if (success && completionNotes != null && !completionNotes.trim().isEmpty()) {
+                // Cập nhật ghi chú kết luận nếu có
+                appointmentDAO.updateDoctorStatus(appointmentId, "ACCEPTED", completionNotes);
+            }
+            
+            if (success) {
+                // Tự động tạo invoice cho appointment đã hoàn thành
+                invoiceService.createInvoiceForCompletedAppointment(appointmentId);
+            }
+        } else {
+            // Xử lý accept/reject như cũ
+            String doctorStatus = "accept".equals(action) ? "ACCEPTED" : "REJECTED";
+            success = appointmentDAO.updateDoctorStatus(appointmentId, doctorStatus, doctorNotes);
+            
+            if (success && "ACCEPTED".equals(doctorStatus)) {
+                // Nếu bác sĩ đồng ý tiếp nhận, cũng cập nhật trạng thái lịch hẹn chung thành CONFIRMED
                 appointmentDAO.updateStatus(appointmentId, "CONFIRMED");
             }
+        }
+        
+        if (success) {
             // Redirect về lại trang chi tiết kèm theo cờ thông báo thành công
             resp.sendRedirect(req.getContextPath() + "/doctor/appointments/detail?id=" + appointmentId + "&success=true");
         } else {

@@ -213,6 +213,26 @@ public class AppointmentDAO extends DBContext {
         return queryScalar(sql.toString(), Integer.class, params.toArray());
     }
 
+    /**
+     * Kiểm tra xem bệnh nhân có lịch hẹn chưa hoàn thành hay không.
+     * Lịch hẹn được coi là "chưa hoàn thành" khi status không phải là 'COMPLETED', 'CANCELLED', hoặc 'NO_SHOW'
+     */
+    public boolean hasIncompleteAppointment(String patientId) {
+        String sql = "SELECT COUNT(*) FROM appointments WHERE patient_id = ? AND status NOT IN ('COMPLETED', 'CANCELLED', 'NO_SHOW')";
+        Integer count = queryScalar(sql, Integer.class, patientId);
+        return count != null && count > 0;
+    }
+
+    /**
+     * Lấy lịch hẹn chưa hoàn thành đầu tiên của bệnh nhân (để hiển thị thông tin)
+     */
+    public Appointment findIncompleteAppointmentByPatientId(String patientId) {
+        return queryOne(
+            SELECT_COLS + " WHERE a.patient_id = ? AND a.status NOT IN ('COMPLETED', 'CANCELLED', 'NO_SHOW') ORDER BY a.appointment_time ASC",
+            AppointmentDAO::mapRow, patientId
+        );
+    }
+
     private static Appointment mapRow(ResultSet rs) throws SQLException {
         Appointment a = new Appointment();
         a.setId(rs.getString("id"));
