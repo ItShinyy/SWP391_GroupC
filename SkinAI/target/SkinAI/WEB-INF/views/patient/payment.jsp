@@ -12,6 +12,21 @@
                         <i class="fas fa-receipt fa-3x text-success mb-3"></i>
                         <h2 class="fw-bold">Thanh Toán Hóa Đơn</h2>
                         <p class="text-muted">Hoàn tất thanh toán cho dịch vụ khám chữa bệnh</p>
+                        
+                        <!-- Total Amount Display -->
+                        <c:if test="${not empty invoice}">
+                            <div class="alert alert-info d-inline-block px-4 py-3 mt-3">
+                                <div class="d-flex align-items-center justify-content-center">
+                                    <i class="fas fa-money-bill-wave fa-2x text-success me-3"></i>
+                                    <div class="text-start">
+                                        <div class="small text-muted fw-bold">TỔNG TIỀN CẦN THANH TOÁN</div>
+                                        <div class="fs-2 fw-bold text-success">
+                                            <fmt:formatNumber value="${invoice.totalAmount}" type="currency" pattern="#,###" />đ
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </c:if>
                     </div>
 
                     <!-- Success/Error Messages -->
@@ -61,7 +76,13 @@
                                             <p class="mb-2">
                                                 <strong>Thời gian hẹn:</strong> 
                                                 <span class="text-muted">
-                                                    <fmt:formatDate value="${appointment.appointmentTime}" pattern="dd/MM/yyyy HH:mm"/>
+                                                    <c:set var="appointmentTimeStr" value="${appointment.appointmentTime.toString()}" />
+                                                    <c:set var="dateOnly" value="${appointmentTimeStr.substring(0, 10)}" />
+                                                    <c:set var="timeOnly" value="${appointmentTimeStr.substring(11, 16)}" />
+                                                    <c:set var="year" value="${dateOnly.substring(0, 4)}" />
+                                                    <c:set var="month" value="${dateOnly.substring(5, 7)}" />
+                                                    <c:set var="day" value="${dateOnly.substring(8, 10)}" />
+                                                    ${day}/${month}/${year} ${timeOnly}
                                                 </span>
                                             </p>
                                         </c:if>
@@ -85,17 +106,28 @@
                                             </c:choose>
                                         </p>
                                         <p class="mb-2">
-                                            <strong>Tổng tiền:</strong> 
-                                            <span class="fs-4 fw-bold text-success">
-                                                <fmt:formatNumber value="${invoice.totalAmount}" type="currency" 
-                                                                pattern="#,###" />đ
-                                            </span>
+                                            <strong>Tổng tiền:</strong>
                                         </p>
+                                        <div class="p-3 bg-success bg-opacity-10 border border-success rounded mb-2">
+                                            <div class="text-center">
+                                                <div class="fs-1 fw-bold text-success">
+                                                    <fmt:formatNumber value="${invoice.totalAmount}" type="currency" 
+                                                                    pattern="#,###" />đ
+                                                </div>
+                                                <small class="text-success fw-semibold">Phí khám bệnh</small>
+                                            </div>
+                                        </div>
                                         <c:if test="${invoice.paidAt != null}">
                                             <p class="mb-0">
                                                 <strong>Đã thanh toán:</strong> 
                                                 <span class="text-muted">
-                                                    <fmt:formatDate value="${invoice.paidAt}" pattern="dd/MM/yyyy HH:mm"/>
+                                                    <c:set var="paidAtStr" value="${invoice.paidAt.toString()}" />
+                                                    <c:set var="dateOnly" value="${paidAtStr.substring(0, 10)}" />
+                                                    <c:set var="timeOnly" value="${paidAtStr.substring(11, 16)}" />
+                                                    <c:set var="year" value="${dateOnly.substring(0, 4)}" />
+                                                    <c:set var="month" value="${dateOnly.substring(5, 7)}" />
+                                                    <c:set var="day" value="${dateOnly.substring(8, 10)}" />
+                                                    ${day}/${month}/${year} ${timeOnly}
                                                 </span>
                                             </p>
                                         </c:if>
@@ -142,12 +174,13 @@
                                             
                                             <div class="mt-auto">
                                                 <form method="post" action="${pageContext.request.contextPath}/patient/payment" 
-                                                      onsubmit="return confirm('Xác nhận ghi nhận thanh toán tại quầy?');">
+                                                      onsubmit="return confirm('Xác nhận ghi nhận thanh toán tại quầy?\nSố tiền: ' + '<fmt:formatNumber value="${invoice.totalAmount}" type="currency" pattern="#,###" />đ');">
                                                     <input type="hidden" name="action" value="pay-offline">
                                                     <input type="hidden" name="invoiceId" value="${invoice.id}">
                                                     <button type="submit" class="btn btn-primary btn-lg w-100">
                                                         <i class="fas fa-cash-register me-2"></i>
-                                                        Ghi Nhận Thanh Toán Tại Quầy
+                                                        Thanh Toán Tại Quầy
+                                                        <div class="small">(<fmt:formatNumber value="${invoice.totalAmount}" type="currency" pattern="#,###" />đ)</div>
                                                     </button>
                                                 </form>
                                                 <small class="text-muted d-block mt-2 text-center">
@@ -198,6 +231,7 @@
                                                     <button type="submit" class="btn btn-success btn-lg w-100">
                                                         <i class="fas fa-credit-card me-2"></i>
                                                         Thanh Toán Online
+                                                        <div class="small">(<fmt:formatNumber value="${invoice.totalAmount}" type="currency" pattern="#,###" />đ)</div>
                                                     </button>
                                                 </form>
                                                 <small class="text-muted d-block mt-2 text-center">

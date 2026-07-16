@@ -169,23 +169,41 @@
                                     </td>
                                     <td class="text-center">
                                         <div class="btn-group" role="group">
-                                            <c:if test="${apt.status == 'CONFIRMED'}">
-                                                <a href="${pageContext.request.contextPath}/patient/payment?action=create&appointmentId=${apt.id}" 
-                                                   class="btn btn-sm btn-success" 
-                                                   title="Thanh toán">
-                                                    <i class="fas fa-credit-card"></i>
-                                                </a>
-                                            </c:if>
-                                            <c:if test="${apt.status == 'COMPLETED'}">
-                                                <span class="badge bg-success px-2 py-1" title="Đã thanh toán">
-                                                    <i class="fas fa-check-circle me-1"></i>Hoàn thành
-                                                </span>
-                                            </c:if>
-                                            <c:if test="${apt.status == 'CREATED'}">
-                                                <span class="badge bg-secondary px-2 py-1" title="Chờ xác nhận">
-                                                    <i class="fas fa-clock me-1"></i>Chờ xác nhận
-                                                </span>
-                                            </c:if>
+                                            <c:choose>
+                                                <c:when test="${apt.status == 'CONFIRMED'}">
+                                                    <!-- Show payment button only for confirmed appointments -->
+                                                    <form method="POST" action="${pageContext.request.contextPath}/patient/payment" style="display: inline;">
+                                                        <input type="hidden" name="action" value="create">
+                                                        <input type="hidden" name="appointmentId" value="${apt.id}">
+                                                        <button type="submit" class="btn btn-sm btn-success" title="Thanh toán">
+                                                            <i class="fas fa-credit-card"></i>
+                                                        </button>
+                                                    </form>
+                                                </c:when>
+                                                <c:when test="${apt.status == 'COMPLETED'}">
+                                                    <!-- Show completed badge and link to invoice -->
+                                                    <span class="badge bg-success px-2 py-1" title="Đã hoàn thành và thanh toán">
+                                                        <i class="fas fa-check-circle me-1"></i>Hoàn thành
+                                                    </span>
+                                                    <a href="${pageContext.request.contextPath}/patient/invoice" 
+                                                       class="btn btn-sm btn-outline-info ms-1" title="Xem hóa đơn">
+                                                        <i class="fas fa-receipt"></i>
+                                                    </a>
+                                                </c:when>
+                                                <c:when test="${apt.status == 'CREATED'}">
+                                                    <span class="badge bg-secondary px-2 py-1" title="Chờ xác nhận">
+                                                        <i class="fas fa-clock me-1"></i>Chờ xác nhận
+                                                    </span>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <!-- For other statuses, show status badge -->
+                                                    <span class="badge bg-light text-dark px-2 py-1" title="${apt.status}">
+                                                        ${apt.status}
+                                                    </span>
+                                                </c:otherwise>
+                                            </c:choose>
+                                            
+                                            <!-- Cancel button for pending and confirmed appointments -->
                                             <c:if test="${apt.status == 'CREATED' or apt.status == 'CONFIRMED'}">
                                                 <button type="button" 
                                                         class="btn btn-sm btn-outline-danger ms-1" 

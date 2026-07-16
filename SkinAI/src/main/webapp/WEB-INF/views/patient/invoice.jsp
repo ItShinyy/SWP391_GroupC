@@ -174,11 +174,17 @@
                                     <td>
                                         <c:if test="${not empty payment.appointmentTime}">
                                             <div class="fw-medium">
-                                                <fmt:formatDate value="${payment.appointmentTime}" pattern="dd/MM/yyyy" />
+                                                <c:set var="appointmentTimeStr" value="${payment.appointmentTime.toString()}" />
+                                                <c:set var="dateOnly" value="${appointmentTimeStr.substring(0, 10)}" />
+                                                <c:set var="year" value="${dateOnly.substring(0, 4)}" />
+                                                <c:set var="month" value="${dateOnly.substring(5, 7)}" />
+                                                <c:set var="day" value="${dateOnly.substring(8, 10)}" />
+                                                ${day}/${month}/${year}
                                             </div>
                                             <small class="text-muted">
                                                 <i class="far fa-clock me-1"></i>
-                                                <fmt:formatDate value="${payment.appointmentTime}" pattern="HH:mm" />
+                                                <c:set var="timeOnly" value="${appointmentTimeStr.substring(11, 16)}" />
+                                                ${timeOnly}
                                             </small>
                                         </c:if>
                                     </td>
@@ -245,10 +251,16 @@
                                         <c:choose>
                                             <c:when test="${not empty payment.paidAt}">
                                                 <div class="fw-medium">
-                                                    <fmt:formatDate value="${payment.paidAt}" pattern="dd/MM/yyyy" />
+                                                    <c:set var="paidAtStr" value="${payment.paidAt.toString()}" />
+                                                    <c:set var="dateOnly" value="${paidAtStr.substring(0, 10)}" />
+                                                    <c:set var="year" value="${dateOnly.substring(0, 4)}" />
+                                                    <c:set var="month" value="${dateOnly.substring(5, 7)}" />
+                                                    <c:set var="day" value="${dateOnly.substring(8, 10)}" />
+                                                    ${day}/${month}/${year}
                                                 </div>
                                                 <small class="text-muted">
-                                                    <fmt:formatDate value="${payment.paidAt}" pattern="HH:mm" />
+                                                    <c:set var="timeOnly" value="${paidAtStr.substring(11, 16)}" />
+                                                    ${timeOnly}
                                                 </small>
                                             </c:when>
                                             <c:otherwise>

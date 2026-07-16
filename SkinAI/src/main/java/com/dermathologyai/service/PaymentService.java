@@ -93,6 +93,11 @@ public class PaymentService {
             // Update invoice status to PAID
             invoiceDAO.updateStatus(invoiceId, Invoice.STATUS_PAID, LocalDateTime.now());
             
+            // Update appointment status to COMPLETED after payment
+            if (invoice.getAppointmentId() != null) {
+                appointmentDAO.updateStatus(invoice.getAppointmentId(), "COMPLETED");
+            }
+            
             // Log audit
             auditLogDAO.createLog(userId, "PAYMENT_OFFLINE_SUCCESS", "payments", paymentId, 
                                 null, "Thanh toán tại quầy thành công - Số tiền: " + invoice.getTotalAmount(), 
@@ -176,6 +181,12 @@ public class PaymentService {
         if (updated) {
             // Update invoice status to PAID
             invoiceDAO.updateStatus(payment.getInvoiceId(), Invoice.STATUS_PAID, LocalDateTime.now());
+            
+            // Update appointment status to COMPLETED after payment
+            Invoice invoice = invoiceDAO.findById(payment.getInvoiceId());
+            if (invoice != null && invoice.getAppointmentId() != null) {
+                appointmentDAO.updateStatus(invoice.getAppointmentId(), "COMPLETED");
+            }
             
             // Log audit
             auditLogDAO.createLog(userId, "PAYMENT_ONLINE_SUCCESS", "payments", payment.getId(), 

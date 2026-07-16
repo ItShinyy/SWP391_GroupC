@@ -42,8 +42,10 @@ public class InvoiceController extends HttpServlet {
             // Get patient information
             Patient patient = patientDAO.findByUserId(user.getId());
             if (patient == null) {
-                req.getSession().setAttribute("errorMessage", "Vui lòng cập nhật hồ sơ bệnh nhân trước khi xem danh sách hóa đơn.");
-                resp.sendRedirect(req.getContextPath() + "/patient/profile");
+                if (!resp.isCommitted()) {
+                    req.getSession().setAttribute("errorMessage", "Vui lòng cập nhật hồ sơ bệnh nhân trước khi xem danh sách hóa đơn.");
+                    resp.sendRedirect(req.getContextPath() + "/patient/profile");
+                }
                 return;
             }
 
@@ -61,9 +63,22 @@ public class InvoiceController extends HttpServlet {
                 }
             }
 
-            // Get payment history
-            List<PaymentHistory> invoiceHistory = paymentDAO.findPaymentHistoryByPatientId(patient.getId(), page, pageSize);
-            int totalInvoices = invoiceDAO.countByPatientId(patient.getId());
+            // Get payment history with error handling
+            List<PaymentHistory> invoiceHistory = null;
+            int totalInvoices = 0;
+            
+            try {
+                invoiceHistory = paymentDAO.findPaymentHistoryByPatientId(patient.getId(), page, pageSize);
+                totalInvoices = invoiceDAO.countByPatientId(patient.getId());
+            } catch (Exception dbException) {
+                // Handle database exceptions specifically
+                if (!resp.isCommitted()) {
+                    req.setAttribute("errorMessage", "Không thể tải danh sách hóa đơn từ database: " + dbException.getMessage());
+                    req.getRequestDispatcher("/WEB-INF/views/error.jsp").forward(req, resp);
+                }
+                return;
+            }
+            
             int totalPages = (int) Math.ceil((double) totalInvoices / pageSize);
 
             // Set attributes for JSP
@@ -73,12 +88,17 @@ public class InvoiceController extends HttpServlet {
             req.setAttribute("totalPages", totalPages);
             req.setAttribute("pageSize", pageSize);
 
-            // Forward to JSP
-            req.getRequestDispatcher("/WEB-INF/views/patient/invoice.jsp").forward(req, resp);
+            // Forward to JSP - only if response not committed
+            if (!resp.isCommitted()) {
+                req.getRequestDispatcher("/WEB-INF/views/patient/invoice.jsp").forward(req, resp);
+            }
 
         } catch (Exception e) {
-            req.setAttribute("errorMessage", "Lỗi khi tải danh sách hóa đơn: " + e.getMessage());
-            req.getRequestDispatcher("/WEB-INF/views/error.jsp").forward(req, resp);
+            // Only forward to error page if response hasn't been committed yet
+            if (!resp.isCommitted()) {
+                req.setAttribute("errorMessage", "Lỗi khi tải danh sách hóa đơn: " + e.getMessage());
+                req.getRequestDispatcher("/WEB-INF/views/error.jsp").forward(req, resp);
+            }
         }
     }
 }

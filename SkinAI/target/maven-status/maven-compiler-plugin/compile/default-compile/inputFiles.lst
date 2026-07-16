@@ -9,6 +9,7 @@ C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathol
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\service\OtpService.java
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\filter\EncodingFilter.java
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\dao\PasswordResetTokenDAO.java
+C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\dao\PaymentDAO.java
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\controller\TestController.java
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\model\AppointmentFilter.java
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\controller\patient\AppointmentsController.java
@@ -21,6 +22,7 @@ C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathol
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\filter\AuditFilter.java
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\util\PageUtil.java
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\dao\DBContext.java
+C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\model\Payment.java
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\controller\admin\DashboardController.java
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\dao\DiseaseDAO.java
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\util\FileStorageUtil.java
@@ -35,11 +37,16 @@ C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathol
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\controller\admin\ClinicsController.java
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\model\DiagnosisReport.java
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\model\Clinic.java
+C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\controller\TestDataController.java
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\controller\admin\DashboardApiController.java
+C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\service\InvoiceService.java
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\controller\admin\AuditLogDetailController.java
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\dao\DoctorDAO.java
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\controller\auth\ResetPasswordController.java
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\controller\doctor\DoctorDashboardController.java
+C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\controller\patient\PaymentController.java
+C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\controller\patient\InvoiceController.java
+C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\model\PaymentHistory.java
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\model\Doctor.java
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\model\Patient.java
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\model\AccountAppeal.java
@@ -48,6 +55,7 @@ C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathol
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\service\BookingService.java
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\service\CooldownException.java
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\util\FormatUtil.java
+C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\controller\InitInvoiceController.java
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\controller\api\DoctorApiController.java
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\controller\auth\VerifyController.java
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\controller\auth\UnlockAccountController.java
@@ -65,7 +73,9 @@ C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathol
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\controller\auth\ForgotPasswordController.java
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\model\PasswordResetToken.java
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\controller\auth\GoogleOAuthController.java
+C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\service\PaymentService.java
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\controller\auth\LoginController.java
+C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\model\Invoice.java
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\util\MaskUtil.java
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\controller\auth\RegisterController.java
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\controller\admin\UserStatusController.java
@@ -77,6 +87,7 @@ C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathol
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\controller\patient\BookingController.java
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\controller\patient\ProfileController.java
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\dao\PatientDAO.java
+C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\dao\InvoiceDAO.java
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\notification\SmsService.java
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\model\AuditLog.java
 C:\Users\admin\Documents\GitHub\SWP391_GroupC\SkinAI\src\main\java\com\dermathologyai\notification\MailService.java
