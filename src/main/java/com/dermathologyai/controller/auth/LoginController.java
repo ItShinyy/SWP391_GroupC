@@ -36,7 +36,13 @@ public class LoginController extends HttpServlet {
         HttpSession session = req.getSession(false);
         if (session != null && session.getAttribute("user") != null) {
             String role = ((User) session.getAttribute("user")).getRole();
-            resp.sendRedirect(req.getContextPath() + ("ADMIN".equals(role) ? "/admin/dashboard" : "/home"));
+            if ("ADMIN".equals(role)) {
+                resp.sendRedirect(req.getContextPath() + "/admin/dashboard");
+            } else if ("DOCTOR".equals(role)) {
+                resp.sendRedirect(req.getContextPath() + "/doctor/dashboard");
+            } else {
+                resp.sendRedirect(req.getContextPath() + "/home");
+            }
             return;
         }
 
@@ -107,6 +113,10 @@ public class LoginController extends HttpServlet {
             if ("ADMIN".equals(user.getRole())) {
                 session.removeAttribute("redirectAfterLogin");
                 resp.sendRedirect(req.getContextPath() + "/admin/dashboard");
+                return;
+            } else if ("DOCTOR".equals(user.getRole())) {
+                session.removeAttribute("redirectAfterLogin");
+                resp.sendRedirect(req.getContextPath() + "/doctor/dashboard");
                 return;
             }
 

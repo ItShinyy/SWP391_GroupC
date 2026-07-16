@@ -17,11 +17,25 @@ public class Appointment {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    private String doctorId;
+    private String doctorStatus;
+    private String doctorNotes;
+
     // Transient fields for display
+    private String doctorName;
     private String clinicName;
     private String patientName;
     private String patientEmail;
     private String patientPhone;
+    private String patientGender;
+    private String patientDob;
+    private String patientAddress;
+    private String diseaseName;
+    private double confidenceScore;
+    private String riskLevel;
+    private String imageUrl;
+    private String heatmapUrl;
+    private String recommendation;
 
     public Appointment() {
     }
@@ -63,6 +77,18 @@ public class Appointment {
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
 
+    public String getDoctorId() { return doctorId; }
+    public void setDoctorId(String doctorId) { this.doctorId = doctorId; }
+
+    public String getDoctorStatus() { return doctorStatus; }
+    public void setDoctorStatus(String doctorStatus) { this.doctorStatus = doctorStatus; }
+
+    public String getDoctorNotes() { return doctorNotes; }
+    public void setDoctorNotes(String doctorNotes) { this.doctorNotes = doctorNotes; }
+
+    public String getDoctorName() { return doctorName; }
+    public void setDoctorName(String doctorName) { this.doctorName = doctorName; }
+
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
@@ -80,6 +106,63 @@ public class Appointment {
 
     public String getPatientPhone() { return patientPhone; }
     public void setPatientPhone(String patientPhone) { this.patientPhone = patientPhone; }
+
+    public String getPatientGender() { return patientGender; }
+    public void setPatientGender(String patientGender) { this.patientGender = patientGender; }
+
+    public String getPatientDob() { return patientDob; }
+    public void setPatientDob(String patientDob) { this.patientDob = patientDob; }
+
+    public String getPatientAddress() { return patientAddress; }
+    public void setPatientAddress(String patientAddress) { this.patientAddress = patientAddress; }
+
+    public String getDiseaseName() { return diseaseName; }
+    public void setDiseaseName(String diseaseName) { this.diseaseName = diseaseName; }
+
+    public double getConfidenceScore() { return confidenceScore; }
+    public void setConfidenceScore(double confidenceScore) { this.confidenceScore = confidenceScore; }
+
+    public String getRiskLevel() { return riskLevel; }
+    public void setRiskLevel(String riskLevel) { this.riskLevel = riskLevel; }
+
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+
+    public String getHeatmapUrl() { return heatmapUrl; }
+    public void setHeatmapUrl(String heatmapUrl) { this.heatmapUrl = heatmapUrl; }
+
+    public String getRecommendation() { return recommendation; }
+    public void setRecommendation(String recommendation) { this.recommendation = recommendation; }
+
+    public String getAppointmentTimeFormatted() {
+        if (appointmentTime == null) return "";
+        return appointmentTime.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+    }
+
+    public String getAppointmentDateFormatted() {
+        if (appointmentTime == null) return "";
+        return appointmentTime.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+    }
+
+    public String getAppointmentTimeOnlyFormatted() {
+        if (appointmentTime == null) return "";
+        return appointmentTime.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
+    }
+
+    public String getCreatedAtFormatted() {
+        if (createdAt == null) return "";
+        return createdAt.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+    }
+
+    public String getCreatedDateFormatted() {
+        if (createdAt == null) return "";
+        return createdAt.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+    }
+
+    public String getCreatedTimeOnlyFormatted() {
+        if (createdAt == null) return "";
+        return createdAt.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"));
+    }
 
     @Override
     public String toString() {

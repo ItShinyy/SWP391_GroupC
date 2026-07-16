@@ -5,6 +5,9 @@
     <c:when test="${user.role == 'ADMIN'}">
         <jsp:include page="/WEB-INF/views/layout/admin-header.jsp" />
     </c:when>
+    <c:when test="${user.role == 'DOCTOR'}">
+        <jsp:include page="/WEB-INF/views/layout/doctor-header.jsp" />
+    </c:when>
     <c:otherwise>
         <jsp:include page="/WEB-INF/views/layout/global-header.jsp" />
     </c:otherwise>
@@ -139,6 +142,9 @@
 <c:choose>
     <c:when test="${user.role == 'ADMIN'}">
         <jsp:include page="/WEB-INF/views/layout/admin-footer.jsp" />
+    </c:when>
+    <c:when test="${user.role == 'DOCTOR'}">
+        <jsp:include page="/WEB-INF/views/layout/doctor-footer.jsp" />
     </c:when>
     <c:otherwise>
         <jsp:include page="/WEB-INF/views/layout/global-footer.jsp" />

@@ -106,6 +106,10 @@ public class GoogleCallbackController extends HttpServlet {
                         session.removeAttribute("redirectAfterLogin");
                         resp.sendRedirect(req.getContextPath() + "/admin/dashboard");
                         return;
+                    } else if ("DOCTOR".equals(user.getRole())) {
+                        session.removeAttribute("redirectAfterLogin");
+                        resp.sendRedirect(req.getContextPath() + "/doctor/dashboard");
+                        return;
                     }
 
                     // Check if redirect was requested
