@@ -203,6 +203,24 @@
     </servlet-mapping>
 
     <servlet>
+        <servlet-name>FeedbackController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.patient.FeedbackController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>FeedbackController</servlet-name>
+        <url-pattern>/patient/feedback</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>AdminFeedbackController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.admin.AdminFeedbackController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AdminFeedbackController</servlet-name>
+        <url-pattern>/admin/feedback</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
         <servlet-name>InitInvoiceController</servlet-name>
         <servlet-class>com.dermathologyai.controller.InitInvoiceController</servlet-class>
     </servlet>

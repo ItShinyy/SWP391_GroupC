@@ -1,4 +1,6 @@
 com\dermathologyai\notification\MailTemplate.class
+com\dermathologyai\model\Feedback.class
+com\dermathologyai\dao\FeedbackDAO.class
 com\dermathologyai\service\AuthService.class
 com\dermathologyai\controller\auth\ForgotPasswordController.class
 com\dermathologyai\service\PaymentService$InvoiceWithDetails.class
@@ -59,6 +61,7 @@ com\dermathologyai\dao\DoctorScheduleDAO.class
 com\dermathologyai\dao\AppointmentDAO.class
 com\dermathologyai\util\FileStorageUtil.class
 com\dermathologyai\dao\PaymentDAO.class
+com\dermathologyai\controller\patient\FeedbackController.class
 com\dermathologyai\util\MaskUtil.class
 com\dermathologyai\controller\doctor\DoctorAppointmentDetailController.class
 com\dermathologyai\controller\admin\DashboardApiController.class

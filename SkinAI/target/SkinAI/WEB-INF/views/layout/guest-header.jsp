@@ -249,6 +249,11 @@
                                         <i class="fa-solid fa-file-medical fa-fw me-2 text-muted"></i> Hồ Sơ Bệnh Án
                                     </a>
                                 </li>
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center" href="${pageContext.request.contextPath}/patient/feedback">
+                                        <i class="fa-solid fa-star fa-fw me-2 text-warning"></i> Đánh Giá Của Tôi
+                                    </a>
+                                </li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <form action="${pageContext.request.contextPath}/auth/logout" method="post" class="m-0 p-0">

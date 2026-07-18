@@ -181,13 +181,17 @@
                                                     </form>
                                                 </c:when>
                                                 <c:when test="${apt.status == 'COMPLETED'}">
-                                                    <!-- Show completed badge and link to invoice -->
+                                                    <!-- Show completed badge, link to invoice, and feedback button -->
                                                     <span class="badge bg-success px-2 py-1" title="Đã hoàn thành và thanh toán">
                                                         <i class="fas fa-check-circle me-1"></i>Hoàn thành
                                                     </span>
                                                     <a href="${pageContext.request.contextPath}/patient/invoice" 
                                                        class="btn btn-sm btn-outline-info ms-1" title="Xem hóa đơn">
                                                         <i class="fas fa-receipt"></i>
+                                                    </a>
+                                                    <a href="${pageContext.request.contextPath}/patient/feedback?action=create&appointmentId=${apt.id}" 
+                                                       class="btn btn-sm btn-outline-warning ms-1" title="Đánh giá dịch vụ">
+                                                        <i class="fas fa-star"></i>
                                                     </a>
                                                 </c:when>
                                                 <c:when test="${apt.status == 'CREATED'}">
