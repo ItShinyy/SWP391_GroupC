@@ -118,6 +118,25 @@ public class DoctorScheduleDAO extends DBContext {
         return false;
     }
 
+    public DoctorSchedule findByDoctorDateAndSlot(String doctorId, LocalDate date, String slot) {
+        String sql = "SELECT id, doctor_id, schedule_date, slot, is_available, max_patients, booked_count, created_at " +
+                     "FROM doctor_schedules WHERE doctor_id = ? AND schedule_date = ? AND slot = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, doctorId);
+            ps.setDate(2, Date.valueOf(date));
+            ps.setString(3, slot);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapRow(rs);
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error finding schedule by doctor, date, and slot", e);
+        }
+        return null;
+    }
+
     /**
      * Ánh xạ (map) một hàng kết quả từ ResultSet thành đối tượng DoctorSchedule.
      */

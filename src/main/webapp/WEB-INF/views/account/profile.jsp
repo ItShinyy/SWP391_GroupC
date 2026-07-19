@@ -27,6 +27,13 @@
                     <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill">
                         <i class="fa-solid fa-circle-check me-1"></i> Active Account
                     </span>
+                    <c:if test="${user.role == 'DOCTOR'}">
+                        <div class="mt-4 pt-3 border-top w-100">
+                            <button type="button" class="btn btn-outline-danger w-100 fw-bold rounded-pill shadow-sm transition hover-scale" data-bs-toggle="modal" data-bs-target="#bugReportModal">
+                                <i class="fa-solid fa-bug me-2"></i>Báo lỗi hệ thống
+                            </button>
+                        </div>
+                    </c:if>
                 </div>
             </div>
         </div>
@@ -150,3 +157,72 @@
         <jsp:include page="/WEB-INF/views/layout/global-footer.jsp" />
     </c:otherwise>
 </c:choose>
+
+<!-- Bug Report Modal -->
+<div class="modal fade" id="bugReportModal" tabindex="-1" aria-labelledby="bugReportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-danger text-white rounded-top-4 p-4 border-0">
+                <h5 class="modal-title fw-bold" id="bugReportModalLabel"><i class="fa-solid fa-bug me-2"></i>Báo Cáo Lỗi Hệ Thống</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="${pageContext.request.contextPath}/account/profile" method="post" id="bugReportForm" class="needs-validation" novalidate>
+                <input type="hidden" name="csrf_token" value="${sessionScope.csrfToken}">
+                <input type="hidden" name="action" value="report_bug">
+                <input type="hidden" name="urlPath" id="bugUrlPath" value="">
+                
+                <div class="modal-body p-4">
+                    <p class="text-muted small">Nếu bạn phát hiện lỗi hoặc sự cố kỹ thuật trong quá trình sử dụng hệ thống, vui lòng phản hồi tại đây. Admin sẽ kiểm tra và khắc phục sớm nhất.</p>
+                    
+                    <div class="mb-3">
+                        <label for="bugTitle" class="form-label fw-bold small text-dark">Tiêu đề lỗi <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control rounded-3" name="title" id="bugTitle" placeholder="Ví dụ: Lỗi trắng màn hình khi xem chi tiết" required>
+                        <div class="invalid-feedback">Vui lòng nhập tiêu đề lỗi.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="bugDescription" class="form-label fw-bold small text-dark">Mô tả chi tiết lỗi <span class="text-danger">*</span></label>
+                        <textarea class="form-control rounded-3" name="description" id="bugDescription" rows="4" placeholder="Vui lòng mô tả các bước dẫn đến lỗi hoặc thông tin chi tiết sự cố..." required></textarea>
+                        <div class="invalid-feedback">Vui lòng nhập mô tả chi tiết lỗi.</div>
+                    </div>
+                </div>
+                
+                <div class="modal-footer p-3 bg-light rounded-bottom-4 border-0">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold">Gửi Báo Cáo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const urlInput = document.getElementById("bugUrlPath");
+        if (urlInput) {
+            urlInput.value = window.location.href;
+        }
+        
+        // Modal Form Validation
+        const bugForm = document.getElementById('bugReportForm');
+        if (bugForm) {
+            bugForm.addEventListener('submit', function (event) {
+                if (!bugForm.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                bugForm.classList.add('was-validated');
+            }, false);
+        }
+    });
+</script>
+
+<style>
+    .transition {
+        transition: all 0.3s ease;
+    }
+    .hover-scale:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(220, 53, 69, 0.2) !important;
+    }
+</style>

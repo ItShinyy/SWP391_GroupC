@@ -62,6 +62,11 @@ public class BookingController extends HttpServlet {
         String notes = req.getParameter("notes");
         String requestId = req.getParameter("requestId");
         
+        String patientType = req.getParameter("patientType");
+        String patientName = req.getParameter("patientName");
+        String patientDob = req.getParameter("patientDob");
+        String patientGender = req.getParameter("patientGender");
+        
         if (clinicId == null || appointmentTimeStr == null || requestId == null) {
             req.setAttribute("errorMessage", "Missing required fields.");
             doGet(req, resp);
@@ -78,10 +83,23 @@ public class BookingController extends HttpServlet {
             appointment.setRequestId(requestId);
             appointment.setStatus("CREATED");
             
+            if ("relative".equalsIgnoreCase(patientType)) {
+                if (patientName == null || patientName.trim().isEmpty() ||
+                    patientDob == null || patientDob.trim().isEmpty() ||
+                    patientGender == null || patientGender.trim().isEmpty()) {
+                    req.setAttribute("errorMessage", "Vui lòng nhập đầy đủ thông tin người thân.");
+                    doGet(req, resp);
+                    return;
+                }
+                appointment.setPatientName(patientName.trim());
+                appointment.setPatientDob(patientDob.trim());
+                appointment.setPatientGender(patientGender.trim());
+            }
+            
             String appointmentId = bookingService.bookAppointment(user.getId(), appointment);
             
             if (appointmentId != null) {
-                auditLogDAO.createLog(user.getId(), "APPOINTMENT_CREATE", "appointments", appointmentId, null, null, "Clinic ID: " + clinicId, RequestUtil.getClientIp(req), req.getHeader("User-Agent"));
+                auditLogDAO.createLog(user.getId(), "APPOINTMENT_CREATE", "appointments", appointmentId, null, null, "Clinic ID: " + clinicId + ", Type: " + patientType, RequestUtil.getClientIp(req), req.getHeader("User-Agent"));
                 resp.sendRedirect(req.getContextPath() + "/patient/reports?success=booking_created");
             } else {
                 req.setAttribute("errorMessage", "Could not book appointment.");
@@ -90,14 +108,14 @@ public class BookingController extends HttpServlet {
         } catch (IllegalStateException e) {
             // Probably no patient profile
             if (e.getMessage().contains("profile")) {
-                req.getSession().setAttribute("errorMessage", "Vui lÃ²ng cáº­p nháº­t há»“ sÆ¡ cÃ¡ nhÃ¢n trÆ°á»›c khi Ä‘áº·t lá»‹ch.");
+                req.getSession().setAttribute("errorMessage", "Vui lòng cập nhật hồ sơ cá nhân trước khi đặt lịch.");
                 resp.sendRedirect(req.getContextPath() + "/account/profile");
             } else {
                 req.setAttribute("errorMessage", e.getMessage());
                 doGet(req, resp);
             }
         } catch (Exception e) {
-            req.setAttribute("errorMessage", "Lá»—i: " + e.getMessage());
+            req.setAttribute("errorMessage", "Lỗi: " + e.getMessage());
             doGet(req, resp);
         }
     }

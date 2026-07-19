@@ -141,6 +141,19 @@
     </servlet-mapping>
 
     <servlet>
+        <servlet-name>GlobalClinicsController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.global.GlobalClinicsController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>GlobalClinicsController</servlet-name>
+        <url-pattern>/global/clinics</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>GlobalClinicsController</servlet-name>
+        <url-pattern>/clinics</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
         <servlet-name>ProfileController</servlet-name>
         <servlet-class>com.dermathologyai.controller.account.ProfileController</servlet-class>
     </servlet>

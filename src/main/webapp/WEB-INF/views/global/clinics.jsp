@@ -38,7 +38,7 @@
                                 <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill">
                                     ${clinic.specialty}
                                 </span>
-                                <a href="#" class="btn btn-outline-primary btn-sm rounded-pill px-3">Chi tiết</a>
+                                <a href="${pageContext.request.contextPath}/patient/booking?clinicId=${clinic.id}" class="btn btn-success btn-sm rounded-pill px-3"><i class="fa-regular fa-calendar-check me-1"></i>Đặt lịch</a>
                             </div>
                         </div>
                     </div>

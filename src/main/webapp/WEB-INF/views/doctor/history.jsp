@@ -5,19 +5,52 @@
 <jsp:include page="/WEB-INF/views/layout/doctor-header.jsp" />
 
 <div class="container-fluid py-4 px-4">
-    <!-- Page Title -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="fw-bold mb-0">
-            <i class="fa-solid fa-clock-rotate-left me-2 text-primary"></i>Lịch Sử Ca Khám Đã Qua
+    <!-- Page Title & Tabs -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <h4 class="fw-bold mb-0" style="color: #1e293b;">
+            <i class="fa-solid fa-clock-rotate-left me-2 text-success"></i>Lịch Sử Ca Khám Đã Qua
         </h4>
-        <!-- Filter Tabs -->
         <div class="btn-group shadow-sm rounded-3">
-            <a href="?status=COMPLETED" class="btn btn-sm ${statusFilter == 'COMPLETED' ? 'btn-primary' : 'btn-outline-primary bg-white'} fw-bold">
+            <a href="?status=COMPLETED" class="btn btn-sm ${statusFilter == 'COMPLETED' ? 'btn-success text-white' : 'btn-outline-success bg-white'} fw-bold">
                 <i class="fa-solid fa-circle-check me-1"></i>Đã Khám Xong
             </a>
-            <a href="?status=CANCELLED" class="btn btn-sm ${statusFilter == 'CANCELLED' ? 'btn-primary' : 'btn-outline-primary bg-white'} fw-bold">
+            <a href="?status=CANCELLED" class="btn btn-sm ${statusFilter == 'CANCELLED' ? 'btn-success text-white' : 'btn-outline-success bg-white'} fw-bold">
                 <i class="fa-solid fa-circle-xmark me-1"></i>Đã Hủy
             </a>
+        </div>
+    </div>
+
+    <!-- Filter & Search Form -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-3">
+            <form method="get" action="${pageContext.request.contextPath}/doctor/appointments/history" class="d-flex flex-wrap gap-2 align-items-center">
+                <input type="hidden" name="status" value="${statusFilter}">
+                
+                <div class="input-group input-group-sm" style="max-width: 250px;">
+                    <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                    <input type="text" name="keyword" class="form-control bg-light border-start-0" placeholder="Tên hoặc SĐT..." value="${param.keyword}">
+                </div>
+                
+                <select name="riskFilter" class="form-select form-select-sm bg-light" style="width: 140px;">
+                    <option value="">-- Mức rủi ro --</option>
+                    <option value="LOW" ${param.riskFilter == 'LOW' ? 'selected' : ''}>Thấp</option>
+                    <option value="MEDIUM" ${param.riskFilter == 'MEDIUM' ? 'selected' : ''}>Trung bình</option>
+                    <option value="HIGH" ${param.riskFilter == 'HIGH' ? 'selected' : ''}>Cao</option>
+                </select>
+                
+                <select name="sortBy" class="form-select form-select-sm bg-light" style="width: 160px;">
+                    <option value="time_desc" ${param.sortBy == 'time_desc' || empty param.sortBy ? 'selected' : ''}>Giờ hẹn (Mới nhất)</option>
+                    <option value="time_asc" ${param.sortBy == 'time_asc' ? 'selected' : ''}>Giờ hẹn (Cũ nhất)</option>
+                    <option value="risk_desc" ${param.sortBy == 'risk_desc' ? 'selected' : ''}>Rủi ro giảm dần</option>
+                </select>
+                
+                <button type="submit" class="btn btn-sm btn-success text-white fw-bold px-3 rounded-2">
+                    <i class="fa-solid fa-filter me-1"></i>Lọc
+                </button>
+                <a href="${pageContext.request.contextPath}/doctor/appointments/history?status=${statusFilter}" class="btn btn-sm btn-outline-secondary fw-bold px-3 rounded-2">
+                    <i class="fa-solid fa-rotate-left"></i>
+                </a>
+            </form>
         </div>
     </div>
 
@@ -95,17 +128,17 @@
             <nav>
                 <ul class="pagination pagination-sm shadow-sm rounded-3 overflow-hidden">
                     <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
-                        <a class="page-link" href="?status=${statusFilter}&page=${currentPage - 1}">
+                        <a class="page-link" href="?status=${statusFilter}&page=${currentPage - 1}${not empty param.keyword ? '&keyword='.concat(param.keyword) : ''}${not empty param.riskFilter ? '&riskFilter='.concat(param.riskFilter) : ''}${not empty param.sortBy ? '&sortBy='.concat(param.sortBy) : ''}">
                             <i class="fa-solid fa-chevron-left"></i>
                         </a>
                     </li>
                     <c:forEach var="i" begin="1" end="${totalPages}">
                         <li class="page-item ${currentPage == i ? 'active' : ''}">
-                            <a class="page-link" href="?status=${statusFilter}&page=${i}">${i}</a>
+                            <a class="page-link" href="?status=${statusFilter}&page=${i}${not empty param.keyword ? '&keyword='.concat(param.keyword) : ''}${not empty param.riskFilter ? '&riskFilter='.concat(param.riskFilter) : ''}${not empty param.sortBy ? '&sortBy='.concat(param.sortBy) : ''}">${i}</a>
                         </li>
                     </c:forEach>
                     <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
-                        <a class="page-link" href="?status=${statusFilter}&page=${currentPage + 1}">
+                        <a class="page-link" href="?status=${statusFilter}&page=${currentPage + 1}${not empty param.keyword ? '&keyword='.concat(param.keyword) : ''}${not empty param.riskFilter ? '&riskFilter='.concat(param.riskFilter) : ''}${not empty param.sortBy ? '&sortBy='.concat(param.sortBy) : ''}">
                             <i class="fa-solid fa-chevron-right"></i>
                         </a>
                     </li>

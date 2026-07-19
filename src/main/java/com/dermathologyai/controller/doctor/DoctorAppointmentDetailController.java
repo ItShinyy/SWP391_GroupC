@@ -2,10 +2,12 @@ package com.dermathologyai.controller.doctor;
 
 import com.dermathologyai.dao.AppointmentDAO;
 import com.dermathologyai.dao.DoctorDAO;
-import com.dermathologyai.dao.AppointmentLabTestDAO;
+import com.dermathologyai.dao.PrescriptionDAO;
+import com.dermathologyai.dao.DoctorScheduleDAO;
 import com.dermathologyai.model.Appointment;
 import com.dermathologyai.model.Doctor;
-import com.dermathologyai.model.AppointmentLabTest;
+import com.dermathologyai.model.Prescription;
+import com.dermathologyai.model.DoctorSchedule;
 import com.dermathologyai.model.User;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
@@ -14,22 +16,26 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 /**
- * Controller xử lý xem chi tiết hồ sơ bệnh nhân, ghi nhận xét, chuyển viện/bác sĩ,
- * chỉ định xét nghiệm và cập nhật kết quả xét nghiệm dành cho Bác sĩ.
+ * Controller xử lý xem chi tiết hồ sơ bệnh nhân, ghi nhận xét, chuyển ca khám,
+ * kê đơn thuốc và xuất báo cáo kết quả PDF dành cho Bác sĩ.
  */
 public class DoctorAppointmentDetailController extends HttpServlet {
     private DoctorDAO doctorDAO;
     private AppointmentDAO appointmentDAO;
-    private AppointmentLabTestDAO labTestDAO;
+    private PrescriptionDAO prescriptionDAO;
+    private DoctorScheduleDAO scheduleDAO;
 
     @Override
     public void init() throws ServletException {
         doctorDAO = new DoctorDAO();
         appointmentDAO = new AppointmentDAO();
-        labTestDAO = new AppointmentLabTestDAO();
+        prescriptionDAO = new PrescriptionDAO();
+        scheduleDAO = new DoctorScheduleDAO();
     }
 
     @Override
@@ -43,35 +49,47 @@ public class DoctorAppointmentDetailController extends HttpServlet {
             return;
         }
         
-        // Lấy ID lịch hẹn từ tham số yêu cầu
         String appointmentId = req.getParameter("id");
         if (appointmentId == null || appointmentId.trim().isEmpty()) {
             resp.sendRedirect(req.getContextPath() + "/doctor/dashboard");
             return;
         }
         
-        // Nạp thông tin lịch hẹn chi tiết đầy đủ (bệnh nhân, AI report) bằng truy vấn tối ưu
-        Appointment fullAppointment = appointmentDAO.findByIdFull(appointmentId);
+        // Handle PDF Export
+        String action = req.getParameter("action");
+        if ("exportPdf".equalsIgnoreCase(action)) {
+            Appointment appt = appointmentDAO.findByIdFull(appointmentId);
+            if (appt != null && "COMPLETED".equals(appt.getStatus())) {
+                List<Prescription> prescriptions = prescriptionDAO.findByAppointmentId(appointmentId);
+                resp.setContentType("application/pdf");
+                resp.setHeader("Content-Disposition", "inline; filename=\"phieu-kham-benh-" + appointmentId.substring(0, 8) + ".pdf\"");
+                try {
+                    com.dermathologyai.util.PdfReportGenerator.generateAppointmentReportPdf(resp.getOutputStream(), appt, prescriptions);
+                    return;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error exporting PDF: " + e.getMessage());
+                    return;
+                }
+            }
+        }
         
+        Appointment fullAppointment = appointmentDAO.findByIdFull(appointmentId);
         if (fullAppointment == null) {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Appointment not found.");
             return;
         }
         
-        // Lấy danh sách bác sĩ khác cùng phòng khám để phục vụ tính năng chuyển bệnh án
         List<Doctor> sameClinicDoctors = doctorDAO.findByClinicId(doctor.getClinicId());
-        sameClinicDoctors.removeIf(d -> d.getId().equals(doctor.getId())); // Loại trừ chính bác sĩ hiện tại
+        sameClinicDoctors.removeIf(d -> d.getId().equals(doctor.getId()));
         
-        // Lấy danh sách các xét nghiệm đã chỉ định cho lịch hẹn này
-        List<AppointmentLabTest> labTests = labTestDAO.findByAppointmentId(appointmentId);
+        List<Prescription> prescriptions = prescriptionDAO.findByAppointmentId(appointmentId);
         
-        // Gắn dữ liệu bác sĩ, lịch hẹn, danh sách bác sĩ cùng phòng khám và các xét nghiệm vào request
         req.setAttribute("doctor", doctor);
         req.setAttribute("appointment", fullAppointment);
         req.setAttribute("sameClinicDoctors", sameClinicDoctors);
-        req.setAttribute("labTests", labTests);
+        req.setAttribute("prescriptions", prescriptions);
         
-        // Forward tới trang chi tiết lịch hẹn của bác sĩ
         req.getRequestDispatcher("/WEB-INF/views/doctor/appointment-detail.jsp").forward(req, resp);
     }
 
@@ -87,7 +105,7 @@ public class DoctorAppointmentDetailController extends HttpServlet {
         }
         
         String appointmentId = req.getParameter("appointmentId");
-        String action = req.getParameter("action"); // "saveNotes", "transfer", "orderTest", "submitMockResult"
+        String action = req.getParameter("action");
         
         if (appointmentId == null || action == null) {
             resp.sendRedirect(req.getContextPath() + "/doctor/dashboard");
@@ -100,71 +118,75 @@ public class DoctorAppointmentDetailController extends HttpServlet {
             case "saveNotes":
                 String doctorNotes = req.getParameter("doctorNotes");
                 success = appointmentDAO.updateDoctorStatus(appointmentId, "ACCEPTED", doctorNotes);
-                resp.sendRedirect(req.getContextPath() + "/doctor/appointments/detail?id=" + appointmentId + "&success=" + success);
+                resp.sendRedirect(req.getContextPath() + "/doctor/appointments/detail?id=" + appointmentId + "&success=" + success + "#notes-card");
                 break;
                 
             case "completeAppointment":
                 success = appointmentDAO.updateStatus(appointmentId, "COMPLETED");
-                resp.sendRedirect(req.getContextPath() + "/doctor/appointments/detail?id=" + appointmentId + "&success=" + success);
+                resp.sendRedirect(req.getContextPath() + "/doctor/appointments/detail?id=" + appointmentId + "&success=" + success + "#notes-card");
                 break;
                 
             case "transfer":
                 String newDoctorId = req.getParameter("newDoctorId");
                 String transferNotes = req.getParameter("transferNotes");
                 if (newDoctorId != null && !newDoctorId.trim().isEmpty()) {
+                    // Overload Check
+                    Appointment appt = appointmentDAO.findByIdFull(appointmentId);
+                    if (appt != null) {
+                        LocalDateTime apptTime = appt.getAppointmentTime();
+                        java.time.LocalDate date = apptTime.toLocalDate();
+                        int hour = apptTime.getHour();
+                        String slot = "MORNING";
+                        if (hour >= 12 && hour < 17) {
+                            slot = "AFTERNOON";
+                        } else if (hour >= 17) {
+                            slot = "EVENING";
+                        }
+                        
+                        DoctorSchedule sched = scheduleDAO.findByDoctorDateAndSlot(newDoctorId, date, slot);
+                        if (sched != null && sched.getBookedCount() >= sched.getMaxPatients()) {
+                            resp.sendRedirect(req.getContextPath() + "/doctor/appointments/detail?id=" + appointmentId + "&error=overload");
+                            return;
+                        }
+                    }
                     success = appointmentDAO.transferDoctor(appointmentId, newDoctorId, transferNotes);
                 }
                 if (success) {
-                    // Chuyển hồ sơ thành công thì quay về Dashboard (hồ sơ này không còn thuộc bác sĩ hiện tại nữa)
                     resp.sendRedirect(req.getContextPath() + "/doctor/dashboard?transferSuccess=true");
                 } else {
                     resp.sendRedirect(req.getContextPath() + "/doctor/appointments/detail?id=" + appointmentId + "&error=true");
                 }
                 break;
                 
-            case "orderTest":
-                String[] testNames = req.getParameterValues("testNames");
-                if (testNames != null && testNames.length > 0) {
-                    for (String testName : testNames) {
-                        AppointmentLabTest test = new AppointmentLabTest();
-                        test.setAppointmentId(appointmentId);
-                        test.setTestName(testName);
-                        test.setStatus("PENDING");
-                        labTestDAO.create(test);
-                    }
-                    success = true;
+            case "addPrescription":
+                String drugName = req.getParameter("drugName");
+                if ("custom".equals(drugName)) {
+                    drugName = req.getParameter("customDrugName");
                 }
-                resp.sendRedirect(req.getContextPath() + "/doctor/appointments/detail?id=" + appointmentId + "&success=" + success);
+                String qtyStr = req.getParameter("quantity");
+                String dosage = req.getParameter("dosage");
+                int quantity = 1;
+                try {
+                    quantity = Integer.parseInt(qtyStr);
+                } catch (NumberFormatException ignored) {}
+                
+                if (drugName != null && !drugName.trim().isEmpty() && dosage != null && !dosage.trim().isEmpty()) {
+                    Prescription p = new Prescription();
+                    p.setAppointmentId(appointmentId);
+                    p.setDrugName(drugName.trim());
+                    p.setQuantity(quantity);
+                    p.setDosage(dosage.trim());
+                    success = prescriptionDAO.create(p);
+                }
+                resp.sendRedirect(req.getContextPath() + "/doctor/appointments/detail?id=" + appointmentId + "&success=" + success + "#prescription-card");
                 break;
                 
-            case "submitMockResult":
-                String testId = req.getParameter("testId");
-                String preset = req.getParameter("preset"); // "positive", "negative", "suspicious"
-                String resultSummary = req.getParameter("resultSummary");
-                String testName = req.getParameter("testName");
-                
-                if (testId != null && resultSummary != null) {
-                    AppointmentLabTest test = new AppointmentLabTest();
-                    test.setId(testId);
-                    test.setTestName(testName);
-                    test.setResultSummary(resultSummary);
-                    
-                    // Lấy đầy đủ thông tin bệnh nhân và bác sĩ vẽ lên PDF
-                    Appointment appt = appointmentDAO.findByIdFull(appointmentId);
-                    
-                    try {
-                        String destFolder = req.getServletContext().getRealPath("/uploads/lab_results");
-                        // Tự động vẽ và xuất file PDF lưu trữ trên máy chủ
-                        String pdfRelativeUrl = com.dermathologyai.util.PdfReportGenerator.generateLabTestPdf(destFolder, test, appt);
-                        
-                        // Cập nhật đường dẫn file PDF vừa sinh vào database
-                        success = labTestDAO.updateResult(testId, resultSummary, pdfRelativeUrl);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        success = false;
-                    }
+            case "deletePrescription":
+                String prescriptionId = req.getParameter("prescriptionId");
+                if (prescriptionId != null) {
+                    success = prescriptionDAO.delete(prescriptionId);
                 }
-                resp.sendRedirect(req.getContextPath() + "/doctor/appointments/detail?id=" + appointmentId + "&success=" + success);
+                resp.sendRedirect(req.getContextPath() + "/doctor/appointments/detail?id=" + appointmentId + "&success=" + success + "#prescription-card");
                 break;
                 
             default:

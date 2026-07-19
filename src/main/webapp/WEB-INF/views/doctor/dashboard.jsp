@@ -256,6 +256,37 @@
                 <h5 class="fw-bold mb-0">
                     <i class="fa-solid fa-list-check me-2 text-primary"></i>Danh Sách Bệnh Nhân Chờ Khám
                 </h5>
+                <!-- Form Filter & Search -->
+                <form method="get" action="${pageContext.request.contextPath}/doctor/dashboard" class="d-flex flex-wrap gap-2 align-items-center">
+                    <c:if test="${not empty statusFilter}">
+                        <input type="hidden" name="status" value="${statusFilter}">
+                    </c:if>
+                    
+                    <div class="input-group input-group-sm" style="max-width: 250px;">
+                        <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                        <input type="text" name="keyword" class="form-control bg-light border-start-0" placeholder="Tên hoặc SĐT..." value="${param.keyword}">
+                    </div>
+                    
+                    <select name="riskFilter" class="form-select form-select-sm bg-light" style="width: 140px;">
+                        <option value="">-- Mức rủi ro --</option>
+                        <option value="LOW" ${param.riskFilter == 'LOW' ? 'selected' : ''}>Thấp</option>
+                        <option value="MEDIUM" ${param.riskFilter == 'MEDIUM' ? 'selected' : ''}>Trung bình</option>
+                        <option value="HIGH" ${param.riskFilter == 'HIGH' ? 'selected' : ''}>Cao</option>
+                    </select>
+                    
+                    <select name="sortBy" class="form-select form-select-sm bg-light" style="width: 160px;">
+                        <option value="time_asc" ${param.sortBy == 'time_asc' ? 'selected' : ''}>Giờ hẹn (Sớm nhất)</option>
+                        <option value="time_desc" ${param.sortBy == 'time_desc' ? 'selected' : ''}>Giờ hẹn (Muộn nhất)</option>
+                        <option value="risk_desc" ${param.sortBy == 'risk_desc' ? 'selected' : ''}>Rủi ro giảm dần</option>
+                    </select>
+                    
+                    <button type="submit" class="btn btn-sm btn-primary fw-bold px-3 rounded-2">
+                        <i class="fa-solid fa-filter me-1"></i>Lọc
+                    </button>
+                    <a href="${pageContext.request.contextPath}/doctor/dashboard?status=${statusFilter}" class="btn btn-sm btn-outline-secondary fw-bold px-3 rounded-2">
+                        <i class="fa-solid fa-rotate-left"></i>
+                    </a>
+                </form>
             </div>
         </div>
         <div class="card-body p-0">
@@ -363,19 +394,19 @@
                                 <ul class="pagination mb-0">
                                     <c:if test="${currentPage > 1}">
                                         <li class="page-item">
-                                            <a class="page-link" href="${pageContext.request.contextPath}/doctor/dashboard?page=${currentPage - 1}${not empty statusFilter ? '&status='.concat(statusFilter) : ''}">
+                                            <a class="page-link" href="${pageContext.request.contextPath}/doctor/dashboard?page=${currentPage - 1}${not empty statusFilter ? '&status='.concat(statusFilter) : ''}${not empty param.keyword ? '&keyword='.concat(param.keyword) : ''}${not empty param.riskFilter ? '&riskFilter='.concat(param.riskFilter) : ''}${not empty param.sortBy ? '&sortBy='.concat(param.sortBy) : ''}">
                                                 <i class="fa-solid fa-chevron-left"></i>
                                             </a>
                                         </li>
                                     </c:if>
                                     <c:forEach begin="1" end="${totalPages}" var="i">
                                         <li class="page-item ${i == currentPage ? 'active' : ''}">
-                                            <a class="page-link" href="${pageContext.request.contextPath}/doctor/dashboard?page=${i}${not empty statusFilter ? '&status='.concat(statusFilter) : ''}">${i}</a>
+                                            <a class="page-link" href="${pageContext.request.contextPath}/doctor/dashboard?page=${i}${not empty statusFilter ? '&status='.concat(statusFilter) : ''}${not empty param.keyword ? '&keyword='.concat(param.keyword) : ''}${not empty param.riskFilter ? '&riskFilter='.concat(param.riskFilter) : ''}${not empty param.sortBy ? '&sortBy='.concat(param.sortBy) : ''}">${i}</a>
                                         </li>
                                     </c:forEach>
                                     <c:if test="${currentPage < totalPages}">
                                         <li class="page-item">
-                                            <a class="page-link" href="${pageContext.request.contextPath}/doctor/dashboard?page=${currentPage + 1}${not empty statusFilter ? '&status='.concat(statusFilter) : ''}">
+                                            <a class="page-link" href="${pageContext.request.contextPath}/doctor/dashboard?page=${currentPage + 1}${not empty statusFilter ? '&status='.concat(statusFilter) : ''}${not empty param.keyword ? '&keyword='.concat(param.keyword) : ''}${not empty param.riskFilter ? '&riskFilter='.concat(param.riskFilter) : ''}${not empty param.sortBy ? '&sortBy='.concat(param.sortBy) : ''}">
                                                 <i class="fa-solid fa-chevron-right"></i>
                                             </a>
                                         </li>

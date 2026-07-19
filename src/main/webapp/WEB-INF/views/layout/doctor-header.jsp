@@ -181,15 +181,7 @@
                             <a class="nav-link-highlight" href="${pageContext.request.contextPath}/doctor/dashboard">
                                 <i class="fa-solid fa-gauge-high me-2"></i> Dashboard Bác Sĩ
                             </a>
-                        </li>
-
-                        <div class="vr mx-2 d-none d-lg-block" style="opacity: 0.15; height: 24px; align-self: center;"></div>
-                        
-                        <li class="nav-item ms-lg-2">
-                            <a class="nav-link ${pageContext.request.requestURI.endsWith('dashboard') ? 'active' : ''}" href="${pageContext.request.contextPath}/doctor/dashboard">
-                                <i class="fa-solid fa-clipboard-list me-1"></i> Hồ Sơ Bệnh Nhân
-                            </a>
-                        </li>
+                        </li>                        
                         <li class="nav-item">
                             <a class="nav-link ${pageContext.request.requestURI.contains('schedule') ? 'active' : ''}" href="${pageContext.request.contextPath}/doctor/schedule">
                                 <i class="fa-regular fa-calendar-check me-1"></i> Lịch Khám

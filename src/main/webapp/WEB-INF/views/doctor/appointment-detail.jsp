@@ -151,6 +151,12 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     </c:if>
+    <c:if test="${param.error == 'overload'}">
+        <div class="alert alert-danger alert-dismissible fade show rounded-3 border-0 shadow-sm" role="alert">
+            <i class="fa-solid fa-triangle-exclamation me-2"></i><strong>Lỗi chuyển ca:</strong> Bác sĩ nhận chuyển đã nhận đủ số lượng bệnh nhân tối đa (đạt giới hạn ca khám). Vui lòng chọn bác sĩ khác.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    </c:if>
 
     <!-- Clinical Progress Status Banners -->
     <c:if test="${appointment.status == 'COMPLETED'}">
@@ -228,6 +234,46 @@
                     </div>
                 </div>
             </div>
+
+            <!-- 3. Referral Card (Moved and minimized here) -->
+            <c:if test="${appointment.status == 'CONFIRMED'}">
+                <div class="card border-0 shadow-sm rounded-4 mt-4" id="referral-card">
+                    <div class="card-header bg-white border-0 pt-3 px-3 pb-1">
+                        <h6 class="fw-bold mb-0 text-muted" style="font-size: 0.85rem;">
+                            <i class="fa-solid fa-share-from-square me-1 text-warning"></i> Chuyển giao Bác sĩ điều trị
+                        </h6>
+                    </div>
+                    <div class="card-body p-3 pt-1">
+                        <c:choose>
+                            <c:when test="${not empty sameClinicDoctors}">
+                                <form method="post" action="${pageContext.request.contextPath}/doctor/appointments/detail#referral-card">
+                                    <input type="hidden" name="appointmentId" value="${appointment.id}">
+                                    <input type="hidden" name="action" value="transfer">
+                                    <div class="mb-2">
+                                        <select class="form-select form-select-sm rounded-3" name="newDoctorId" required style="font-size: 0.8rem; height: 34px;">
+                                            <option value="" disabled selected>-- Chọn bác sĩ tiếp nhận --</option>
+                                            <c:forEach var="doc" items="${sameClinicDoctors}">
+                                                <option value="${doc.id}">${doc.fullName} (${doc.specialization})</option>
+                                            </c:forEach>
+                                        </select>
+                                    </div>
+                                    <div class="mb-2">
+                                        <input type="text" class="form-control form-control-sm rounded-3" name="transferNotes" placeholder="Lý do bàn giao..." required style="font-size: 0.8rem; height: 34px;">
+                                    </div>
+                                    <button type="submit" class="btn btn-warning btn-sm fw-bold w-100 rounded-pill text-dark" style="font-size: 0.8rem; height: 34px;">
+                                        <i class="fa-solid fa-share me-1"></i>Chuyển ca khám
+                                    </button>
+                                </form>
+                            </c:when>
+                            <c:otherwise>
+                                <div class="alert alert-light border rounded-3 p-2 mb-0 text-muted small" style="font-size: 0.75rem;">
+                                    <i class="fa-solid fa-circle-info me-1 text-primary"></i>Phòng khám không có bác sĩ khác để chuyển giao.
+                                </div>
+                            </c:otherwise>
+                        </c:choose>
+                    </div>
+                </div>
+            </c:if>
         </div>
 
         <!-- Right Column: AI Diagnosis -->
@@ -306,15 +352,109 @@
 
     <!-- Unified Doctor Workspace -->
     <div class="mt-4">
-        <!-- 1. Treatment Notes Card -->
-        <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <!-- 1. Prescription Card -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4" id="prescription-card">
+            <div class="card-header bg-white border-0 pt-4 px-4 pb-2">
+                <h5 class="fw-bold mb-0">
+                    <i class="fa-solid fa-prescription-bottle-medical me-2 text-success"></i>Đơn Thuốc Điều Trị
+                </h5>
+            </div>
+            <div class="card-body px-4 pb-4">
+                <c:choose>
+                    <c:when test="${empty prescriptions}">
+                        <div class="alert alert-light border rounded-3 p-3 mb-3 text-muted small">
+                            <i class="fa-solid fa-circle-info me-2 text-success"></i>Hiện chưa có đơn thuốc nào được kê cho bệnh nhân.
+                        </div>
+                    </c:when>
+                    <c:otherwise>
+                        <div class="table-responsive mb-4">
+                            <table class="table align-middle table-bordered mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Tên Thuốc</th>
+                                        <th style="width: 120px;">Số Lượng</th>
+                                        <th>Liều Lượng & Hướng Dẫn Sử Dụng</th>
+                                        <c:if test="${appointment.status == 'CONFIRMED'}">
+                                            <th style="width: 80px;" class="text-center">Thao tác</th>
+                                        </c:if>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <c:forEach var="presc" items="${prescriptions}">
+                                        <tr>
+                                            <td class="fw-bold text-dark">${presc.drugName}</td>
+                                            <td><span class="badge bg-light text-dark border px-3 py-1 font-monospace">${presc.quantity}</span></td>
+                                            <td>${presc.dosage}</td>
+                                            <c:if test="${appointment.status == 'CONFIRMED'}">
+                                                <td class="text-center">
+                                                    <form method="post" action="${pageContext.request.contextPath}/doctor/appointments/detail#prescription-card" class="m-0 p-0" onsubmit="return confirm('Bạn chắc chắn muốn xóa thuốc này khỏi đơn?');">
+                                                        <input type="hidden" name="appointmentId" value="${appointment.id}">
+                                                        <input type="hidden" name="prescriptionId" value="${presc.id}">
+                                                        <input type="hidden" name="action" value="deletePrescription">
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger border-0 rounded-circle">
+                                                            <i class="fa-regular fa-trash-can"></i>
+                                                        </button>
+                                                    </form>
+                                                </td>
+                                            </c:if>
+                                        </tr>
+                                    </c:forEach>
+                                </tbody>
+                            </table>
+                        </div>
+                    </c:otherwise>
+                </c:choose>
+
+                <!-- Form to Add Drug (Only if appointment is CONFIRMED) -->
+                <c:if test="${appointment.status == 'CONFIRMED'}">
+                    <div class="p-3 border rounded-3 bg-light">
+                        <h6 class="fw-bold text-success mb-3"><i class="fa-solid fa-plus me-1"></i>Thêm thuốc vào đơn thuốc</h6>
+                        <form method="post" action="${pageContext.request.contextPath}/doctor/appointments/detail#prescription-card" class="row g-2 align-items-end">
+                            <input type="hidden" name="appointmentId" value="${appointment.id}">
+                            <input type="hidden" name="action" value="addPrescription">
+                            
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold text-muted mb-1">Tên thuốc <span class="text-danger">*</span></label>
+                                <select class="form-select rounded-3" name="drugName" id="drugNameSelect" required onchange="fillPrescriptionPreset(this.value)" style="height: 38px; font-size: 0.85rem;">
+                                    <option value="" disabled selected>-- Chọn tên thuốc --</option>
+                                    <option value="Thuốc A">Thuốc A</option>
+                                    <option value="Thuốc B">Thuốc B</option>
+                                    <option value="Thuốc C">Thuốc C</option>
+                                    <option value="custom">-- Nhập tên thuốc khác --</option>
+                                </select>
+                                <input type="text" class="form-control rounded-3 mt-2 d-none" name="customDrugName" id="customDrugNameInput" placeholder="Nhập tên thuốc tự do..." style="height: 38px; font-size: 0.85rem;">
+                            </div>
+
+                            <div class="col-md-2">
+                                <label class="form-label small fw-bold text-muted mb-1">Số lượng <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control rounded-3" name="quantity" min="1" max="100" value="10" required style="height: 38px; font-size: 0.85rem;">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold text-muted mb-1">Cách dùng & Liều lượng <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control rounded-3" name="dosage" id="dosageInput" placeholder="Ví dụ: Uống 2 lần/ngày, mỗi lần 1 viên" required style="height: 38px; font-size: 0.85rem;">
+                            </div>
+
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-success fw-bold w-100 rounded-3" style="height: 38px; font-size: 0.85rem;">
+                                    <i class="fa-solid fa-plus me-1"></i>Thêm thuốc
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </c:if>
+            </div>
+        </div>
+
+        <!-- 2. Treatment Notes Card -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4" id="notes-card">
             <div class="card-header bg-white border-0 pt-4 px-4 pb-2">
                 <h5 class="fw-bold mb-0">
                     <i class="fa-solid fa-user-doctor me-2 text-primary"></i>Nhận xét & Chẩn đoán của Bác sĩ
                 </h5>
             </div>
             <div class="card-body px-4 pb-4">
-                <form method="post" action="${pageContext.request.contextPath}/doctor/appointments/detail">
+                <form method="post" action="${pageContext.request.contextPath}/doctor/appointments/detail#notes-card">
                     <input type="hidden" name="appointmentId" value="${appointment.id}">
                     <input type="hidden" name="action" value="saveNotes">
                     <div class="mb-3">
@@ -335,254 +475,50 @@
                             </div>
                         </c:when>
                         <c:otherwise>
-                            <span class="text-muted small fw-bold"><i class="fa-solid fa-lock me-1"></i>Hồ sơ bệnh án đã đóng, không thể chỉnh sửa nhận xét.</span>
+                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 w-100">
+                                <span class="text-muted small fw-bold"><i class="fa-solid fa-lock me-1"></i>Hồ sơ bệnh án đã đóng, không thể chỉnh sửa nhận xét.</span>
+                                <c:if test="${appointment.status == 'COMPLETED'}">
+                                    <a href="${pageContext.request.contextPath}/doctor/appointments/detail?id=${appointment.id}&action=exportPdf" target="_blank" class="btn btn-danger fw-bold rounded-pill px-4 shadow-sm transition hover-scale">
+                                        <i class="fa-solid fa-file-pdf me-2"></i>Tải Phiếu Khám & Đơn Thuốc (PDF)
+                                    </a>
+                                </c:if>
+                            </div>
                         </c:otherwise>
                     </c:choose>
                 </form>
 
-                <form id="completeForm" method="post" action="${pageContext.request.contextPath}/doctor/appointments/detail" style="display: none;">
+                <form id="completeForm" method="post" action="${pageContext.request.contextPath}/doctor/appointments/detail#notes-card" style="display: none;">
                     <input type="hidden" name="appointmentId" value="${appointment.id}">
                     <input type="hidden" name="action" value="completeAppointment">
                 </form>
             </div>
         </div>
-
-        <!-- 2. Lab Tests Card -->
-        <div class="card border-0 shadow-sm rounded-4 mb-4">
-            <div class="card-header bg-white border-0 pt-4 px-4 pb-2">
-                <h5 class="fw-bold mb-0">
-                    <i class="fa-solid fa-flask-vial me-2 text-primary"></i>Chỉ định Xét nghiệm cận lâm sàng
-                </h5>
-            </div>
-            <div class="card-body px-4 pb-4">
-                <c:choose>
-                    <c:when test="${empty labTests}">
-                        <c:choose>
-                            <c:when test="${appointment.status == 'CONFIRMED'}">
-                                <p class="text-muted small mb-3">Hiện chưa có chỉ định xét nghiệm nào cho bệnh nhân này. Bác sĩ có thể chọn chỉ định bên dưới:</p>
-                                <form method="post" action="${pageContext.request.contextPath}/doctor/appointments/detail">
-                                    <input type="hidden" name="appointmentId" value="${appointment.id}">
-                                    <input type="hidden" name="action" value="orderTest">
-                                    <div class="row g-3 mb-4">
-                                        <div class="col-md-6">
-                                            <div class="form-check p-3 border rounded-3 h-100 d-flex align-items-center">
-                                                <input class="form-check-input ms-0 me-2" type="checkbox" name="testNames" value="Sinh thiết da" id="test1">
-                                                <label class="form-check-label fw-semibold" for="test1">Sinh thiết da (Skin Biopsy)</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-check p-3 border rounded-3 h-100 d-flex align-items-center">
-                                                <input class="form-check-input ms-0 me-2" type="checkbox" name="testNames" value="Soi tươi tìm nấm" id="test2">
-                                                <label class="form-check-label fw-semibold" for="test2">Soi tươi tìm nấm/ký sinh trùng</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-check p-3 border rounded-3 h-100 d-flex align-items-center">
-                                                <input class="form-check-input ms-0 me-2" type="checkbox" name="testNames" value="Xét nghiệm dị ứng IgE" id="test3">
-                                                <label class="form-check-label fw-semibold" for="test3">Xét nghiệm dị ứng máu IgE</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-check p-3 border rounded-3 h-100 d-flex align-items-center">
-                                                <input class="form-check-input ms-0 me-2" type="checkbox" name="testNames" value="Soi da Dermoscopy" id="test4">
-                                                <label class="form-check-label fw-semibold" for="test4">Soi da Dermoscopy chuyên sâu</label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <button type="submit" class="btn btn-success fw-bold px-4 rounded-3">
-                                        <i class="fa-solid fa-square-plus me-2"></i>Yêu cầu xét nghiệm
-                                    </button>
-                                </form>
-                            </c:when>
-                            <c:otherwise>
-                                <div class="alert alert-light border rounded-3 p-3 mb-0 text-muted small">
-                                    <i class="fa-solid fa-circle-info me-2 text-primary"></i>Không có chỉ định xét nghiệm nào được thực hiện cho ca khám này.
-                                </div>
-                            </c:otherwise>
-                        </c:choose>
-                    </c:when>
-                    <c:otherwise>
-                        <div class="table-responsive">
-                            <table class="table align-middle table-bordered mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th style="width: 250px;">Tên Xét Nghiệm</th>
-                                        <th style="width: 180px;">Trạng Thái</th>
-                                        <th>Kết Quả / Chi Tiết</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <c:forEach var="test" items="${labTests}">
-                                        <tr>
-                                            <td class="fw-bold text-dark">${test.testName}</td>
-                                            <td>
-                                                <c:choose>
-                                                    <c:when test="${test.status == 'PENDING'}">
-                                                        <span class="badge bg-warning text-dark rounded-pill px-3 py-1"><i class="fa-solid fa-clock-rotate-left me-1"></i>Chờ kết quả</span>
-                                                    </c:when>
-                                                    <c:otherwise>
-                                                        <span class="badge bg-success rounded-pill px-3 py-1"><i class="fa-solid fa-circle-check me-1"></i>Đã có kết quả</span>
-                                                    </c:otherwise>
-                                                </c:choose>
-                                            </td>
-                                            <td>
-                                                <c:choose>
-                                                    <c:when test="${test.status == 'PENDING'}">
-                                                        <!-- Form Trả kết quả giả lập nhanh -->
-                                                        <div class="p-3 border rounded-3 bg-light">
-                                                            <form method="post" action="${pageContext.request.contextPath}/doctor/appointments/detail" class="row g-2 align-items-center">
-                                                                <input type="hidden" name="appointmentId" value="${appointment.id}">
-                                                                <input type="hidden" name="testId" value="${test.id}">
-                                                                <input type="hidden" name="testName" value="${test.testName}">
-                                                                <input type="hidden" name="action" value="submitMockResult">
-                                                                
-                                                                <div class="col-md-4">
-                                                                    <label class="form-label small fw-bold text-muted mb-1">Chọn kết quả mẫu:</label>
-                                                                    <select class="form-select form-select-sm" name="preset" required
-                                                                        onchange="fillPreset('${test.id}', '${test.testName}', this.value)" style="border-radius: 8px;">
-                                                                        <option value="">-- Chọn Preset mẫu --</option>
-                                                                        <option value="positive">Có bất thường (Dương tính)</option>
-                                                                        <option value="negative">Bình thường (Âm tính)</option>
-                                                                        <option value="suspicious">Nghi ngờ / Cần theo dõi</option>
-                                                                    </select>
-                                                                </div>
-                                                                <div class="col-md-8">
-                                                                    <label class="form-label small fw-bold text-muted mb-1">Chi tiết kết luận:</label>
-                                                                    <textarea class="form-control form-control-sm" id="summary_${test.id}" name="resultSummary" rows="2" 
-                                                                        placeholder="Nhập kết quả xét nghiệm..." required style="border-radius: 8px; resize: none;"></textarea>
-                                                                </div>
-                                                                <div class="col-12 text-end mt-2">
-                                                                    <button type="submit" class="btn btn-sm btn-primary fw-bold px-3 rounded-2">
-                                                                        <i class="fa-solid fa-paper-plane me-1"></i>Trả kết quả
-                                                                    </button>
-                                                                </div>
-                                                            </form>
-                                                        </div>
-                                                    </c:when>
-                                                    <c:otherwise>
-                                                         <!-- Kết quả đã trả -->
-                                                         <div class="p-2 text-center bg-light rounded-3">
-                                                             <c:choose>
-                                                                 <c:when test="${test.isPdf()}">
-                                                                     <span class="d-inline-block small text-muted me-3 fw-bold">Phiếu kết quả:</span>
-                                                                     <a href="${pageContext.request.contextPath}/${test.resultImageUrl}" target="_blank" class="btn btn-outline-danger btn-sm fw-bold rounded-3">
-                                                                         <i class="fa-solid fa-file-pdf me-1"></i> Xem PDF kết quả
-                                                                     </a>
-                                                                 </c:when>
-                                                                 <c:otherwise>
-                                                                     <div class="row align-items-center g-3 text-start">
-                                                                         <div class="col-8">
-                                                                             <p class="fw-bold mb-1 text-primary small">Kết luận y khoa:</p>
-                                                                             <p class="mb-0 text-dark small fw-semibold" style="line-height: 1.5;">${test.resultSummary}</p>
-                                                                         </div>
-                                                                         <c:if test="${test.resultImageUrl != null}">
-                                                                             <div class="col-4 text-center">
-                                                                                 <span class="d-block small text-muted mb-1 fw-bold">Ảnh tế bào</span>
-                                                                                 <a href="${pageContext.request.contextPath}/${test.resultImageUrl}" target="_blank">
-                                                                                     <img src="${pageContext.request.contextPath}/${test.resultImageUrl}" class="img-thumbnail rounded-3 shadow-sm" style="max-height: 80px; object-fit: cover;" alt="Lab result">
-                                                                                 </a>
-                                                                             </div>
-                                                                         </c:if>
-                                                                     </div>
-                                                                 </c:otherwise>
-                                                             </c:choose>
-                                                         </div>
-                                                    </c:otherwise>
-                                                </c:choose>
-                                            </td>
-                                        </tr>
-                                    </c:forEach>
-                                </tbody>
-                            </table>
-                        </div>
-                    </c:otherwise>
-                </c:choose>
-            </div>
-        </div>
-
-        <!-- 3. Referral Card -->
-        <c:if test="${appointment.status == 'CONFIRMED'}">
-            <div class="card border-0 shadow-sm rounded-4 mb-4">
-                <div class="card-header bg-white border-0 pt-4 px-4 pb-2">
-                    <h5 class="fw-bold mb-0">
-                        <i class="fa-solid fa-arrows-spin me-2 text-primary"></i>Chuyển giao Bác sĩ điều trị
-                    </h5>
-                </div>
-                <div class="card-body px-4 pb-4">
-                    <c:choose>
-                        <c:when test="${not empty sameClinicDoctors}">
-                            <p class="text-muted small mb-3">Bác sĩ có thể chuyển hồ sơ bệnh án này cho một đồng nghiệp cùng phòng khám để tiếp tục điều trị hoặc hội chẩn:</p>
-                            <form method="post" action="${pageContext.request.contextPath}/doctor/appointments/detail">
-                                <input type="hidden" name="appointmentId" value="${appointment.id}">
-                                <input type="hidden" name="action" value="transfer">
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label for="newDoctorId" class="form-label small fw-bold text-muted">Chọn bác sĩ tiếp nhận:</label>
-                                        <select class="form-select" id="newDoctorId" name="newDoctorId" required style="border-radius: 8px;">
-                                            <option value="">-- Chọn bác sĩ cùng phòng khám --</option>
-                                            <c:forEach var="doc" items="${sameClinicDoctors}">
-                                                <option value="${doc.id}">${doc.fullName} (${doc.specialization})</option>
-                                            </c:forEach>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label for="transferNotes" class="form-label small fw-bold text-muted">Lý do / Hướng điều trị bàn giao:</label>
-                                        <input type="text" class="form-control" id="transferNotes" name="transferNotes" 
-                                            placeholder="Nhập lý do chuyển hồ sơ hoặc lời dặn..." required style="border-radius: 8px;">
-                                    </div>
-                                    <div class="col-12 mt-3">
-                                        <button type="submit" class="btn btn-warning fw-bold px-4 rounded-3 text-dark">
-                                            <i class="fa-solid fa-share-from-square me-2"></i>Chuyển giao hồ sơ
-                                        </button>
-                                    </div>
-                                </div>
-                            </form>
-                        </c:when>
-                        <c:otherwise>
-                            <div class="alert alert-light border rounded-3 p-3 mb-0">
-                                <i class="fa-solid fa-circle-info me-2 text-primary"></i>Phòng khám hiện chưa có bác sĩ khác phù hợp để thực hiện chuyển giao.
-                            </div>
-                        </c:otherwise>
-                    </c:choose>
-                </div>
-            </div>
-        </c:if>
     </div>
 
 </div>
 
 <script>
-    const presets = {
-        "Sinh thiết da": {
-            "positive": "Kết quả giải phẫu bệnh: Phát hiện sự tăng sinh bất thường của các tế bào hắc tố ác tính xâm nhập lớp hạ bì. Phù hợp với chẩn đoán Melanoma ác tính (Clark Level III). Vết cắt rìa tổn thương chưa hoàn toàn sạch tế bào u.",
-            "negative": "Kết quả giải phẫu bệnh: Mô da có cấu trúc bình thường, lớp sừng và biểu bì bình thường. Không phát hiện tế bào dị dạng hay cấu trúc ác tính. Lành tính.",
-            "suspicious": "Kết quả sinh thiết: Phát hiện các tế bào hắc tố không điển hình (atypical melanocytic hyperplasia), cần theo dõi sát sao hoặc sinh thiết mở rộng để loại trừ u hắc tố ác tính giai đoạn sớm."
-        },
-        "Soi tươi tìm nấm": {
-            "positive": "Kết quả soi tươi: Tìm thấy nhiều bào tử nấm dạng sợi (Hyphae) và tế bào men nấm dương tính. Kết luận: Nhiễm nấm da.",
-            "negative": "Kết quả soi tươi: Không tìm thấy sợi nấm, bào tử nấm hoặc ký sinh trùng trên mẫu cạo da. Âm tính.",
-            "suspicious": "Kết quả soi tươi: Mẫu bệnh phẩm chứa quá ít tế bào sừng, nghi ngờ có bào tử nấm nhưng chưa đủ căn cứ kết luận. Đề nghị vệ sinh da sạch và làm lại xét nghiệm sau 3 ngày."
-        },
-        "Xét nghiệm dị ứng IgE": {
-            "positive": "Chỉ số IgE toàn phần tăng cao đạt 385 IU/mL (bình thường < 100 IU/mL). Phản ứng dương tính mạnh với mạt bụi nhà và phấn hoa. Kết luận: Viêm da dị ứng dị nguyên môi trường.",
-            "negative": "Chỉ số IgE toàn phần đạt 54 IU/mL (nằm trong giới hạn bình thường). Không phát hiện kháng thể IgE đặc hiệu đối với các dị nguyên nhóm thức ăn và đường hô hấp cơ bản.",
-            "suspicious": "Chỉ số IgE toàn phần hơi tăng nhẹ đạt 115 IU/mL. Chưa phát hiện dị nguyên đặc hiệu cụ thể nào. Đề xuất kiểm tra thêm bảng dị nguyên mở rộng nếu triệu chứng ngứa tiếp diễn."
-        },
-        "Soi da Dermoscopy": {
-            "positive": "Kết quả soi da: Phát hiện cấu trúc mạng lưới sắc tố không điển hình, có vùng mất cấu trúc và chấm sắc tố phân bố bất đối xứng. Cần chỉ định sinh thiết để xác định ác tính.",
-            "negative": "Kết quả soi da: Mạng lưới sắc tố đồng đều, ranh giới tổn thương rõ ràng, không phát hiện dấu hiệu bất thường. Tổn thương lành tính.",
-            "suspicious": "Kết quả soi da: Tổn thương có sắc tố không đồng nhất nhẹ, có vài điểm bất đối xứng nhẹ nhưng chưa đủ tiêu chuẩn ác tính. Hẹn tái khám theo dõi sau 1 tháng."
-        }
-    };
-
-    function fillPreset(testId, testName, presetValue) {
-        const textarea = document.getElementById('summary_' + testId);
-        if (!textarea) return;
+    function fillPrescriptionPreset(val) {
+        const customInput = document.getElementById('customDrugNameInput');
+        const dosageInput = document.getElementById('dosageInput');
         
-        if (presets[testName] && presets[testName][presetValue]) {
-            textarea.value = presets[testName][presetValue];
+        if (val === 'custom') {
+            customInput.classList.remove('d-none');
+            customInput.setAttribute('required', 'required');
+            customInput.focus();
         } else {
-            textarea.value = '';
+            customInput.classList.add('d-none');
+            customInput.removeAttribute('required');
+        }
+
+        const presets = {
+            'Thuốc A': 'Uống 2 lần/ngày, mỗi lần 1 viên sau ăn sáng và tối. Dùng liên tục trong 7 ngày.',
+            'Thuốc B': 'Thoa một lớp mỏng lên vùng da tổn thương 1 lần/ngày vào buổi tối trước khi đi ngủ.',
+            'Thuốc C': 'Uống 1 lần/ngày vào buổi sáng sau ăn. Tránh ánh nắng mặt trời trực tiếp khi đang dùng thuốc.'
+        };
+
+        if (presets[val]) {
+            dosageInput.value = presets[val];
         }
     }
 

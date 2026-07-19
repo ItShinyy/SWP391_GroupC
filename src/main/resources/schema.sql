@@ -29,9 +29,11 @@ GO
 -- =========================================================
 -- DROP TABLES (Sắp xếp theo thứ tự giải phóng khóa ngoại an toàn)
 -- =========================================================
-DROP TABLE IF EXISTS appointment_lab_tests; -- Chứa FK tới appointments
-DROP TABLE IF EXISTS appointments;          -- Chứa FK tới patients, clinics, diagnosis_reports, doctors
-DROP TABLE IF EXISTS doctor_schedules;      -- Chứa FK tới doctors
+DROP TABLE IF EXISTS appointment_prescriptions; -- Chứa FK tới appointments
+DROP TABLE IF EXISTS bug_reports;               -- Chứa FK tới users
+DROP TABLE IF EXISTS appointment_lab_tests;     -- Chứa FK tới appointments
+DROP TABLE IF EXISTS appointments;              -- Chứa FK tới patients, clinics, diagnosis_reports, doctors
+DROP TABLE IF EXISTS doctor_schedules;          -- Chứa FK tới doctors
 DROP TABLE IF EXISTS doctors;               -- Chứa FK tới users, clinics
 DROP TABLE IF EXISTS user_tokens; -- Chứa FK tới users
 DROP TABLE IF EXISTS audit_logs;            -- Chứa FK tới users
@@ -211,6 +213,9 @@ CREATE TABLE appointments (
     appointment_time DATETIME2 NOT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'CREATED',
     notes NVARCHAR(1000) NULL,
+    patient_name NVARCHAR(100) NULL,
+    patient_dob DATE NULL,
+    patient_gender VARCHAR(10) NULL,
     doctor_id UNIQUEIDENTIFIER NULL,
     doctor_status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
     doctor_notes NVARCHAR(2000) NULL,
@@ -228,21 +233,36 @@ CREATE TABLE appointments (
 );
 
 -- =========================================================
--- 6a. APPOINTMENT LAB TESTS
+-- 6a. APPOINTMENT PRESCRIPTIONS
 -- =========================================================
-CREATE TABLE appointment_lab_tests (
+CREATE TABLE appointment_prescriptions (
     id UNIQUEIDENTIFIER NOT NULL DEFAULT NEWSEQUENTIALID(),
     appointment_id UNIQUEIDENTIFIER NOT NULL,
-    test_name NVARCHAR(150) NOT NULL,
-    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
-    result_summary NVARCHAR(1000) NULL,
-    result_image_url VARCHAR(255) NULL,
+    drug_name NVARCHAR(150) NOT NULL,
+    quantity INT NOT NULL,
+    dosage NVARCHAR(500) NOT NULL,
     created_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
     updated_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
 
-    CONSTRAINT PK_appointment_lab_tests PRIMARY KEY (id),
-    CONSTRAINT CHK_appointment_lab_tests_status CHECK (status IN ('PENDING', 'COMPLETED', 'CANCELLED')),
-    CONSTRAINT FK_appointment_lab_tests_appointments FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE CASCADE
+    CONSTRAINT PK_appointment_prescriptions PRIMARY KEY (id),
+    CONSTRAINT FK_appointment_prescriptions_appointments FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE CASCADE
+);
+
+-- =========================================================
+-- 6b. SYSTEM BUG REPORTS
+-- =========================================================
+CREATE TABLE bug_reports (
+    id UNIQUEIDENTIFIER NOT NULL DEFAULT NEWSEQUENTIALID(),
+    user_id UNIQUEIDENTIFIER NULL,
+    title NVARCHAR(200) NOT NULL,
+    description NVARCHAR(2000) NOT NULL,
+    url_path VARCHAR(255) NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    created_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
+
+    CONSTRAINT PK_bug_reports PRIMARY KEY (id),
+    CONSTRAINT FK_bug_reports_users FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+    CONSTRAINT CHK_bug_reports_status CHECK (status IN ('PENDING', 'RESOLVED', 'CLOSED'))
 );
 
 -- =========================================================
@@ -484,9 +504,28 @@ VALUES
 (NEWID(), @AdminId, 'USER_LOGIN', 'users', @AdminId, NULL, N'{"status":"success"}', '127.0.0.1', 'Chrome/120.0'),
 (NEWID(), @User1Id, 'CREATE_DIAGNOSIS_REPORT', 'diagnosis_reports', @Report1Id, NULL, N'{"disease_id":"Acne","score":95.5}', '192.168.1.5', 'iPhone/Safari');
 
--- Insert Appointment Lab Tests
-INSERT INTO appointment_lab_tests (id, appointment_id, test_name, status, result_summary, result_image_url)
+-- Insert Appointment Prescriptions
+INSERT INTO appointment_prescriptions (id, appointment_id, drug_name, quantity, dosage)
 VALUES
-(NEWID(), (SELECT TOP 1 id FROM appointments WHERE request_id = 'req-seed-03'), N'Xét nghiệm máu tổng quát', 'COMPLETED', N'Chỉ số bạch cầu và hồng cầu bình thường. Không phát hiện dấu hiệu nhiễm trùng nặng.', 'uploads/lab_results/sample_blood_test.pdf'),
-(NEWID(), (SELECT TOP 1 id FROM appointments WHERE request_id = 'req-seed-03'), N'Sinh thiết biểu bì da', 'COMPLETED', N'Xét nghiệm mô bệnh học biểu bì: các lớp tế bào sừng phát triển đều, không phát hiện tế bào ác tính dạng Melanoma.', 'uploads/lab_results/sample_biopsy.pdf');
+(NEWID(), (SELECT TOP 1 id FROM appointments WHERE request_id = 'req-seed-03'), N'Thuốc A', 10, N'Uống 2 lần/ngày, mỗi lần 1 viên sau ăn'),
+(NEWID(), (SELECT TOP 1 id FROM appointments WHERE request_id = 'req-seed-03'), N'Thuốc B', 1, N'Thoa 1 lần/ngày vào buổi tối trước khi đi ngủ');
+
+-- Seed 15 extra waiting appointments for Doctor 1 (bs.nguyenvana) to test search, filter and pagination
+INSERT INTO appointments (id, request_id, patient_id, clinic_id, diagnosis_report_id, appointment_time, status, notes, doctor_id, doctor_status, doctor_notes, patient_name, patient_dob, patient_gender)
+VALUES
+(NEWID(), 'req-test-d1-01', @Patient1Id, @Clinic1Id, @ReportD1A, DATEADD(HOUR, 9, DATEADD(DAY, 1, DATEDIFF(DAY, 0, SYSDATETIME()))), 'CONFIRMED', N'Khám viêm da ở cánh tay', @Doctor1Id, 'ACCEPTED', NULL, N'Nguyễn Văn An', '1990-05-12', 'MALE'),
+(NEWID(), 'req-test-d1-02', @Patient2Id, @Clinic1Id, @ReportD1B, DATEADD(HOUR, 10, DATEADD(DAY, 1, DATEDIFF(DAY, 0, SYSDATETIME()))), 'CONFIRMED', N'Ngứa đỏ dị ứng sau khi ăn hải sản', @Doctor1Id, 'ACCEPTED', NULL, N'Trần Thị Bình', '1995-08-20', 'FEMALE'),
+(NEWID(), 'req-test-d1-03', @Patient1Id, @Clinic1Id, @ReportD1C, DATEADD(HOUR, 11, DATEADD(DAY, 1, DATEDIFF(DAY, 0, SYSDATETIME()))), 'CONFIRMED', N'Bong tróc da khô ráp', @Doctor1Id, 'ACCEPTED', NULL, N'Lê Hoàng Châu', '1988-12-05', 'MALE'),
+(NEWID(), 'req-test-d1-04', @Patient3Id, @Clinic1Id, @ReportD1A, DATEADD(HOUR, 14, DATEADD(DAY, 1, DATEDIFF(DAY, 0, SYSDATETIME()))), 'CONFIRMED', N'Khám da nổi mề đay cục bộ', @Doctor1Id, 'ACCEPTED', NULL, N'Phạm Minh Duy', '2001-03-15', 'MALE'),
+(NEWID(), 'req-test-d1-05', @Patient1Id, @Clinic1Id, @ReportD1B, DATEADD(HOUR, 15, DATEADD(DAY, 1, DATEDIFF(DAY, 0, SYSDATETIME()))), 'CONFIRMED', N'Kích ứng mỹ phẩm vùng má', @Doctor1Id, 'ACCEPTED', NULL, N'Hoàng Lan Anh', '1997-11-22', 'FEMALE'),
+(NEWID(), 'req-test-d1-06', @Patient2Id, @Clinic1Id, @ReportD1C, DATEADD(HOUR, 9, DATEADD(DAY, 2, DATEDIFF(DAY, 0, SYSDATETIME()))), 'CONFIRMED', N'Mẩn ngứa vùng cổ kéo dài', @Doctor1Id, 'ACCEPTED', NULL, N'Ngô Gia Bảo', '2005-07-30', 'MALE'),
+(NEWID(), 'req-test-d1-07', @Patient1Id, @Clinic1Id, @ReportD1A, DATEADD(HOUR, 10, DATEADD(DAY, 2, DATEDIFF(DAY, 0, SYSDATETIME()))), 'CONFIRMED', N'Vết đỏ tròn như hắc lào', @Doctor1Id, 'ACCEPTED', NULL, N'Vũ Phương Cường', '1992-09-14', 'MALE'),
+(NEWID(), 'req-test-d1-08', @Patient3Id, @Clinic1Id, @ReportD1B, DATEADD(HOUR, 11, DATEADD(DAY, 2, DATEDIFF(DAY, 0, SYSDATETIME()))), 'CONFIRMED', N'Nhiễm trùng da nhẹ ở ngón tay', @Doctor1Id, 'ACCEPTED', NULL, N'Đặng Thu Hà', '1996-01-25', 'FEMALE'),
+(NEWID(), 'req-test-d1-09', @Patient1Id, @Clinic1Id, @ReportD1C, DATEADD(HOUR, 14, DATEADD(DAY, 2, DATEDIFF(DAY, 0, SYSDATETIME()))), 'CONFIRMED', N'Vảy nến da đầu bong nhiều', @Doctor1Id, 'ACCEPTED', NULL, N'Đỗ Minh Hải', '1984-04-18', 'MALE'),
+(NEWID(), 'req-test-d1-10', @Patient2Id, @Clinic1Id, @ReportD1A, DATEADD(HOUR, 15, DATEADD(DAY, 2, DATEDIFF(DAY, 0, SYSDATETIME()))), 'CONFIRMED', N'Chàm bã nhờn vùng trán', @Doctor1Id, 'ACCEPTED', NULL, N'Bùi Khánh Huyền', '1999-06-08', 'FEMALE'),
+(NEWID(), 'req-test-d1-11', @Patient1Id, @Clinic1Id, @ReportD1B, DATEADD(HOUR, 9, DATEADD(DAY, 3, DATEDIFF(DAY, 0, SYSDATETIME()))), 'CONFIRMED', N'Ngứa ngáy vùng lưng khó chịu', @Doctor1Id, 'ACCEPTED', NULL, N'Lý Thiên Long', '1991-02-28', 'MALE'),
+(NEWID(), 'req-test-d1-12', @Patient3Id, @Clinic1Id, @ReportD1C, DATEADD(HOUR, 10, DATEADD(DAY, 3, DATEDIFF(DAY, 0, SYSDATETIME()))), 'CONFIRMED', N'Viêm da cơ địa dị ứng', @Doctor1Id, 'ACCEPTED', NULL, N'Nguyễn Trọng Nghĩa', '1993-10-10', 'MALE'),
+(NEWID(), 'req-test-d1-13', @Patient1Id, @Clinic1Id, @ReportD1A, DATEADD(HOUR, 11, DATEADD(DAY, 3, DATEDIFF(DAY, 0, SYSDATETIME()))), 'CONFIRMED', N'Tổn thương da ngứa rát', @Doctor1Id, 'ACCEPTED', NULL, N'Phan Thanh Oanh', '1994-07-17', 'FEMALE'),
+(NEWID(), 'req-test-d1-14', @Patient2Id, @Clinic1Id, @ReportD1B, DATEADD(HOUR, 14, DATEADD(DAY, 3, DATEDIFF(DAY, 0, SYSDATETIME()))), 'CONFIRMED', N'Dị ứng tiếp xúc xi măng', @Doctor1Id, 'ACCEPTED', NULL, N'Trịnh Xuân Phong', '1987-12-31', 'MALE'),
+(NEWID(), 'req-test-d1-15', @Patient3Id, @Clinic1Id, @ReportD1C, DATEADD(HOUR, 15, DATEADD(DAY, 3, DATEDIFF(DAY, 0, SYSDATETIME()))), 'CONFIRMED', N'Ngứa sần đỏ chân tay', @Doctor1Id, 'ACCEPTED', NULL, N'Vương Thảo Quỳnh', '2000-08-09', 'FEMALE');
 GO

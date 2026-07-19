@@ -22,7 +22,8 @@ public class AppointmentDAO extends DBContext {
     private static final String SELECT_COLS =
         "SELECT a.id, a.request_id, a.patient_id, a.clinic_id, a.diagnosis_report_id," +
         " a.appointment_time, a.status, a.notes, a.created_at, a.updated_at, c.clinic_name," +
-        " u.full_name AS patient_name, u.email AS patient_email, u.phone AS patient_phone" +
+        " COALESCE(a.patient_name, u.full_name) AS patient_name, u.email AS patient_email, u.phone AS patient_phone," +
+        " COALESCE(a.patient_gender, p.gender) AS patient_gender, COALESCE(a.patient_dob, p.dob) AS patient_dob" +
         " FROM appointments a" +
         " LEFT JOIN clinics c ON a.clinic_id = c.id" +
         " LEFT JOIN patients p ON a.patient_id = p.id" +
@@ -30,8 +31,8 @@ public class AppointmentDAO extends DBContext {
 
     private static final String INSERT_SQL =
         "INSERT INTO appointments (id, request_id, patient_id, clinic_id, diagnosis_report_id," +
-        " appointment_time, status, notes) OUTPUT INSERTED.id" +
-        " VALUES (NEWID(), ?, ?, ?, ?, ?, ?, ?)";
+        " appointment_time, status, notes, patient_name, patient_dob, patient_gender) OUTPUT INSERTED.id" +
+        " VALUES (NEWID(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     public Appointment findById(String id) {
         return queryOne(SELECT_COLS + " WHERE a.id = ?", AppointmentDAO::mapRow, id);
@@ -44,8 +45,8 @@ public class AppointmentDAO extends DBContext {
         String sql = "SELECT a.id, a.request_id, a.patient_id, a.clinic_id, a.diagnosis_report_id, a.appointment_time, a.status, a.notes, " +
                      "a.doctor_id, a.doctor_status, a.doctor_notes, a.created_at, a.updated_at, " +
                      "c.clinic_name, " +
-                     "u_p.full_name AS patient_name, u_p.email AS patient_email, u_p.phone AS patient_phone, " +
-                     "p.gender AS patient_gender, p.dob AS patient_dob, p.address AS patient_address, " +
+                     "COALESCE(a.patient_name, u_p.full_name) AS patient_name, u_p.email AS patient_email, u_p.phone AS patient_phone, " +
+                     "COALESCE(a.patient_gender, p.gender) AS patient_gender, COALESCE(a.patient_dob, p.dob) AS patient_dob, p.address AS patient_address, " +
                      "dis.disease_name, dr.confidence_score, dr.risk_level, dr.image_url, dr.heatmap_url, dr.recommendation " +
                      "FROM appointments a " +
                      "LEFT JOIN clinics c ON a.clinic_id = c.id " +
@@ -82,7 +83,10 @@ public class AppointmentDAO extends DBContext {
             a.getDiagnosisReportId(),
             Timestamp.valueOf(a.getAppointmentTime()),
             a.getStatus() != null ? a.getStatus() : "CREATED",
-            a.getNotes()
+            a.getNotes(),
+            a.getPatientName(),
+            a.getPatientDob() != null && !a.getPatientDob().trim().isEmpty() ? Date.valueOf(a.getPatientDob()) : null,
+            a.getPatientGender()
         );
     }
 
@@ -97,7 +101,10 @@ public class AppointmentDAO extends DBContext {
                 a.getDiagnosisReportId(),
                 Timestamp.valueOf(a.getAppointmentTime()),
                 a.getStatus() != null ? a.getStatus() : "CREATED",
-                a.getNotes()
+                a.getNotes(),
+                a.getPatientName(),
+                a.getPatientDob() != null && !a.getPatientDob().trim().isEmpty() ? Date.valueOf(a.getPatientDob()) : null,
+                a.getPatientGender()
             );
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next() ? rs.getString(1) : null;
@@ -127,6 +134,14 @@ public class AppointmentDAO extends DBContext {
         a.setPatientName(rs.getString("patient_name"));
         a.setPatientEmail(rs.getString("patient_email"));
         a.setPatientPhone(rs.getString("patient_phone"));
+        try {
+            a.setPatientGender(rs.getString("patient_gender"));
+        } catch (SQLException ignored) {}
+        try {
+            if (rs.getDate("patient_dob") != null) {
+                a.setPatientDob(rs.getDate("patient_dob").toString());
+            }
+        } catch (SQLException ignored) {}
         return a;
     }
 
@@ -207,6 +222,10 @@ public class AppointmentDAO extends DBContext {
     }
 
     public List<Appointment> findByDoctorId(String doctorId, String statusFilter, int page, int pageSize) {
+        return findByDoctorId(doctorId, statusFilter, null, null, null, page, pageSize);
+    }
+
+    public List<Appointment> findByDoctorId(String doctorId, String statusFilter, String keyword, String riskFilter, String sortBy, int page, int pageSize) {
         List<Appointment> list = new ArrayList<>();
         int offset = (page - 1) * pageSize;
         
@@ -214,8 +233,8 @@ public class AppointmentDAO extends DBContext {
         sb.append("SELECT a.id, a.request_id, a.patient_id, a.clinic_id, a.diagnosis_report_id, a.appointment_time, a.status, a.notes, ")
           .append("a.doctor_id, a.doctor_status, a.doctor_notes, a.created_at, a.updated_at, ")
           .append("c.clinic_name, ")
-          .append("u_p.full_name AS patient_name, u_p.email AS patient_email, u_p.phone AS patient_phone, ")
-          .append("p.gender AS patient_gender, p.dob AS patient_dob, p.address AS patient_address, ")
+          .append("COALESCE(a.patient_name, u_p.full_name) AS patient_name, u_p.email AS patient_email, u_p.phone AS patient_phone, ")
+          .append("COALESCE(a.patient_gender, p.gender) AS patient_gender, COALESCE(a.patient_dob, p.dob) AS patient_dob, p.address AS patient_address, ")
           .append("dis.disease_name, dr.confidence_score, dr.risk_level, dr.image_url, dr.heatmap_url, dr.recommendation ")
           .append("FROM appointments a ")
           .append("LEFT JOIN clinics c ON a.clinic_id = c.id ")
@@ -228,10 +247,24 @@ public class AppointmentDAO extends DBContext {
         if (statusFilter != null && !statusFilter.trim().isEmpty()) {
             sb.append("AND a.status = ? ");
         }
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sb.append("AND (a.patient_name LIKE ? OR u_p.full_name LIKE ? OR a.notes LIKE ?) ");
+        }
+        if (riskFilter != null && !riskFilter.trim().isEmpty()) {
+            sb.append("AND dr.risk_level = ? ");
+        }
         
-        sb.append("ORDER BY a.appointment_time DESC ")
-          .append("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
-          
+        // Sorting
+        if ("time_asc".equalsIgnoreCase(sortBy)) {
+            sb.append("ORDER BY a.appointment_time ASC ");
+        } else if ("risk_desc".equalsIgnoreCase(sortBy)) {
+            sb.append("ORDER BY CASE dr.risk_level WHEN 'HIGH' THEN 1 WHEN 'MEDIUM' THEN 2 WHEN 'LOW' THEN 3 ELSE 4 END ASC, a.appointment_time DESC ");
+        } else {
+            sb.append("ORDER BY a.appointment_time DESC ");
+        }
+        
+        sb.append("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+        
         String sql = sb.toString();
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -239,6 +272,15 @@ public class AppointmentDAO extends DBContext {
             ps.setString(paramIndex++, doctorId);
             if (statusFilter != null && !statusFilter.trim().isEmpty()) {
                 ps.setString(paramIndex++, statusFilter);
+            }
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                String searchPattern = "%" + keyword.trim() + "%";
+                ps.setString(paramIndex++, searchPattern);
+                ps.setString(paramIndex++, searchPattern);
+                ps.setString(paramIndex++, searchPattern);
+            }
+            if (riskFilter != null && !riskFilter.trim().isEmpty()) {
+                ps.setString(paramIndex++, riskFilter);
             }
             ps.setInt(paramIndex++, offset);
             ps.setInt(paramIndex++, pageSize);
@@ -249,32 +291,59 @@ public class AppointmentDAO extends DBContext {
                 }
             }
         } catch (SQLException e) {
-            logger.error("Lỗi khi lấy danh sách lịch hẹn theo DoctorId: {}", doctorId, e);
+            logger.error("Lỗi khi lấy danh sách lịch hẹn theo DoctorId với bộ lọc: {}", doctorId, e);
         }
         return list;
     }
 
     public int countByDoctorId(String doctorId, String statusFilter) {
+        return countByDoctorId(doctorId, statusFilter, null, null);
+    }
+
+    public int countByDoctorId(String doctorId, String statusFilter, String keyword, String riskFilter) {
         StringBuilder sb = new StringBuilder();
-        sb.append("SELECT COUNT(*) FROM appointments WHERE doctor_id = ? ");
+        sb.append("SELECT COUNT(*) ")
+          .append("FROM appointments a ")
+          .append("LEFT JOIN patients p ON a.patient_id = p.id ")
+          .append("LEFT JOIN users u_p ON p.user_id = u_p.id ")
+          .append("LEFT JOIN diagnosis_reports dr ON a.diagnosis_report_id = dr.id ")
+          .append("WHERE a.doctor_id = ? ");
+          
         if (statusFilter != null && !statusFilter.trim().isEmpty()) {
-            sb.append("AND status = ? ");
+            sb.append("AND a.status = ? ");
+        }
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sb.append("AND (a.patient_name LIKE ? OR u_p.full_name LIKE ? OR a.notes LIKE ?) ");
+        }
+        if (riskFilter != null && !riskFilter.trim().isEmpty()) {
+            sb.append("AND dr.risk_level = ? ");
         }
         
         String sql = sb.toString();
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, doctorId);
+            int paramIndex = 1;
+            ps.setString(paramIndex++, doctorId);
             if (statusFilter != null && !statusFilter.trim().isEmpty()) {
-                ps.setString(2, statusFilter);
+                ps.setString(paramIndex++, statusFilter);
             }
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                String searchPattern = "%" + keyword.trim() + "%";
+                ps.setString(paramIndex++, searchPattern);
+                ps.setString(paramIndex++, searchPattern);
+                ps.setString(paramIndex++, searchPattern);
+            }
+            if (riskFilter != null && !riskFilter.trim().isEmpty()) {
+                ps.setString(paramIndex++, riskFilter);
+            }
+            
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return rs.getInt(1);
                 }
             }
         } catch (SQLException e) {
-            logger.error("Lỗi khi đếm số lịch hẹn theo DoctorId: {}", doctorId, e);
+            logger.error("Lỗi khi đếm số lịch hẹn theo DoctorId với bộ lọc: {}", doctorId, e);
         }
         return 0;
     }

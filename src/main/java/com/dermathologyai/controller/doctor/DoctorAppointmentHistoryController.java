@@ -48,6 +48,16 @@ public class DoctorAppointmentHistoryController extends HttpServlet {
             statusFilter = "COMPLETED";
         }
 
+        // Đọc các tham số tìm kiếm, lọc và sắp xếp mới
+        String keyword = req.getParameter("keyword");
+        if (keyword != null && keyword.trim().isEmpty()) keyword = null;
+        String riskFilter = req.getParameter("riskFilter");
+        if (riskFilter != null && riskFilter.trim().isEmpty()) riskFilter = null;
+        String sortBy = req.getParameter("sortBy");
+        if (sortBy == null || sortBy.trim().isEmpty()) {
+            sortBy = "time_desc"; // Mặc định lịch sử khám sắp xếp theo thời gian mới nhất (gần đây nhất)
+        }
+
         // Phân trang dữ liệu: Mặc định trang 1, kích thước trang là 10 dòng
         int page = 1;
         int pageSize = 10;
@@ -61,10 +71,10 @@ public class DoctorAppointmentHistoryController extends HttpServlet {
         }
 
         // Lấy danh sách lịch sử ca khám đã được phân trang từ CSDL
-        List<Appointment> historyList = appointmentDAO.findByDoctorId(doctor.getId(), statusFilter, page, pageSize);
+        List<Appointment> historyList = appointmentDAO.findByDoctorId(doctor.getId(), statusFilter, keyword, riskFilter, sortBy, page, pageSize);
         
         // Tính toán tổng số trang dựa trên tổng số bản ghi thỏa mãn bộ lọc
-        int totalRecords = appointmentDAO.countByDoctorId(doctor.getId(), statusFilter);
+        int totalRecords = appointmentDAO.countByDoctorId(doctor.getId(), statusFilter, keyword, riskFilter);
         int totalPages = (int) Math.ceil((double) totalRecords / pageSize);
 
         // Gửi dữ liệu ra tầng hiển thị (JSP)

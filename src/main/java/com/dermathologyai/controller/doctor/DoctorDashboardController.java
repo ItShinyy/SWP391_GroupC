@@ -52,6 +52,16 @@ public class DoctorDashboardController extends HttpServlet {
             statusFilter = "CONFIRMED"; // Mặc định chỉ hiển thị bệnh nhân chờ khám
         }
         
+        // Đọc các tham số tìm kiếm, lọc và sắp xếp mới
+        String keyword = req.getParameter("keyword");
+        if (keyword != null && keyword.trim().isEmpty()) keyword = null;
+        String riskFilter = req.getParameter("riskFilter");
+        if (riskFilter != null && riskFilter.trim().isEmpty()) riskFilter = null;
+        String sortBy = req.getParameter("sortBy");
+        if (sortBy == null || sortBy.trim().isEmpty()) {
+            sortBy = "time_asc"; // Mặc định sắp xếp theo thời gian sớm nhất
+        }
+        
         // Phân trang dữ liệu: Mặc định trang 1, mỗi trang 10 dòng
         int page = 1;
         int pageSize = 10;
@@ -60,8 +70,8 @@ public class DoctorDashboardController extends HttpServlet {
             if (pageParam != null) page = Integer.parseInt(pageParam);
         } catch (NumberFormatException ignored) {} // Bỏ qua nếu tham số trang lỗi định dạng
         
-        // Lấy danh sách lịch khám của bác sĩ theo bộ lọc và phân trang
-        List<Appointment> appointments = appointmentDAO.findByDoctorId(doctor.getId(), statusFilter, page, pageSize);
+        // Lấy danh sách lịch khám của bác sĩ theo bộ lọc, tìm kiếm, phân loại và phân trang
+        List<Appointment> appointments = appointmentDAO.findByDoctorId(doctor.getId(), statusFilter, keyword, riskFilter, sortBy, page, pageSize);
         
         // Thống kê số lượng hồ sơ cho các thẻ chỉ số (Stat Cards) theo tiến độ khám thực tế
         int totalCount = appointmentDAO.countByDoctorId(doctor.getId(), null);            // Tổng số lịch khám
@@ -69,8 +79,8 @@ public class DoctorDashboardController extends HttpServlet {
         int completedCount = appointmentDAO.countByDoctorId(doctor.getId(), "COMPLETED");  // Đã khám xong
         int cancelledCount = appointmentDAO.countByDoctorId(doctor.getId(), "CANCELLED");  // Đã hủy
         
-        // Tính toán tổng số trang dựa trên số lượng lịch khám sau khi lọc
-        int filteredCount = appointmentDAO.countByDoctorId(doctor.getId(), statusFilter);
+        // Tính toán tổng số trang dựa trên số lượng lịch khám sau khi lọc có kèm tìm kiếm
+        int filteredCount = appointmentDAO.countByDoctorId(doctor.getId(), statusFilter, keyword, riskFilter);
         int totalPages = (int) Math.ceil((double) filteredCount / pageSize);
         
         // Đẩy toàn bộ dữ liệu thống kê và danh sách lịch hẹn sang trang giao diện JSP

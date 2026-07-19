@@ -78,6 +78,28 @@ public class ProfileController extends HttpServlet {
             } else {
                 req.setAttribute("errorMessage", "Vui lòng nhập đầy đủ thông tin.");
             }
+        } else if ("report_bug".equals(action)) {
+            String title = req.getParameter("title");
+            String description = req.getParameter("description");
+            String urlPath = req.getParameter("urlPath");
+            
+            if (title != null && !title.trim().isEmpty() && description != null && !description.trim().isEmpty()) {
+                com.dermathologyai.model.BugReport bug = new com.dermathologyai.model.BugReport();
+                bug.setUserId(currentUser.getId());
+                bug.setTitle(title.trim());
+                bug.setDescription(description.trim());
+                bug.setUrlPath(urlPath);
+                bug.setStatus("PENDING");
+                
+                com.dermathologyai.dao.BugReportDAO bugDAO = new com.dermathologyai.dao.BugReportDAO();
+                if (bugDAO.create(bug)) {
+                    req.setAttribute("successMessage", "Báo cáo lỗi hệ thống thành công. Cảm ơn sự đóng góp của bạn!");
+                } else {
+                    req.setAttribute("errorMessage", "Không thể gửi báo cáo lỗi. Vui lòng thử lại sau.");
+                }
+            } else {
+                req.setAttribute("errorMessage", "Vui lòng nhập đầy đủ thông tin báo lỗi.");
+            }
         } else if ("request_change_security".equals(action)) {
             String newEmail = req.getParameter("newEmail");
             String newPhone = req.getParameter("newPhone");
