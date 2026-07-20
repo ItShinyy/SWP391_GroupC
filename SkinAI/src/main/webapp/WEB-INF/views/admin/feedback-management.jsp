@@ -29,7 +29,7 @@
 
     <!-- Statistics Cards -->
     <div class="row mb-4">
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div class="card bg-warning text-white">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
@@ -42,20 +42,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-info text-white">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-spinner fa-2x me-3"></i>
-                        <div>
-                            <h5 class="card-title mb-0">${processingCount}</h5>
-                            <small>Đang xử lý</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div class="card bg-success text-white">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
@@ -68,7 +55,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div class="card bg-primary text-white">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
@@ -92,7 +79,6 @@
                     <select class="form-select" id="status" name="status">
                         <option value="">Tất cả trạng thái</option>
                         <option value="Chưa xử lý" ${statusFilter == 'Chưa xử lý' ? 'selected' : ''}>Chưa xử lý</option>
-                        <option value="Đang xử lý" ${statusFilter == 'Đang xử lý' ? 'selected' : ''}>Đang xử lý</option>
                         <option value="Đã xử lý" ${statusFilter == 'Đã xử lý' ? 'selected' : ''}>Đã xử lý</option>
                     </select>
                 </div>
@@ -178,7 +164,7 @@
                                             </div>
                                         </td>
                                         <td>
-                                            <span class="badge ${feedback.status == 'Chưa xử lý' ? 'bg-warning' : feedback.status == 'Đang xử lý' ? 'bg-info' : 'bg-success'}">
+                                            <span class="badge ${feedback.status == 'Chưa xử lý' ? 'bg-warning' : 'bg-success'}">
                                                 ${feedback.status}
                                             </span>
                                             <c:if test="${feedback.hasAdminReply()}">

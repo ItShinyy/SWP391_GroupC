@@ -146,7 +146,6 @@ public class AdminFeedbackController extends HttpServlet {
 
         // Get statistics
         int pendingCount = feedbackDAO.countByStatus("Chưa xử lý");
-        int processingCount = feedbackDAO.countByStatus("Đang xử lý");
         int completedCount = feedbackDAO.countByStatus("Đã xử lý");
 
         req.setAttribute("feedbacks", feedbacks);
@@ -157,7 +156,6 @@ public class AdminFeedbackController extends HttpServlet {
         req.setAttribute("pageSize", pageSize);
         
         req.setAttribute("pendingCount", pendingCount);
-        req.setAttribute("processingCount", processingCount);
         req.setAttribute("completedCount", completedCount);
         
         req.setAttribute("statusFilter", statusFilter);
@@ -285,7 +283,6 @@ public class AdminFeedbackController extends HttpServlet {
 
     private boolean isValidStatus(String status) {
         return "Chưa xử lý".equals(status) || 
-               "Đang xử lý".equals(status) || 
                "Đã xử lý".equals(status);
     }
 }
