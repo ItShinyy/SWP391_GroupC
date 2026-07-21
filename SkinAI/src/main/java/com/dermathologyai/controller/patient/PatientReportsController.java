@@ -62,23 +62,11 @@ public class PatientReportsController extends HttpServlet {
             }
         }
         
-        // Filter parameters
-        String search = req.getParameter("search");
-        String fromDate = req.getParameter("fromDate");
-        String toDate = req.getParameter("toDate");
-        String riskLevel = req.getParameter("risk");
-        String sort = req.getParameter("sort");
-        
-        logger.info("PatientReportsController - User: {}, Patient: {}, Page: {}, Filters - search: {}, fromDate: {}, toDate: {}, risk: {}, sort: {}", 
-                    user.getId(), patient.getId(), page, search, fromDate, toDate, riskLevel, sort);
-        
-        // Use filtered method (handles null parameters gracefully)
-        List<DiagnosisReport> reports = reportDAO.findByPatientIdFiltered(
-            patient.getId(), search, fromDate, toDate, riskLevel, sort, page, pageSize
-        );
-        int totalReports = reportDAO.countByPatientIdFiltered(
-            patient.getId(), search, fromDate, toDate, riskLevel
-        );
+        logger.info("PatientReportsController - User: {}, Patient: {}, Page: {}",
+                    user.getId(), patient.getId(), page);
+
+        List<DiagnosisReport> reports = reportDAO.findByPatientId(patient.getId(), page, pageSize);
+        int totalReports = reportDAO.countByPatientId(patient.getId());
         
         logger.info("PatientReportsController - Found {} reports, total pages: {}", totalReports, (int) Math.ceil((double) totalReports / pageSize));
         
@@ -88,7 +76,7 @@ public class PatientReportsController extends HttpServlet {
         req.setAttribute("currentPage", page);
         req.setAttribute("totalPages", totalPages);
         req.setAttribute("totalRecords", totalReports);
-        
+
         req.getRequestDispatcher("/WEB-INF/views/patient/reports.jsp").forward(req, resp);
     }
 }

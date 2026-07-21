@@ -91,6 +91,9 @@
                             <button type="submit" class="btn btn-skin w-100 btn-lg fw-bold fs-5">
                                 <i class="fa-solid fa-wand-magic-sparkles me-2"></i> Bắt đầu phân tích AI
                             </button>
+                            <button type="submit" class="btn btn-skin w-50 btn-lg fw-bold fs-5">
+                                <i class="fa-solid fa-wand-magic-sparkles me-2"></i> Back
+                            </button>
                         </form>
                     </div>
                 </div>

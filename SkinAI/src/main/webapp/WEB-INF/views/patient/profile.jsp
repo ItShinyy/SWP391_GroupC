@@ -23,6 +23,9 @@
                     <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill">
                         <i class="fa-solid fa-circle-check me-1"></i> Active Account
                     </span>
+                        <a class="btn btn-danger btn-sm d-table mx-auto mt-3" href="${pageContext.request.contextPath}/patient/issue-report">
+                            <i class="fa-solid fa-bug me-1"></i> Báo lỗi / Hỗ trợ
+                        </a>
                 </div>
             </div>
         </div>
@@ -62,6 +65,57 @@
                         </div>
                         <button type="submit" class="btn btn-skin fw-bold">Lưu Thay Đổi</button>
                     </form>
+
+                    <!-- Family Members -->
+                    <section class="mb-5">
+                        <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                            <h5 class="fw-bold mb-0">Thành viên gia đình</h5>
+                            <c:if test="${not empty familyMembers}">
+                                <a class="btn btn-outline-primary btn-sm" href="${pageContext.request.contextPath}/patient/family-members?action=create">
+                                    <i class="fa-solid fa-user-plus me-1"></i> Thêm thành viên
+                                </a>
+                            </c:if>
+                        </div>
+
+                        <c:choose>
+                            <c:when test="${empty familyMembers}">
+                                <div class="text-center border rounded-3 bg-light p-4">
+                                    <i class="fa-solid fa-people-roof text-primary fs-3 mb-2"></i>
+                                    <p class="mb-3 text-muted">Bạn chưa thêm thành viên gia đình nào.</p>
+                                    <a class="btn btn-primary" href="${pageContext.request.contextPath}/patient/family-members?action=create">
+                                        <i class="fa-solid fa-user-plus me-2"></i>Thêm thành viên gia đình
+                                    </a>
+                                </div>
+                            </c:when>
+                            <c:otherwise>
+                                <div class="table-responsive border rounded-3">
+                                    <table class="table table-hover align-middle mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Người thân</th>
+                                                <th class="text-end">Thông tin cá nhân</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <c:forEach var="member" items="${familyMembers}">
+                                                <tr>
+                                                    <td>
+                                                        <i class="fa-solid fa-people-roof text-primary me-2"></i>
+                                                        <span class="fw-semibold"><c:out value="${member.relationshipLabel}" /> - <c:out value="${member.fullName}" /></span>
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <a class="btn btn-sm btn-outline-primary" href="${pageContext.request.contextPath}/patient/family-members?action=view&amp;id=${member.id}">
+                                                            Xem <i class="fa-solid fa-chevron-right ms-1"></i>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            </c:forEach>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </c:otherwise>
+                        </c:choose>
+                    </section>
 
                     <!-- Form Security Settings -->
                     <form action="${pageContext.request.contextPath}/patient/profile" method="post" class="mb-5">

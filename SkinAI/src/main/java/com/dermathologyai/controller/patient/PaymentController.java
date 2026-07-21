@@ -50,6 +50,10 @@ public class PaymentController extends HttpServlet {
             } else if ("view".equals(action)) {
                 // Allow GET request for viewing invoice (for page reload)
                 handleViewInvoice(req, resp, user, req.getParameter("invoiceId"));
+            } else if ("create".equals(action)) {
+                // Booking always enters the required payment-choice step.
+                req.getSession().setAttribute("paymentRequired", true);
+                handleCreateInvoiceAndRedirect(req, resp, user, req.getParameter("appointmentId"));
             } else {
                 // Default: show payment page from session data (for clean URL reload)
                 handleShowPaymentFromSession(req, resp, user);
@@ -172,6 +176,7 @@ public class PaymentController extends HttpServlet {
 
             req.setAttribute("invoice", invoice);
             req.setAttribute("appointment", appointment);
+            req.setAttribute("paymentViewOnly", true);
             req.getRequestDispatcher("/WEB-INF/views/patient/payment.jsp").forward(req, resp);
         } catch (Exception e) {
             // Handle exception within this method to avoid response commitment issues
@@ -197,11 +202,12 @@ public class PaymentController extends HttpServlet {
         try {
             Payment payment = paymentService.processOfflinePayment(invoiceId, user.getId(), clientIp, userAgent);
             req.getSession().setAttribute("successMessage", 
-                "Thanh toán tại quầy đã được ghi nhận! Vui lòng đến quầy lễ tân để hoàn tất thanh toán.");
+                "Yêu cầu thanh toán tại quầy đã được ghi nhận và đang chờ lễ tân xác nhận.");
             
             // Clear payment session data
             req.getSession().removeAttribute("currentInvoice");
             req.getSession().removeAttribute("currentAppointment");
+            req.getSession().removeAttribute("paymentRequired");
         } catch (Exception e) {
             req.getSession().setAttribute("errorMessage", "Lỗi xử lý thanh toán: " + e.getMessage());
         }
@@ -346,6 +352,7 @@ public class PaymentController extends HttpServlet {
             
             req.setAttribute("invoice", invoice);
             req.setAttribute("appointment", appointment);
+            req.setAttribute("paymentRequired", Boolean.TRUE.equals(session.getAttribute("paymentRequired")));
             req.getRequestDispatcher("/WEB-INF/views/patient/payment.jsp").forward(req, resp);
         } catch (Exception e) {
             if (!resp.isCommitted()) {

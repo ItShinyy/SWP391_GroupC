@@ -119,19 +119,44 @@
             transform: scale(0.95);
         }
 
+        .notification-link {
+            position: relative;
+            color: #475569;
+            padding: 0.5rem 0.75rem;
+            font-size: 1.1rem;
+        }
+        .notification-link:hover { color: #198754; }
+        .notification-count {
+            position: absolute;
+            top: 0;
+            right: 0.15rem;
+            min-width: 1.1rem;
+            height: 1.1rem;
+            padding: 0 0.25rem;
+            border-radius: 999px;
+            background: #dc3545;
+            color: #fff;
+            font-size: 0.65rem;
+            line-height: 1.1rem;
+            text-align: center;
+        }
+
         /* Hiệu ứng trượt mượt mà cho Dropdown */
         .dropdown-menu-custom {
             border-radius: 8px;
             border: 1px solid #e2e8f0;
             box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
             min-width: 200px;
+            max-width: calc(100vw - 2rem);
+            left: auto !important;
+            right: 0 !important;
             animation: slideDownFade 0.3s ease forwards;
-            transform-origin: top center;
+            transform-origin: top right;
         }
         
         @keyframes slideDownFade {
-            from { opacity: 0; transform: translateY(-10px) scale(0.98); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         .dropdown-menu-custom .dropdown-item {
@@ -154,6 +179,32 @@
         .dropdown-item.text-danger:hover {
             background-color: #fef2f2 !important;
             color: #dc2626 !important;
+        }
+
+        /* Open the account menu on hover on desktop; click remains available on mobile and keyboard. */
+        @media (min-width: 992px) {
+            .profile-dropdown {
+                position: relative;
+            }
+            .profile-dropdown:hover > .dropdown-menu-custom {
+                display: block;
+                margin-top: 0 !important;
+                left: auto !important;
+                right: 0 !important;
+            }
+            .profile-dropdown:hover > .profile-dropdown-toggle {
+                color: #0f172a;
+            }
+        }
+
+        @media (max-width: 991.98px) {
+            .profile-dropdown > .dropdown-menu-custom {
+                position: static !important;
+                width: 100%;
+                max-width: 100%;
+                margin-top: 0.5rem !important;
+                transform: none !important;
+            }
         }
         
         .btn-skin {
@@ -215,7 +266,15 @@
                         </li>
                     </c:when>
                     <c:otherwise>
-                        <li class="nav-item dropdown mt-3 mt-lg-0">
+                        <c:if test="${sessionScope.user.role == 'PATIENT' or sessionScope.user.role == 'USER'}">
+                            <li class="nav-item mt-3 mt-lg-0">
+                                <a id="notificationLink" class="nav-link notification-link" href="${pageContext.request.contextPath}/patient/notifications" aria-label="Thông báo">
+                                    <i class="fa-regular fa-bell"></i>
+                                    <span id="notificationCount" class="notification-count d-none">0</span>
+                                </a>
+                            </li>
+                        </c:if>
+                        <li class="nav-item dropdown profile-dropdown mt-3 mt-lg-0">
                             <button class="nav-link profile-dropdown-toggle dropdown-toggle w-100 text-start" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="fa-regular fa-user me-1"></i> 
                                 ${sessionScope.user.fullName}
@@ -244,11 +303,18 @@
                                         <i class="fa-solid fa-credit-card fa-fw me-2 text-success"></i> Hóa Đơn
                                     </a>
                                 </li>
-                                <li>
-                                    <a class="dropdown-item d-flex align-items-center" href="${pageContext.request.contextPath}/patient/reports">
-                                        <i class="fa-solid fa-file-medical fa-fw me-2 text-muted"></i> Hồ Sơ Bệnh Án
-                                    </a>
-                                </li>
+                                <c:if test="${sessionScope.user.role == 'PATIENT' or sessionScope.user.role == 'USER'}">
+                                    <li>
+                                        <a class="dropdown-item d-flex align-items-center" href="${pageContext.request.contextPath}/patient/medical-records">
+                                            <i class="fa-solid fa-file-medical fa-fw me-2 text-primary"></i> Hồ Sơ Bệnh Án
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item d-flex align-items-center" href="${pageContext.request.contextPath}/patient/issue-report">
+                                            <i class="fa-solid fa-bug fa-fw me-2 text-danger"></i> Báo lỗi / Hỗ trợ
+                                        </a>
+                                    </li>
+                                </c:if>
                                 <li>
                                     <a class="dropdown-item d-flex align-items-center" href="${pageContext.request.contextPath}/patient/feedback">
                                         <i class="fa-solid fa-star fa-fw me-2 text-warning"></i> Đánh Giá Của Tôi
@@ -270,6 +336,22 @@
         </div>
     </div>
 </nav>
+
+<c:if test="${not empty sessionScope.user and (sessionScope.user.role == 'PATIENT' or sessionScope.user.role == 'USER')}">
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            fetch('${pageContext.request.contextPath}/patient/notifications?format=count')
+                .then(function (response) { return response.ok ? response.json() : null; })
+                .then(function (data) {
+                    var badge = document.getElementById('notificationCount');
+                    if (!badge || !data || !data.unread) return;
+                    badge.textContent = data.unread > 99 ? '99+' : data.unread;
+                    badge.classList.remove('d-none');
+                })
+                .catch(function () { /* Notification count must not break page navigation. */ });
+        });
+    </script>
+</c:if>
 
 <!-- Start Main Content -->
 <main>

@@ -197,7 +197,7 @@
                                             </div>
                                             <div class="col-md-3 text-end">
                                                 <button type="button" class="btn btn-primary btn-sm w-100" 
-                                                        onclick="selectDoctor('${doctor.id}', '${doctor.fullName}', '${doctor.specialization}')">
+                                                        onclick="selectDoctor('${doctor.id}', '${doctor.fullName}', '${doctor.specialization}', '${doctor.clinicId}')">
                                                     <i class="fas fa-user-check me-1"></i>Chọn Bác Sĩ Này
                                                 </button>
                                             </div>
@@ -284,6 +284,25 @@
                             <input type="hidden" name="reportId" value="${reportId}">
                         </c:if>
 
+                        <!-- Person being examined -->
+                        <div class="mb-4">
+                            <label for="examinedPerson" class="form-label fw-semibold">
+                                <span class="badge bg-primary me-2">1</span>
+                                <i class="fas fa-user-group me-2"></i>Người khám <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select form-select-lg" id="examinedPerson" name="examinedPerson" required>
+                                <option value="SELF" ${empty selectedExaminedPerson or selectedExaminedPerson == 'SELF' ? 'selected' : ''}>
+                                    Tôi - <c:out value="${sessionScope.user.fullName}" />
+                                </option>
+                                <c:forEach var="member" items="${familyMembers}">
+                                    <option value="FAMILY:${member.id}" ${selectedExaminedPerson == ('FAMILY:'.concat(member.id)) ? 'selected' : ''}>
+                                        <c:out value="${member.relationshipLabel}" /> - <c:out value="${member.fullName}" />
+                                    </option>
+                                </c:forEach>
+                            </select>
+                            <small class="text-muted">Chọn người sẽ trực tiếp đến khám. Bạn có thể thêm người thân trong Hồ sơ cá nhân.</small>
+                        </div>
+
                         <c:if test="${blockBooking}">
                             <div class="position-relative">
                                 <div class="form-overlay">
@@ -295,10 +314,10 @@
                                 </div>
                         </c:if>
 
-                        <!-- Step 1: Select Clinic -->
+                        <!-- Step 2: Select Clinic -->
                         <div class="mb-4">
                             <label for="clinicId" class="form-label fw-semibold">
-                                <span class="badge bg-primary me-2">1</span>
+                                <span class="badge bg-primary me-2">2</span>
                                 <i class="fas fa-hospital me-2"></i>Chọn Phòng Khám <span class="text-danger">*</span>
                             </label>
                             <select class="form-select form-select-lg" id="clinicId" name="clinicId" required>
@@ -311,10 +330,10 @@
                             </select>
                         </div>
 
-                        <!-- Step 2: Select Doctor -->
+                        <!-- Step 3: Select Doctor -->
                         <div class="mb-4" id="doctorStep">
                             <label for="doctorId" class="form-label fw-semibold">
-                                <span class="badge bg-primary me-2">2</span>
+                                <span class="badge bg-primary me-2">3</span>
                                 <i class="fas fa-user-doctor me-2"></i>Chọn Bác Sĩ <span class="text-danger">*</span>
                             </label>
                             <select class="form-select form-select-lg" id="doctorId" name="doctorId" required>
@@ -324,10 +343,10 @@
                             <div id="doctorInfo" class="mt-3" style="display: none;"></div>
                         </div>
 
-                        <!-- Step 3: Select Date -->
+                        <!-- Step 4: Select Date -->
                         <div class="mb-4" id="dateStep">
                             <label for="appointmentDate" class="form-label fw-semibold">
-                                <span class="badge bg-primary me-2">3</span>
+                                <span class="badge bg-primary me-2">4</span>
                                 <i class="fas fa-calendar me-2"></i>Chọn Ngày Khám <span class="text-danger">*</span>
                             </label>
                             <select class="form-select form-select-lg" id="appointmentDate" name="appointmentDate" required>
@@ -336,10 +355,10 @@
                             <small class="text-muted">💡 Chọn ngày để xem bác sĩ nào có lịch làm việc</small>
                         </div>
 
-                        <!-- Step 4: Select Time Slot -->
+                        <!-- Step 5: Select Time Slot -->
                         <div class="mb-4" id="slotStep">
                             <label class="form-label fw-semibold">
-                                <span class="badge bg-primary me-2">4</span>
+                                <span class="badge bg-primary me-2">5</span>
                                 <i class="fas fa-clock me-2"></i>Chọn Ca Khám <span class="text-danger">*</span>
                             </label>
                             <div id="slotList" class="row g-3"></div>
@@ -348,6 +367,17 @@
                         <!-- Hidden fields -->
                         <input type="hidden" id="slotId" name="slotId" required>
                         <input type="hidden" id="appointmentTime" name="appointmentTime" required>
+
+                        <!-- Step 6: Declare Allergies -->
+                        <div class="mb-4">
+                            <label for="allergies" class="form-label fw-semibold">
+                                <span class="badge bg-primary me-2">6</span>
+                                <i class="fas fa-allergies me-2"></i>Khai Báo Dị Ứng <span class="text-muted fw-normal">(Tùy chọn)</span>
+                            </label>
+                            <textarea class="form-control" id="allergies" name="allergies" rows="3" maxlength="1000"
+                                      placeholder="Ví dụ: Dị ứng penicillin; dị ứng hải sản; nổi mẩn khi dùng mỹ phẩm..."><c:out value="${patient.allergies}" /></textarea>
+                            <small class="text-muted">Thông tin này được lưu trong hồ sơ để bác sĩ lưu ý trước khi kê đơn.</small>
+                        </div>
 
                         <!-- Summary -->
                         <div class="mb-4" id="appointmentSummary" style="display: none;">
@@ -556,7 +586,7 @@ function updateDoctorSelectForDate(doctors) {
     });
 }
 
-function loadDoctors(clinicId) {
+function loadDoctors(clinicId, selectedDoctorId = '') {
     const select = document.getElementById('doctorId');
     select.innerHTML = '<option value="">Đang tải...</option>';
     
@@ -593,6 +623,18 @@ function loadDoctors(clinicId) {
                     option.setAttribute('data-bio', doctor.bio || '');
                     option.setAttribute('data-license', doctor.licenseNumber || '');
                     select.appendChild(option);
+                }
+
+                if (selectedDoctorId) {
+                    select.value = selectedDoctorId;
+                    const selectedOption = select.options[select.selectedIndex];
+                    if (selectedOption && selectedOption.value === selectedDoctorId) {
+                        selectedDoctorName = selectedOption.textContent;
+                        showDoctorInfo(selectedOption);
+                        loadDoctorAvailableDates(selectedDoctorId);
+                    } else {
+                        showTempMessage('Không tìm thấy bác sĩ trong phòng khám đã chọn.', 'warning');
+                    }
                 }
             } else {
                 console.log('No doctors found or API error:', data.message || 'Unknown error');
@@ -725,29 +767,22 @@ function selectSlot(btn) {
 }
 
 // Function to select doctor from search results
-function selectDoctor(doctorId, doctorName, specialization) {
+function selectDoctor(doctorId, doctorName, specialization, clinicId) {
     console.log('Selecting doctor:', doctorId, doctorName);
-    
-    // Set doctor in the form
-    const doctorSelect = document.getElementById('doctorId');
-    
-    // Clear existing options and add selected doctor
-    doctorSelect.innerHTML = '<option value="">-- Chọn bác sĩ --</option>';
-    
-    const option = document.createElement('option');
-    option.value = doctorId;
-    option.textContent = doctorName + ' - ' + specialization;
-    option.selected = true;
-    doctorSelect.appendChild(option);
-    
-    // Update selected doctor name for display
+
+    const clinicSelect = document.getElementById('clinicId');
+    if (!clinicId || !Array.from(clinicSelect.options).some(option => option.value === clinicId)) {
+        showTempMessage('Không tìm thấy phòng khám của bác sĩ này.', 'warning');
+        return;
+    }
+
+    // Set the doctor's clinic first, then load its doctors and select the doctor
+    // only after the asynchronous request has completed.
+    clinicSelect.value = clinicId;
+    selectedClinicName = clinicSelect.options[clinicSelect.selectedIndex].text;
     selectedDoctorName = doctorName;
-    
-    // Show doctor info
-    showDoctorInfo(option);
-    
-    // Load available dates for selected doctor
-    loadDoctorAvailableDates(doctorId);
+    clearDateSelection();
+    loadDoctors(clinicId, doctorId);
     
     // Scroll to booking form
     document.getElementById('bookingForm').scrollIntoView({ behavior: 'smooth' });

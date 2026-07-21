@@ -136,7 +136,19 @@
                             </div>
                         </div>
 
-                        <c:if test="${invoice.status eq 'UNPAID'}">
+                        <div class="alert alert-warning mb-4" role="alert">
+                            <c:if test="${invoice.status eq 'UNPAID' and paymentRequired}">
+                                <div class="mb-2">
+                                    <i class="fas fa-clock me-2"></i>Vui lòng chọn một phương thức thanh toán để tiếp tục. Giao dịch sẽ hết hạn sau 3 phút 30 giây.
+                                </div>
+                            </c:if>
+                            <div class="text-danger fw-semibold">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                Lưu ý: Nếu khách hàng đã thanh toán online thành công thì khi hủy lịch hẹn quý khách sẽ không được hoàn lại tiền đã trả.
+                            </div>
+                        </div>
+
+                        <c:if test="${invoice.status eq 'UNPAID' and not paymentViewOnly}">
                             <!-- Payment Options -->
                             <div class="row g-4">
                                 <!-- Offline Payment -->
@@ -151,35 +163,15 @@
                                             <div class="text-center mb-3">
                                                 <i class="fas fa-building fa-4x text-primary mb-3"></i>
                                                 <h6 class="text-primary">Thanh Toán Trực Tiếp</h6>
-                                            </div>
-                                            
-                                            <ul class="list-unstyled mb-4">
-                                                <li class="mb-2">
-                                                    <i class="fas fa-check text-success me-2"></i>
-                                                    Thanh toán bằng tiền mặt
-                                                </li>
-                                                <li class="mb-2">
-                                                    <i class="fas fa-check text-success me-2"></i>
-                                                    Thanh toán bằng thẻ ATM/Credit
-                                                </li>
-                                                <li class="mb-2">
-                                                    <i class="fas fa-check text-success me-2"></i>
-                                                    Nhận hóa đơn ngay tại quầy
-                                                </li>
-                                                <li class="mb-2">
-                                                    <i class="fas fa-check text-success me-2"></i>
-                                                    Hỗ trợ trực tiếp từ nhân viên
-                                                </li>
-                                            </ul>
-                                            
+                                            </div>                                                                                    
                                             <div class="mt-auto">
                                                 <form method="post" action="${pageContext.request.contextPath}/patient/payment" 
-                                                      onsubmit="return confirm('Xác nhận ghi nhận thanh toán tại quầy?\nSố tiền: ' + '<fmt:formatNumber value="${invoice.totalAmount}" type="currency" pattern="#,###" />đ');">
+                                                      onsubmit="return confirm('Gửi yêu cầu thanh toán tại quầy?\nYêu cầu sẽ chờ lễ tân xác nhận.\nSố tiền: ' + '<fmt:formatNumber value="${invoice.totalAmount}" type="currency" pattern="#,###" />đ');">
                                                     <input type="hidden" name="action" value="pay-offline">
                                                     <input type="hidden" name="invoiceId" value="${invoice.id}">
                                                     <button type="submit" class="btn btn-primary btn-lg w-100">
                                                         <i class="fas fa-cash-register me-2"></i>
-                                                        Thanh Toán Tại Quầy
+                                                        Gửi Yêu Cầu Tại Quầy
                                                         <div class="small">(<fmt:formatNumber value="${invoice.totalAmount}" type="currency" pattern="#,###" />đ)</div>
                                                     </button>
                                                 </form>
@@ -204,30 +196,11 @@
                                                 <i class="fas fa-mobile-alt fa-4x text-success mb-3"></i>
                                                 <h6 class="text-success">Thanh Toán Điện Tử</h6>
                                             </div>
-                                            
-                                            <ul class="list-unstyled mb-4">
-                                                <li class="mb-2">
-                                                    <i class="fas fa-check text-success me-2"></i>
-                                                    Thanh toán qua VNPay
-                                                </li>
-                                                <li class="mb-2">
-                                                    <i class="fas fa-check text-success me-2"></i>
-                                                    Hỗ trợ Internet Banking
-                                                </li>
-                                                <li class="mb-2">
-                                                    <i class="fas fa-check text-success me-2"></i>
-                                                    Thanh toán bằng QR Code
-                                                </li>
-                                                <li class="mb-2">
-                                                    <i class="fas fa-check text-success me-2"></i>
-                                                    Xác nhận tức thì
-                                                </li>
-                                            </ul>
+
                                             
                                             <div class="mt-auto">
-                                                <form method="post" action="${pageContext.request.contextPath}/patient/payment">
-                                                    <input type="hidden" name="action" value="pay-online">
-                                                    <input type="hidden" name="invoiceId" value="${invoice.id}">
+                                                <form method="post" action="http://localhost:3000/api/invoices/${invoice.id}/payments/vnpay">
+                                                    <input type="hidden" name="locale" value="vn">
                                                     <button type="submit" class="btn btn-success btn-lg w-100">
                                                         <i class="fas fa-credit-card me-2"></i>
                                                         Thanh Toán Online
@@ -257,9 +230,11 @@
 
                         <!-- Action Buttons -->
                         <div class="text-center mt-4">
-                            <a href="${pageContext.request.contextPath}/patient/appointments" class="btn btn-outline-primary btn-lg me-3">
-                                <i class="fas fa-arrow-left me-2"></i>Về Danh Sách Lịch Hẹn
-                            </a>
+                            <c:if test="${not paymentRequired or invoice.status ne 'UNPAID'}">
+                                <a href="${pageContext.request.contextPath}/patient/appointments" class="btn btn-outline-primary btn-lg me-3">
+                                    <i class="fas fa-arrow-left me-2"></i>Về Danh Sách Lịch Hẹn
+                                </a>
+                            </c:if>
                             <c:if test="${invoice.status eq 'PAID'}">
                                 <button class="btn btn-outline-success btn-lg" onclick="window.print()">
                                     <i class="fas fa-print me-2"></i>In Hóa Đơn
@@ -284,6 +259,14 @@
         </div>
     </div>
 </div>
+
+<c:if test="${not empty invoice}">
+    <div class="text-center mt-3">
+        <a class="small text-muted text-decoration-none" href="${pageContext.request.contextPath}/patient/issue-report?category=PAYMENT">
+            <i class="fa-solid fa-bug me-1 text-danger"></i>Gặp vấn đề khi thanh toán? Báo lỗi
+        </a>
+    </div>
+</c:if>
 
 <!-- Mock VNPay Payment Modal (for demo purposes) -->
 <c:if test="${param.action eq 'vnpay-mock'}">

@@ -88,7 +88,7 @@
                                 <i class="fas fa-comment-dots me-2"></i>Nội dung đánh giá
                                 <span class="text-danger">*</span>
                             </label>
-                            <textarea class="form-control" id="content" name="content" rows="6" required
+                            <textarea class="form-control" id="content" name="content" rows="6" maxlength="1000" required
                                       placeholder="Hãy chia sẻ trải nghiệm chi tiết của bạn về dịch vụ khám chữa bệnh..."></textarea>
                             <div class="form-text">Chia sẻ chi tiết sẽ giúp chúng tôi cải thiện dịch vụ tốt hơn</div>
                         </div>

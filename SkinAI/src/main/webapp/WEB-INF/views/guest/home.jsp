@@ -2,6 +2,19 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <jsp:include page="/WEB-INF/views/layout/guest-header.jsp" />
 
+<style>
+    .ai-diagnosis-history-link {
+        color: #475569;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+        transition: color 0.2s ease;
+    }
+    .ai-diagnosis-history-link:hover,
+    .ai-diagnosis-history-link:focus {
+        color: #198754;
+    }
+</style>
+
 <!-- Hero Banner -->
 <section class="hero-section text-center d-flex align-items-center" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); min-height: 500px;">
     <div class="container">
@@ -12,6 +25,11 @@
                 <a href="${pageContext.request.contextPath}/patient/diagnose" class="btn btn-skin btn-lg fw-bold px-5 py-3 shadow-sm" style="font-size: 1.1rem;">
                     Bắt đầu Chẩn đoán <i class="fa-solid fa-arrow-right ms-2"></i>
                 </a>
+                <div class="mt-3">
+                    <a href="${pageContext.request.contextPath}/patient/reports" class="ai-diagnosis-history-link fw-semibold">
+                        Lịch sử chẩn đoán AI
+                    </a>
+                </div>
             </div>
         </div>
     </div>

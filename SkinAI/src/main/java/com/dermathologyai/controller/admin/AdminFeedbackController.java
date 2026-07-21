@@ -56,8 +56,7 @@ public class AdminFeedbackController extends HttpServlet {
             }
         } catch (Exception e) {
             if (!resp.isCommitted()) {
-                req.setAttribute("errorMessage", "Lỗi: " + e.getMessage());
-                req.getRequestDispatcher("/WEB-INF/views/error.jsp").forward(req, resp);
+                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Không thể tải danh sách đánh giá");
             }
         }
     }
@@ -91,8 +90,7 @@ public class AdminFeedbackController extends HttpServlet {
             }
         } catch (Exception e) {
             if (!resp.isCommitted()) {
-                req.setAttribute("errorMessage", "Lỗi: " + e.getMessage());
-                req.getRequestDispatcher("/WEB-INF/views/error.jsp").forward(req, resp);
+                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Không thể xử lý đánh giá");
             }
         }
     }
@@ -100,15 +98,10 @@ public class AdminFeedbackController extends HttpServlet {
     private void handleShowFeedbackList(HttpServletRequest req, HttpServletResponse resp, User user) 
             throws ServletException, IOException {
         
-        // Debug database first
-        feedbackDAO.debugDatabase();
-        
         // Get filter parameters
         String statusFilter = req.getParameter("status");
         String categoryFilter = req.getParameter("category");
         String searchTerm = req.getParameter("search");
-        
-        System.out.println("DEBUG Filters - Status: " + statusFilter + ", Category: " + categoryFilter + ", Search: " + searchTerm);
         
         // Pagination
         int page = 1;
@@ -145,8 +138,9 @@ public class AdminFeedbackController extends HttpServlet {
         int totalPages = (int) Math.ceil((double) totalFeedbacks / pageSize);
 
         // Get statistics
-        int pendingCount = feedbackDAO.countByStatus("Chưa xử lý");
-        int completedCount = feedbackDAO.countByStatus("Đã xử lý");
+        int pendingCount = feedbackDAO.countByStatus(Feedback.STATUS_PENDING);
+        int processingCount = feedbackDAO.countByStatus(Feedback.STATUS_PROCESSING);
+        int completedCount = feedbackDAO.countByStatus(Feedback.STATUS_COMPLETED);
 
         req.setAttribute("feedbacks", feedbacks);
         req.setAttribute("patientNames", patientNames);
@@ -156,6 +150,7 @@ public class AdminFeedbackController extends HttpServlet {
         req.setAttribute("pageSize", pageSize);
         
         req.setAttribute("pendingCount", pendingCount);
+        req.setAttribute("processingCount", processingCount);
         req.setAttribute("completedCount", completedCount);
         
         req.setAttribute("statusFilter", statusFilter);
@@ -211,7 +206,7 @@ public class AdminFeedbackController extends HttpServlet {
             return;
         }
 
-        if (adminReply == null || adminReply.trim().isEmpty()) {
+        if (adminReply == null || adminReply.trim().isEmpty() || adminReply.trim().length() > 1000) {
             req.getSession().setAttribute("errorMessage", "Vui lòng nhập nội dung phản hồi");
             resp.sendRedirect(req.getContextPath() + "/admin/feedback?action=detail&id=" + feedbackId);
             return;
@@ -227,7 +222,7 @@ public class AdminFeedbackController extends HttpServlet {
 
         // Update feedback with admin reply
         feedback.setAdminReply(adminReply.trim());
-        feedback.setStatus("Đã xử lý"); // Auto set to completed when replied
+        feedback.setStatus(Feedback.STATUS_COMPLETED); // Auto set to completed when replied
 
         boolean updated = feedbackDAO.updateReply(feedback);
         if (updated) {
@@ -282,7 +277,8 @@ public class AdminFeedbackController extends HttpServlet {
     }
 
     private boolean isValidStatus(String status) {
-        return "Chưa xử lý".equals(status) || 
-               "Đã xử lý".equals(status);
+        return Feedback.STATUS_PENDING.equals(status)
+                || Feedback.STATUS_PROCESSING.equals(status)
+                || Feedback.STATUS_COMPLETED.equals(status);
     }
 }

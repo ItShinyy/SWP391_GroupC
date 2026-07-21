@@ -58,7 +58,7 @@
                         <div class="col-sm-3"><strong>Loại đánh giá:</strong></div>
                         <div class="col-sm-9">
                             <span class="badge ${feedback.category == 'Khen' ? 'bg-success' : feedback.category == 'Góp ý' ? 'bg-info' : 'bg-warning'} px-3 py-2">
-                                ${feedback.category}
+                                <c:out value="${feedback.category}" />
                             </span>
                         </div>
                     </div>
@@ -68,7 +68,7 @@
                         <div class="col-sm-3"><strong>Nội dung:</strong></div>
                         <div class="col-sm-9">
                             <div class="bg-light p-3 rounded">
-                                <p class="mb-0">"${feedback.content}"</p>
+                                <p class="mb-0">“<c:out value="${feedback.content}" />”</p>
                             </div>
                         </div>
                     </div>
@@ -92,8 +92,8 @@
                     <div class="row">
                         <div class="col-sm-3"><strong>Trạng thái:</strong></div>
                         <div class="col-sm-9">
-                            <span class="badge ${feedback.status == 'Chưa xử lý' ? 'bg-warning' : 'bg-success'} px-3 py-2">
-                                ${feedback.status}
+                            <span class="badge ${feedback.status == 'Chưa xử lý' ? 'bg-warning' : feedback.status == 'Đang xử lý' ? 'bg-info' : 'bg-success'} px-3 py-2">
+                                <c:out value="${feedback.status}" />
                             </span>
                         </div>
                     </div>
@@ -159,7 +159,7 @@
                     </div>
                     <div class="card-body">
                         <div class="bg-light p-3 rounded">
-                            <p class="mb-0">"${feedback.adminReply}"</p>
+                            <p class="mb-0">“<c:out value="${feedback.adminReply}" />”</p>
                         </div>
                         <c:if test="${feedback.repliedAt != null}">
                             <small class="text-muted">
@@ -196,6 +196,7 @@
                             <label for="status" class="form-label">Trạng thái mới:</label>
                             <select class="form-select" id="status" name="status" required>
                                 <option value="Chưa xử lý" ${feedback.status == 'Chưa xử lý' ? 'selected' : ''}>Chưa xử lý</option>
+                                <option value="Đang xử lý" ${feedback.status == 'Đang xử lý' ? 'selected' : ''}>Đang xử lý</option>
                                 <option value="Đã xử lý" ${feedback.status == 'Đã xử lý' ? 'selected' : ''}>Đã xử lý</option>
                             </select>
                         </div>
@@ -221,8 +222,8 @@
                         
                         <div class="mb-3">
                             <label for="adminReply" class="form-label">Nội dung phản hồi:</label>
-                            <textarea class="form-control" id="adminReply" name="adminReply" rows="6" required
-                                      placeholder="Nhập nội dung phản hồi cho bệnh nhân...">${feedback.adminReply}</textarea>
+                            <textarea class="form-control" id="adminReply" name="adminReply" rows="6" maxlength="1000" required
+                                      placeholder="Nhập nội dung phản hồi cho bệnh nhân..."><c:out value="${feedback.adminReply}" /></textarea>
                             <div class="form-text">Phản hồi này sẽ được gửi đến bệnh nhân</div>
                         </div>
                         

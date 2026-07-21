@@ -110,8 +110,8 @@
                                 <i class="fas fa-comment-dots me-2"></i>Nội dung đánh giá
                                 <span class="text-danger">*</span>
                             </label>
-                            <textarea class="form-control" id="content" name="content" rows="6" required
-                                      placeholder="Hãy chia sẻ trải nghiệm chi tiết của bạn về dịch vụ khám chữa bệnh...">${feedback.content}</textarea>
+                            <textarea class="form-control" id="content" name="content" rows="6" maxlength="1000" required
+                                      placeholder="Hãy chia sẻ trải nghiệm chi tiết của bạn về dịch vụ khám chữa bệnh..."><c:out value="${feedback.content}" /></textarea>
                             <div class="form-text">Chia sẻ chi tiết sẽ giúp chúng tôi cải thiện dịch vụ tốt hơn</div>
                         </div>
 
@@ -122,7 +122,7 @@
                                     <i class="fas fa-reply me-2"></i>Phản hồi từ quản trị
                                 </label>
                                 <div class="alert alert-success">
-                                    <p class="mb-1">${feedback.adminReply}</p>
+                                    <p class="mb-1"><c:out value="${feedback.adminReply}" /></p>
                                     <c:if test="${feedback.repliedAt != null}">
                                         <small class="text-muted">
                                             <i class="fas fa-clock me-1"></i>

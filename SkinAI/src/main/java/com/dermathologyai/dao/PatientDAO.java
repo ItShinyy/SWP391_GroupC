@@ -14,7 +14,7 @@ public class PatientDAO extends DBContext {
     private static final Logger logger = LoggerFactory.getLogger(PatientDAO.class);
 
     private static final String SELECT_COLS =
-        "SELECT id, user_id, gender, dob, address, created_at, updated_at FROM patients";
+        "SELECT id, user_id, gender, dob, address, allergies, created_at, updated_at FROM patients";
 
     public Patient findById(String id) {
         return queryOne(SELECT_COLS + " WHERE id = ?", PatientDAO::mapRow, id);
@@ -46,6 +46,11 @@ public class PatientDAO extends DBContext {
         );
     }
 
+    public boolean updateAllergies(String patientId, String allergies) {
+        String sql = "UPDATE patients SET allergies = ?, updated_at = GETDATE() WHERE id = ?";
+        return executeUpdate(sql, allergies, patientId);
+    }
+
     private static Patient mapRow(ResultSet rs) throws SQLException {
         Patient p = new Patient();
         p.setId(rs.getString("id"));
@@ -55,7 +60,7 @@ public class PatientDAO extends DBContext {
         Timestamp ca = rs.getTimestamp("created_at"); if (ca != null) p.setCreatedAt(ca.toLocalDateTime());
         Timestamp ua = rs.getTimestamp("updated_at"); if (ua != null) p.setUpdatedAt(ua.toLocalDateTime());
         p.setAddress(rs.getString("address"));
+        p.setAllergies(rs.getString("allergies"));
         return p;
     }
 }
-

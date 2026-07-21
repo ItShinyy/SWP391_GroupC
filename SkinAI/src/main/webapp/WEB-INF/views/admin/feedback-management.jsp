@@ -29,7 +29,7 @@
 
     <!-- Statistics Cards -->
     <div class="row mb-4">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card bg-warning text-white">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
@@ -42,7 +42,20 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-spinner fa-2x me-3"></i>
+                        <div>
+                            <h5 class="card-title mb-0">${processingCount}</h5>
+                            <small>Đang xử lý</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
             <div class="card bg-success text-white">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
@@ -55,7 +68,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card bg-primary text-white">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
@@ -79,6 +92,7 @@
                     <select class="form-select" id="status" name="status">
                         <option value="">Tất cả trạng thái</option>
                         <option value="Chưa xử lý" ${statusFilter == 'Chưa xử lý' ? 'selected' : ''}>Chưa xử lý</option>
+                        <option value="Đang xử lý" ${statusFilter == 'Đang xử lý' ? 'selected' : ''}>Đang xử lý</option>
                         <option value="Đã xử lý" ${statusFilter == 'Đã xử lý' ? 'selected' : ''}>Đã xử lý</option>
                     </select>
                 </div>
@@ -156,16 +170,16 @@
                                             <span class="badge ${feedback.rating >= 4 ? 'bg-success' : feedback.rating >= 3 ? 'bg-warning' : 'bg-danger'}">${feedback.rating}/5</span>
                                         </td>
                                         <td>
-                                            <span class="badge ${feedback.category == 'Khen' ? 'bg-success' : feedback.category == 'Góp ý' ? 'bg-info' : 'bg-warning'}">${feedback.category}</span>
+                                            <span class="badge ${feedback.category == 'Khen' ? 'bg-success' : feedback.category == 'Góp ý' ? 'bg-info' : 'bg-warning'}"><c:out value="${feedback.category}" /></span>
                                         </td>
                                         <td>
-                                            <div class="text-truncate" style="max-width: 300px;" title="${feedback.content}">
-                                                ${feedback.content}
+                                            <div class="text-truncate" style="max-width: 300px;">
+                                                <c:out value="${feedback.content}" />
                                             </div>
                                         </td>
                                         <td>
-                                            <span class="badge ${feedback.status == 'Chưa xử lý' ? 'bg-warning' : 'bg-success'}">
-                                                ${feedback.status}
+                                            <span class="badge ${feedback.status == 'Chưa xử lý' ? 'bg-warning' : feedback.status == 'Đang xử lý' ? 'bg-info' : 'bg-success'}">
+                                                <c:out value="${feedback.status}" />
                                             </span>
                                             <c:if test="${feedback.hasAdminReply()}">
                                                 <br><small class="text-success"><i class="fas fa-reply me-1"></i>Đã phản hồi</small>

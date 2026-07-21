@@ -40,39 +40,28 @@
 
         <!-- Appointments Statistics -->
         <div class="row mb-4">
-            <div class="col-md-12">
-                <div class="card bg-light border-0">
-                    <div class="card-body py-2">
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-info-circle fa-2x text-info me-3"></i>
-                            <div>
-                                <h6 class="mb-0">Tổng số lịch hẹn: <strong>${totalAppointments}</strong></h6>
-                                <small class="text-muted">Quản lý các cuộc hẹn y tế của bạn bên dưới</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+
         </div>
 
         <div class="table-responsive">
             <table class="table table-hover table-striped align-middle">
                 <thead class="table-dark">
                     <tr>
-                        <th scope="col" style="width: 10%">Mã ID</th>
-                        <th scope="col" style="width: 20%">Phòng khám</th>
-                        <th scope="col" style="width: 15%">Ngày & Giờ</th>
-                        <th scope="col" style="width: 12%">Trạng thái</th>
-                        <th scope="col" style="width: 15%">Mục đích</th>
-                        <th scope="col" style="width: 18%">Ghi chú</th>
-                        <th scope="col" style="width: 10%" class="text-center">Thao tác</th>
+                        <th scope="col" style="width: 9%">Mã ID</th>
+                        <th scope="col" style="width: 17%">Phòng khám</th>
+                        <th scope="col" style="width: 14%">Ngày & Giờ</th>
+                        <th scope="col" style="width: 14%">Trạng thái thanh toán</th>
+                        <th scope="col" style="width: 14%">Trạng thái tham gia</th>
+                        <th scope="col" style="width: 12%">Mục đích</th>
+                        <th scope="col" style="width: 12%">Ghi chú</th>
+                        <th scope="col" style="width: 8%" class="text-center">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
                     <c:choose>
                         <c:when test="${empty appointments}">
                             <tr>
-                                <td colspan="7" class="text-center py-5 text-muted">
+                                <td colspan="8" class="text-center py-5 text-muted">
                                     <i class="fa-regular fa-calendar fa-3x mb-3 text-light"></i>
                                     <h5>Không tìm thấy lịch hẹn</h5>
                                     <p>Bạn chưa đặt lịch hẹn nào.</p>
@@ -112,27 +101,35 @@
                                         </div>
                                     </td>
                                     <td>
+                                        <c:set var="paymentStatus" value="${paymentStatuses[apt.id]}" />
                                         <c:choose>
-                                            <c:when test="${apt.status == 'CREATED'}">
-                                                <span class="badge bg-secondary px-3 py-2">Chờ xử lý</span>
+                                            <c:when test="${paymentStatus == 'PAID'}">
+                                                <span class="badge bg-success px-3 py-2"><i class="fas fa-check-circle me-1"></i>Đã thanh toán</span>
                                             </c:when>
-                                            <c:when test="${apt.status == 'CONFIRMED'}">
-                                                <span class="badge bg-success px-3 py-2">Đã xác nhận</span>
+                                            <c:when test="${paymentStatus == 'PENDING'}">
+                                                <span class="badge bg-warning text-dark px-3 py-2"><i class="fas fa-clock me-1"></i>Đang chờ thanh toán</span>
                                             </c:when>
-                                            <c:when test="${apt.status == 'CHECKED_IN'}">
-                                                <span class="badge bg-info px-3 py-2">Đã check-in</span>
-                                            </c:when>
-                                            <c:when test="${apt.status == 'COMPLETED'}">
-                                                <span class="badge bg-primary px-3 py-2">Hoàn thành</span>
-                                            </c:when>
-                                            <c:when test="${apt.status == 'CANCELLED'}">
+                                            <c:when test="${paymentStatus == 'CANCELLED'}">
                                                 <span class="badge bg-danger px-3 py-2">Đã hủy</span>
                                             </c:when>
-                                            <c:when test="${apt.status == 'NO_SHOW'}">
-                                                <span class="badge bg-warning text-dark px-3 py-2">Vắng mặt</span>
+                                            <c:otherwise>
+                                                <span class="badge bg-secondary px-3 py-2">Chưa thanh toán</span>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </td>
+                                    <td>
+                                        <c:choose>
+                                            <c:when test="${apt.attendanceStatus == 'VISITED'}">
+                                                <span class="badge bg-primary px-3 py-2">Đã khám</span>
+                                            </c:when>
+                                            <c:when test="${apt.attendanceStatus == 'NO_SHOW'}">
+                                                <span class="badge bg-danger px-3 py-2">Không có mặt</span>
+                                            </c:when>
+                                            <c:when test="${apt.attendanceStatus == 'CANCELLED'}">
+                                                <span class="badge bg-danger px-3 py-2">Hủy</span>
                                             </c:when>
                                             <c:otherwise>
-                                                <span class="badge bg-light text-dark px-3 py-2">${apt.status}</span>
+                                                <span class="badge bg-secondary px-3 py-2">Chưa khám</span>
                                             </c:otherwise>
                                         </c:choose>
                                     </td>
@@ -169,44 +166,13 @@
                                     </td>
                                     <td class="text-center">
                                         <div class="btn-group" role="group">
-                                            <c:choose>
-                                                <c:when test="${apt.status == 'CONFIRMED'}">
-                                                    <!-- Show payment button only for confirmed appointments -->
-                                                    <form method="POST" action="${pageContext.request.contextPath}/patient/payment" style="display: inline;">
-                                                        <input type="hidden" name="action" value="create">
-                                                        <input type="hidden" name="appointmentId" value="${apt.id}">
-                                                        <button type="submit" class="btn btn-sm btn-success" title="Thanh toán">
-                                                            <i class="fas fa-credit-card"></i>
-                                                        </button>
-                                                    </form>
-                                                </c:when>
-                                                <c:when test="${apt.status == 'COMPLETED'}">
-                                                    <!-- Show completed badge, link to invoice, and feedback button -->
-                                                    <span class="badge bg-success px-2 py-1" title="Đã hoàn thành và thanh toán">
-                                                        <i class="fas fa-check-circle me-1"></i>Hoàn thành
-                                                    </span>
-                                                    <a href="${pageContext.request.contextPath}/patient/invoice" 
-                                                       class="btn btn-sm btn-outline-info ms-1" title="Xem hóa đơn">
-                                                        <i class="fas fa-receipt"></i>
-                                                    </a>
-                                                    <a href="${pageContext.request.contextPath}/patient/feedback?action=create&appointmentId=${apt.id}" 
-                                                       class="btn btn-sm btn-outline-warning ms-1" title="Đánh giá dịch vụ">
-                                                        <i class="fas fa-star"></i>
-                                                    </a>
-                                                </c:when>
-                                                <c:when test="${apt.status == 'CREATED'}">
-                                                    <span class="badge bg-secondary px-2 py-1" title="Chờ xác nhận">
-                                                        <i class="fas fa-clock me-1"></i>Chờ xác nhận
-                                                    </span>
-                                                </c:when>
-                                                <c:otherwise>
-                                                    <!-- For other statuses, show status badge -->
-                                                    <span class="badge bg-light text-dark px-2 py-1" title="${apt.status}">
-                                                        ${apt.status}
-                                                    </span>
-                                                </c:otherwise>
-                                            </c:choose>
-                                            
+                                            <form method="POST" action="${pageContext.request.contextPath}/patient/payment" style="display: inline;">
+                                                <input type="hidden" name="action" value="view">
+                                                <input type="hidden" name="invoiceId" value="${invoiceIds[apt.id]}">
+                                                <button type="submit" class="btn btn-sm btn-outline-info" title="Xem thông tin lịch khám và hóa đơn">
+                                                    <i class="fas fa-circle-info me-1"></i>Thông tin
+                                                </button>
+                                            </form>
                                             <!-- Cancel button for pending and confirmed appointments -->
                                             <c:if test="${apt.status == 'CREATED' or apt.status == 'CONFIRMED'}">
                                                 <button type="button" 
@@ -215,6 +181,13 @@
                                                         title="Hủy lịch hẹn">
                                                     <i class="fas fa-times"></i>
                                                 </button>
+                                            </c:if>
+                                            <c:if test="${apt.status == 'COMPLETED' and apt.attendanceStatus == 'VISITED'}">
+                                                <a href="${pageContext.request.contextPath}/patient/feedback?action=create&amp;appointmentId=${apt.id}"
+                                                   class="btn btn-sm btn-outline-warning ms-1"
+                                                   title="Đánh giá dịch vụ">
+                                                    <i class="fas fa-star"></i>
+                                                </a>
                                             </c:if>
                                         </div>
                                     </td>
@@ -228,18 +201,24 @@
     </div>
 </div>
 
+<div class="container-fluid text-end mt-3">
+    <a class="small text-muted text-decoration-none" href="${pageContext.request.contextPath}/patient/issue-report?category=APPOINTMENT">
+        <i class="fa-solid fa-bug me-1 text-danger"></i>Cần hỗ trợ về lịch hẹn? Báo lỗi
+    </a>
+</div>
+
 <!-- Cancel Appointment Modal -->
 <div class="modal fade" id="cancelModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">
-                    <i class="fas fa-exclamation-triangle text-warning me-2"></i>Hủy Lịch Hẹn
+                    <i class="fas fa-exclamation-triangle text-danger me-2"></i>Hủy Lịch Hẹn
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p>Bạn có chắc chắn muốn hủy lịch hẹn này không?</p>
+                <p>Liệu bạn có muốn hủy lịch hẹn?</p>
                 <p class="text-muted small">Hành động này không thể hoàn tác. Bạn sẽ cần đặt lịch hẹn mới nếu cần.</p>
             </div>
             <div class="modal-footer">

@@ -40,7 +40,7 @@ public class BookingService {
         }
 
         // 2. Check if patient has any incomplete appointments
-        if (appointmentDAO.hasIncompleteAppointment(patient.getId())) {
+        if (appointmentDAO.hasIncompleteAppointmentForExaminedPerson(patient.getId(), appointment.getFamilyMemberId())) {
             throw new IllegalStateException("Bạn cần hoàn thành lịch khám cũ trước khi đặt lịch mới.");
         }
 
@@ -59,6 +59,8 @@ public class BookingService {
             if (appointmentId == null) {
                 throw new SQLException("Failed to insert appointment.");
             }
+
+            appointmentDAO.purgeCancelledAndKeepNewestWithConnection(conn, patient.getId(), 5);
 
             conn.commit(); // Commit transaction
             return appointmentId;
@@ -84,7 +86,7 @@ public class BookingService {
             if (conn != null) {
                 try {
                     conn.setAutoCommit(true);
-                    // Do NOT close the connection because it belongs to the DAO instance
+                    conn.close();
                 } catch (SQLException ex) {
                     logger.error("Error resetting auto-commit", ex);
                 }

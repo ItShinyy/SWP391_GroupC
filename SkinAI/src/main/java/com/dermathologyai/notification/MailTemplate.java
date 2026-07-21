@@ -80,5 +80,41 @@ public class MailTemplate {
             </html>
             """.formatted(expireMinutes, otp, java.time.Year.now().getValue());
     }
+
+    /** Shared HTML layout for payment and appointment notification emails. */
+    public static String buildNotificationMail(String recipientName, String title, String message) {
+        String safeName = escapeHtml(recipientName == null || recipientName.isBlank() ? "Quý khách" : recipientName);
+        String safeTitle = escapeHtml(title);
+        String safeMessage = escapeHtml(message).replace("\n", "<br>");
+        return """
+            <!doctype html>
+            <html lang="vi"><head><meta charset="UTF-8"></head>
+            <body style="margin:0;padding:0;background:#f8fafc;font-family:Arial,sans-serif;color:#1e293b;">
+              <div style="max-width:600px;margin:32px auto;background:#fff;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden;">
+                <div style="padding:28px 32px;background:#198754;color:#fff;">
+                  <div style="font-size:24px;font-weight:700;">SkinAI</div>
+                  <div style="margin-top:6px;opacity:.9;">Thông báo lịch khám</div>
+                </div>
+                <div style="padding:32px;line-height:1.6;">
+                  <p style="margin:0 0 16px;">Xin chào <strong>%s</strong>,</p>
+                  <h2 style="font-size:20px;margin:0 0 14px;color:#0f172a;">%s</h2>
+                  <p style="margin:0;color:#475569;">%s</p>
+                </div>
+                <div style="padding:18px 32px;background:#f8fafc;border-top:1px solid #e2e8f0;font-size:12px;color:#64748b;">
+                  Đây là email thông báo tự động từ SkinAI. Vui lòng không trả lời trực tiếp email này.
+                </div>
+              </div>
+            </body></html>
+            """.formatted(safeName, safeTitle, safeMessage);
+    }
+
+    private static String escapeHtml(String value) {
+        if (value == null) return "";
+        return value.replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+            .replace("\"", "&quot;")
+            .replace("'", "&#39;");
+    }
     // Removed buildVerifyLinkMail as system now exclusively uses OTP
 }

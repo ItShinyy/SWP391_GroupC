@@ -4,10 +4,12 @@ import com.dermathologyai.dao.ClinicDAO;
 import com.dermathologyai.dao.DoctorDAO;
 import com.dermathologyai.dao.PatientDAO;
 import com.dermathologyai.dao.AppointmentDAO;
+import com.dermathologyai.dao.FamilyMemberDAO;
 import com.dermathologyai.model.Appointment;
 import com.dermathologyai.model.User;
 import com.dermathologyai.model.Doctor;
 import com.dermathologyai.model.Patient;
+import com.dermathologyai.model.FamilyMember;
 import com.dermathologyai.dao.AuditLogDAO;
 import com.dermathologyai.model.AuditLog;
 import com.dermathologyai.service.BookingService;
@@ -30,6 +32,7 @@ public class BookingController extends HttpServlet {
     private DoctorDAO doctorDAO;
     private PatientDAO patientDAO;
     private AppointmentDAO appointmentDAO;
+    private FamilyMemberDAO familyMemberDAO;
     private BookingService bookingService;
     private AuditLogDAO auditLogDAO;
 
@@ -39,6 +42,7 @@ public class BookingController extends HttpServlet {
         doctorDAO = new DoctorDAO();
         patientDAO = new PatientDAO();
         appointmentDAO = new AppointmentDAO();
+        familyMemberDAO = new FamilyMemberDAO();
         bookingService = new BookingService();
         auditLogDAO = new AuditLogDAO();
     }
@@ -54,16 +58,13 @@ public class BookingController extends HttpServlet {
         User user = (User) session.getAttribute("user");
         String clinicId = req.getParameter("clinicId");
         String reportId = req.getParameter("reportId");
+        req.setAttribute("selectedExaminedPerson", req.getParameter("examinedPerson"));
         
         // Check if user has incomplete appointments before allowing booking
         try {
             Patient patient = patientDAO.findByUserId(user.getId());
-            if (patient != null && appointmentDAO.hasIncompleteAppointment(patient.getId())) {
-                Appointment incompleteAppointment = appointmentDAO.findIncompleteAppointmentByPatientId(patient.getId());
-                req.setAttribute("hasIncompleteAppointment", true);
-                req.setAttribute("incompleteAppointment", incompleteAppointment);
-                req.setAttribute("blockBooking", true);
-            }
+            req.setAttribute("patient", patient);
+            req.setAttribute("familyMembers", familyMemberDAO.findByOwnerUserId(user.getId()));
         } catch (Exception e) {
             // Log error but don't block the page
             System.err.println("Error checking incomplete appointments: " + e.getMessage());
@@ -136,8 +137,10 @@ public class BookingController extends HttpServlet {
         String slotId = req.getParameter("slotId");
         String appointmentTimeStr = req.getParameter("appointmentTime");
         String notes = req.getParameter("notes");
+        String allergies = req.getParameter("allergies");
         String requestId = req.getParameter("requestId");
         String reportId = req.getParameter("reportId");
+        String examinedPerson = req.getParameter("examinedPerson");
         
         if (clinicId == null || doctorId == null || slotId == null || appointmentTimeStr == null || requestId == null) {
             req.setAttribute("errorMessage", "Vui lòng điền đầy đủ thông tin bắt buộc.");
@@ -146,6 +149,34 @@ public class BookingController extends HttpServlet {
         }
 
         try {
+            String normalizedAllergies = allergies == null ? null : allergies.trim();
+            if (normalizedAllergies != null && normalizedAllergies.length() > 1000) {
+                req.setAttribute("errorMessage", "Thông tin dị ứng không được vượt quá 1000 ký tự.");
+                doGet(req, resp);
+                return;
+            }
+
+            Patient patient = patientDAO.findByUserId(user.getId());
+            if (patient == null) {
+                throw new IllegalStateException("Patient profile not found");
+            }
+            String familyMemberId = null;
+            if (examinedPerson != null && !examinedPerson.isBlank() && !"SELF".equals(examinedPerson)) {
+                if (!examinedPerson.startsWith("FAMILY:")) {
+                    throw new IllegalStateException("Người khám không hợp lệ.");
+                }
+                familyMemberId = examinedPerson.substring("FAMILY:".length());
+                FamilyMember familyMember = familyMemberDAO.findByIdAndOwnerUserId(familyMemberId, user.getId());
+                if (familyMember == null) {
+                    throw new IllegalStateException("Không tìm thấy người thân được chọn.");
+                }
+            }
+
+            // Allergies on the current profile are only updated when the account owner is examined.
+            if (familyMemberId == null && !patientDAO.updateAllergies(patient.getId(), normalizedAllergies)) {
+                throw new IllegalStateException("Không thể lưu thông tin dị ứng.");
+            }
+
             LocalDateTime appointmentTime = LocalDateTime.parse(appointmentTimeStr, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
             
             Appointment appointment = new Appointment();
@@ -156,7 +187,9 @@ public class BookingController extends HttpServlet {
             appointment.setNotes(notes);
             appointment.setRequestId(requestId);
             appointment.setStatus("CONFIRMED");
+            appointment.setAttendanceStatus("NOT_VISITED");
             appointment.setDoctorStatus("APPROVED");
+            appointment.setFamilyMemberId(familyMemberId);
             
             // Set diagnosis report ID if booking from a report
             if (reportId != null && !reportId.trim().isEmpty()) {
@@ -172,7 +205,7 @@ public class BookingController extends HttpServlet {
                 }
                 auditLogDAO.createLog(user.getId(), "APPOINTMENT_CREATE_APPROVED", "appointments", appointmentId, null, auditDetails, RequestUtil.getClientIp(req), req.getHeader("User-Agent"));
                 req.getSession().setAttribute("successMessage", "Đặt lịch hẹn thành công! Lịch hẹn đã được xác nhận và bạn có thể đến khám theo lịch đã đặt.");
-                resp.sendRedirect(req.getContextPath() + "/patient/appointments");
+                resp.sendRedirect(req.getContextPath() + "/patient/payment?action=create&appointmentId=" + appointmentId);
             } else {
                 req.setAttribute("errorMessage", "Không thể đặt lịch hẹn. Vui lòng thử lại.");
                 doGet(req, resp);

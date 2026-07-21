@@ -1,0 +1,19 @@
+{
+  "name": "skinai",
+  "version": "1.0.0",
+  "private": true,
+  "main": "src/main/webapp/assets/javascript/server.js",
+  "scripts": {
+    "start": "nodemon src/main/webapp/assets/javascript/server.js",
+    "start:prod": "node src/main/webapp/assets/javascript/server.js",
+    "test": "node --check src/main/webapp/assets/javascript/db.js && node --check src/main/webapp/assets/javascript/payment-service.js && node --check src/main/webapp/assets/javascript/server.js"
+  },
+  "type": "commonjs",
+  "dependencies": {
+    "dotenv": "^16.6.1",
+    "express": "^5.2.1",
+    "mssql": "^11.0.1",
+    "nodemon": "^3.1.14",
+    "vnpay": "^2.5.0"
+  }
+}

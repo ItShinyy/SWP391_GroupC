@@ -1,6 +1,7 @@
 package com.dermathologyai.controller.patient;
 
 import com.dermathologyai.dao.UserDAO;
+import com.dermathologyai.dao.FamilyMemberDAO;
 import com.dermathologyai.model.User;
 import org.mindrot.jbcrypt.BCrypt;
 import jakarta.servlet.ServletException;
@@ -21,12 +22,14 @@ import com.dermathologyai.util.MaskUtil;
 public class ProfileController extends HttpServlet {
     private UserDAO userDAO;
     private PasswordResetTokenDAO tokenDAO;
+    private FamilyMemberDAO familyMemberDAO;
     
 
     @Override
     public void init() throws ServletException {
         userDAO = new UserDAO();
         tokenDAO = new PasswordResetTokenDAO();
+        familyMemberDAO = new FamilyMemberDAO();
         
     }
 
@@ -38,6 +41,13 @@ public class ProfileController extends HttpServlet {
         // Refresh user data from DB to get latest info
         User freshUser = userDAO.findById(user.getId());
         session.setAttribute("user", freshUser);
+        req.setAttribute("familyMembers", familyMemberDAO.findByOwnerUserId(freshUser.getId()));
+
+        Object flashSuccess = session.getAttribute("successMessage");
+        if (flashSuccess != null) {
+            req.setAttribute("successMessage", flashSuccess);
+            session.removeAttribute("successMessage");
+        }
         
         String success = req.getParameter("success");
         if ("security_updated".equals(success)) {
@@ -56,6 +66,7 @@ public class ProfileController extends HttpServlet {
         String action = req.getParameter("action");
         HttpSession session = req.getSession(false);
         User currentUser = (User) session.getAttribute("user");
+        req.setAttribute("familyMembers", familyMemberDAO.findByOwnerUserId(currentUser.getId()));
 
         if ("update_info".equals(action)) {
             String fullName = req.getParameter("fullName");

@@ -6,38 +6,7 @@
 <div class="container-fluid">
     <div class="table-container bg-white shadow-sm rounded-4 p-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="page-title">Lịch Sử Y tế </h1>
-        </div>
-        
-        <div class="card shadow-sm mb-4 border-0 rounded-4 bg-light">
-            <div class="card-body">
-                <form action="${pageContext.request.contextPath}/patient/reports" method="get" class="row g-3 align-items-center">
-                    <div class="col-md-3">
-                        <input type="text" name="search" class="form-control" placeholder="Tìm kiếm theo tên bệnh" value="${param.search}">
-                    </div>
-                    
-                    <div class="col-md-2">
-                        <input type="date" name="fromDate" class="form-control" value="${param.fromDate}" title="Từ ngày">
-                    </div>
-                    
-                    <div class="col-md-2">
-                        <input type="date" name="toDate" class="form-control" value="${param.toDate}" title="Đến ngày">
-                    </div>
-                    
-                    <div class="col-md-3">
-                        <select name="sort" class="form-select">
-                            <option value="date" ${param.sort == 'date' || empty param.sort ? 'selected' : ''}>Sắp xếp theo Ngày (Mới nhất)</option>
-                            <option value="confidence" ${param.sort == 'confidence' ? 'selected' : ''}>Sắp xếp theo Độ tin cậy (Cao nhất)</option>
-                            <option value="risk" ${param.sort == 'risk' ? 'selected' : ''}>Sắp xếp theo Mức độ rủi ro (Cao đến Thấp)</option>
-                        </select>
-                    </div>
-                    
-                    <div class="col-md-2 d-flex gap-2">
-                        <button type="submit" class="btn btn-primary flex-grow-1"><i class="fa-solid fa-magnifying-glass"></i> Tìm kiếm</button>
-                        <a href="${pageContext.request.contextPath}/patient/reports" class="btn btn-outline-secondary">Xóa bộ lọc</a>
-                    </div>
-                </form>
-            </div>
+            <h1 class="page-title mb-0">Lịch sử Chẩn đoán AI</h1>
         </div>
 
         <div class="table-responsive">
@@ -56,7 +25,7 @@
                     <c:choose>
                         <c:when test="${empty reports}">
                             <tr>
-                                <td colspan="6" class="text-center py-4 text-muted">Không tìm thấy kết quả chẩn đoán nào.</td>
+                                <td colspan="6" class="text-center py-4 text-muted">Không tìm thấy kết quả chẩn đoán AI nào.</td>
                             </tr>
                         </c:when>
                         <c:otherwise>
@@ -130,15 +99,15 @@
                 <nav aria-label="Page navigation">
                     <ul class="pagination justify-content-center mb-0">
                         <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
-                            <a class="page-link" href="?page=${currentPage - 1}&search=${param.search}&fromDate=${param.fromDate}&toDate=${param.toDate}&sort=${param.sort}">Trước</a>
+                            <a class="page-link" href="?page=${currentPage - 1}">Trước</a>
                         </li>
                         <c:forEach begin="1" end="${totalPages}" var="i">
                             <li class="page-item ${i == currentPage ? 'active' : ''}">
-                                <a class="page-link" href="?page=${i}&search=${param.search}&fromDate=${param.fromDate}&toDate=${param.toDate}&sort=${param.sort}">${i}</a>
+                                <a class="page-link" href="?page=${i}">${i}</a>
                             </li>
                         </c:forEach>
                         <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
-                            <a class="page-link" href="?page=${currentPage + 1}&search=${param.search}&fromDate=${param.fromDate}&toDate=${param.toDate}&sort=${param.sort}">Sau</a>
+                            <a class="page-link" href="?page=${currentPage + 1}">Sau</a>
                         </li>
                     </ul>
                 </nav>

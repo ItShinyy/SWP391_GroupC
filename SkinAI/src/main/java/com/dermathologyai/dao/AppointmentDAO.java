@@ -18,15 +18,15 @@ public class AppointmentDAO extends DBContext {
     private static final Logger logger = LoggerFactory.getLogger(AppointmentDAO.class);
 
     private static final String SELECT_COLS =
-        "SELECT a.id, a.request_id, a.patient_id, a.clinic_id, a.diagnosis_report_id," +
-        " a.appointment_time, a.status, a.notes, a.created_at, a.updated_at, " +
+        "SELECT a.id, a.request_id, a.patient_id, a.family_member_id, a.clinic_id, a.diagnosis_report_id," +
+        " a.appointment_time, a.status, a.attendance_status, a.notes, a.created_at, a.updated_at, " +
         " a.doctor_id, a.slot_id, a.doctor_status, a.doctor_notes, c.clinic_name" +
         " FROM appointments a LEFT JOIN clinics c ON a.clinic_id = c.id";
 
     private static final String INSERT_SQL =
-        "INSERT INTO appointments (id, request_id, patient_id, clinic_id, diagnosis_report_id," +
-        " appointment_time, status, notes, doctor_id, slot_id, doctor_status) OUTPUT INSERTED.id" +
-        " VALUES (NEWID(), ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING')";
+        "INSERT INTO appointments (id, request_id, patient_id, family_member_id, clinic_id, diagnosis_report_id," +
+        " appointment_time, status, attendance_status, notes, doctor_id, slot_id, doctor_status) OUTPUT INSERTED.id" +
+        " VALUES (NEWID(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING')";
 
     public Appointment findById(String id) {
         return queryOne(SELECT_COLS + " WHERE a.id = ?", AppointmentDAO::mapRow, id);
@@ -42,10 +42,11 @@ public class AppointmentDAO extends DBContext {
     /** Standard insert; acquires its own connection from the pool. */
     public String create(Appointment a) {
         return insertReturningId(INSERT_SQL,
-            a.getRequestId(), a.getPatientId(), a.getClinicId(),
+            a.getRequestId(), a.getPatientId(), a.getFamilyMemberId(), a.getClinicId(),
             a.getDiagnosisReportId(),
             Timestamp.valueOf(a.getAppointmentTime()),
             a.getStatus() != null ? a.getStatus() : "CREATED",
+            a.getAttendanceStatus() != null ? a.getAttendanceStatus() : "NOT_VISITED",
             a.getNotes(),
             a.getDoctorId(),
             a.getSlotId()
@@ -57,15 +58,16 @@ public class AppointmentDAO extends DBContext {
      * The caller is responsible for commit/rollback.
      */
     public String createWithConnection(Connection conn, Appointment a) throws SQLException {
-        String sql = "INSERT INTO appointments (id, request_id, patient_id, clinic_id, diagnosis_report_id," +
-                     " appointment_time, status, notes, doctor_id, slot_id, doctor_status) OUTPUT INSERTED.id" +
-                     " VALUES (NEWID(), ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING')";
+        String sql = "INSERT INTO appointments (id, request_id, patient_id, family_member_id, clinic_id, diagnosis_report_id," +
+                     " appointment_time, status, attendance_status, notes, doctor_id, slot_id, doctor_status) OUTPUT INSERTED.id" +
+                     " VALUES (NEWID(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING')";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             setParams(ps,
-                a.getRequestId(), a.getPatientId(), a.getClinicId(),
+                a.getRequestId(), a.getPatientId(), a.getFamilyMemberId(), a.getClinicId(),
                 a.getDiagnosisReportId(),
                 Timestamp.valueOf(a.getAppointmentTime()),
                 a.getStatus() != null ? a.getStatus() : "CREATED",
+                a.getAttendanceStatus() != null ? a.getAttendanceStatus() : "NOT_VISITED",
                 a.getNotes(),
                 a.getDoctorId(),
                 a.getSlotId()
@@ -78,14 +80,99 @@ public class AppointmentDAO extends DBContext {
 
     public boolean updateStatus(String id, String status) {
         return executeUpdate(
-            "UPDATE appointments SET status = ?, updated_at = GETDATE() WHERE id = ?", status, id
+            "UPDATE appointments SET status = ?, attendance_status = CASE ? " +
+            "WHEN 'COMPLETED' THEN 'VISITED' WHEN 'NO_SHOW' THEN 'NO_SHOW' " +
+            "WHEN 'CANCELLED' THEN 'CANCELLED' ELSE 'NOT_VISITED' END, " +
+            "updated_at = GETDATE() WHERE id = ?", status, status, id
         );
+    }
+
+    /** Cancels an appointment and closes its unpaid payment records atomically. */
+    public boolean cancelByPatientId(String appointmentId, String patientId) {
+        try (Connection conn = getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                int changed;
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "UPDATE appointments SET status = 'CANCELLED', attendance_status = 'CANCELLED', updated_at = SYSDATETIME() " +
+                        "WHERE id = ? AND patient_id = ? AND status IN ('CREATED', 'CONFIRMED')")) {
+                    ps.setString(1, appointmentId);
+                    ps.setString(2, patientId);
+                    changed = ps.executeUpdate();
+                }
+                if (changed == 0) {
+                    conn.rollback();
+                    return false;
+                }
+
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "UPDATE payments SET status = 'FAILED', updated_at = SYSDATETIME() " +
+                        "WHERE status = 'PENDING' AND invoice_id IN " +
+                        "(SELECT id FROM invoices WHERE appointment_id = ?)")) {
+                    ps.setString(1, appointmentId);
+                    ps.executeUpdate();
+                }
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "UPDATE invoices SET status = 'CANCELLED', paid_at = NULL, updated_at = SYSDATETIME() " +
+                        "WHERE appointment_id = ? AND status = 'UNPAID'")) {
+                    ps.setString(1, appointmentId);
+                    ps.executeUpdate();
+                }
+                conn.commit();
+                return true;
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            logger.error("Could not cancel appointment {}", appointmentId, e);
+            return false;
+        }
+    }
+
+    /**
+     * Deletes cancelled appointments and, after that, every appointment older than the
+     * newest {@code maxAppointments}. Child payments and invoices are deleted first.
+     */
+    public void purgeCancelledAndKeepNewestWithConnection(Connection conn, String patientId, int maxAppointments)
+            throws SQLException {
+        String sql = "DECLARE @appointmentsToDelete TABLE (id UNIQUEIDENTIFIER PRIMARY KEY); " +
+            "INSERT INTO @appointmentsToDelete (id) " +
+            "SELECT id FROM appointments WHERE patient_id = ? AND status = 'CANCELLED'; " +
+            ";WITH ranked AS (" +
+            " SELECT a.id, ROW_NUMBER() OVER (ORDER BY a.appointment_time DESC, a.created_at DESC, a.id DESC) AS row_num " +
+            " FROM appointments a WHERE a.patient_id = ? " +
+            " AND NOT EXISTS (SELECT 1 FROM @appointmentsToDelete d WHERE d.id = a.id)" +
+            ") INSERT INTO @appointmentsToDelete (id) SELECT id FROM ranked WHERE row_num > ?; " +
+            "DELETE p FROM payments p INNER JOIN invoices i ON i.id = p.invoice_id " +
+            " INNER JOIN @appointmentsToDelete d ON d.id = i.appointment_id; " +
+            "DELETE i FROM invoices i INNER JOIN @appointmentsToDelete d ON d.id = i.appointment_id; " +
+            "DELETE f FROM feedbacks f INNER JOIN @appointmentsToDelete d ON d.id = f.appointment_id; " +
+            "DELETE a FROM appointments a INNER JOIN @appointmentsToDelete d ON d.id = a.id;";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, patientId);
+            ps.setString(2, patientId);
+            ps.setInt(3, maxAppointments);
+            ps.executeUpdate();
+        }
     }
 
     public boolean updateDoctorStatus(String id, String doctorStatus, String doctorNotes) {
         return executeUpdate(
             "UPDATE appointments SET doctor_status = ?, doctor_notes = ?, updated_at = GETDATE() WHERE id = ?", 
             doctorStatus, doctorNotes, id
+        );
+    }
+
+    /** Marks missed appointments only when their scheduled time has passed and the patient never attended. */
+    public void markMissedAppointmentsAsNoShow(String patientId) {
+        executeUpdate(
+            "UPDATE appointments SET status = 'NO_SHOW', attendance_status = 'NO_SHOW', updated_at = SYSDATETIME() " +
+            "WHERE patient_id = ? AND appointment_time < SYSDATETIME() " +
+            "AND attendance_status = 'NOT_VISITED' AND status IN ('CREATED', 'CONFIRMED')",
+            patientId
         );
     }
 
@@ -223,6 +310,19 @@ public class AppointmentDAO extends DBContext {
         return count != null && count > 0;
     }
 
+    /** Checks unfinished appointments for the actual person being examined. */
+    public boolean hasIncompleteAppointmentForExaminedPerson(String patientId, String familyMemberId) {
+        String sql = familyMemberId == null
+                ? "SELECT COUNT(*) FROM appointments WHERE patient_id = ? AND family_member_id IS NULL "
+                    + "AND status NOT IN ('COMPLETED', 'CANCELLED', 'NO_SHOW')"
+                : "SELECT COUNT(*) FROM appointments WHERE patient_id = ? AND family_member_id = ? "
+                    + "AND status NOT IN ('COMPLETED', 'CANCELLED', 'NO_SHOW')";
+        Integer count = familyMemberId == null
+                ? queryScalar(sql, Integer.class, patientId)
+                : queryScalar(sql, Integer.class, patientId, familyMemberId);
+        return count != null && count > 0;
+    }
+
     /**
      * Lấy lịch hẹn chưa hoàn thành đầu tiên của bệnh nhân (để hiển thị thông tin)
      */
@@ -238,10 +338,12 @@ public class AppointmentDAO extends DBContext {
         a.setId(rs.getString("id"));
         a.setRequestId(rs.getString("request_id"));
         a.setPatientId(rs.getString("patient_id"));
+        a.setFamilyMemberId(rs.getString("family_member_id"));
         a.setClinicId(rs.getString("clinic_id"));
         a.setDiagnosisReportId(rs.getString("diagnosis_report_id"));
         Timestamp at = rs.getTimestamp("appointment_time"); if (at != null) a.setAppointmentTime(at.toLocalDateTime());
         a.setStatus(rs.getString("status"));
+        a.setAttendanceStatus(rs.getString("attendance_status"));
         a.setNotes(rs.getString("notes"));
         Timestamp ca = rs.getTimestamp("created_at"); if (ca != null) a.setCreatedAt(ca.toLocalDateTime());
         Timestamp ua = rs.getTimestamp("updated_at"); if (ua != null) a.setUpdatedAt(ua.toLocalDateTime());

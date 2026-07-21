@@ -42,6 +42,10 @@ DROP TABLE IF EXISTS users;                 -- Bảng cha cốt lõi (Xóa cuố
 -- =========================================================
 -- 1. USERS
 -- =========================================================
+DROP TABLE IF EXISTS notifications;
+DROP TABLE IF EXISTS notification_job_settings;
+DROP TABLE IF EXISTS feedbacks;
+
 CREATE TABLE users (
     id UNIQUEIDENTIFIER NOT NULL DEFAULT NEWSEQUENTIALID(),
     google_id VARCHAR(100) NULL,
@@ -84,6 +88,7 @@ CREATE TABLE patients (
     gender VARCHAR(10) NULL,
     dob DATE NULL,
     address NVARCHAR(500) NULL,
+    allergies NVARCHAR(1000) NULL,
     created_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
     updated_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
 
@@ -166,6 +171,7 @@ CREATE TABLE appointments (
     diagnosis_report_id UNIQUEIDENTIFIER NULL,
     appointment_time DATETIME2 NOT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'CREATED',
+    attendance_status VARCHAR(20) NOT NULL DEFAULT 'NOT_VISITED',
     notes NVARCHAR(1000) NULL,
     created_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
     updated_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
@@ -174,6 +180,7 @@ CREATE TABLE appointments (
     CONSTRAINT UQ_appointments_request_id UNIQUE (request_id),
     CONSTRAINT UQ_appointments_patient_time UNIQUE (patient_id, appointment_time),
     CONSTRAINT CHK_appointments_status CHECK (status IN ('CREATED', 'CONFIRMED', 'CHECKED_IN', 'COMPLETED', 'CANCELLED', 'NO_SHOW')),
+    CONSTRAINT CHK_appointments_attendance_status CHECK (attendance_status IN ('VISITED', 'NOT_VISITED', 'NO_SHOW', 'CANCELLED')),
     CONSTRAINT FK_appointments_patients FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE NO ACTION,
     CONSTRAINT FK_appointments_clinics FOREIGN KEY (clinic_id) REFERENCES clinics(id) ON DELETE NO ACTION,
     CONSTRAINT FK_appointments_reports FOREIGN KEY (diagnosis_report_id) REFERENCES diagnosis_reports(id) ON DELETE NO ACTION
@@ -242,6 +249,105 @@ CREATE TABLE account_appeals (
 );
 
 -- =========================================================
+-- 10. NOTIFICATIONS & EMAIL QUEUE
+-- =========================================================
+CREATE TABLE notifications (
+    id UNIQUEIDENTIFIER NOT NULL DEFAULT NEWSEQUENTIALID(),
+    user_id UNIQUEIDENTIFIER NOT NULL,
+    event_key VARCHAR(180) NOT NULL,
+    type VARCHAR(50) NOT NULL,
+    title NVARCHAR(200) NOT NULL,
+    message NVARCHAR(1000) NOT NULL,
+    target_url NVARCHAR(500) NULL,
+    is_read BIT NOT NULL DEFAULT 0,
+    email_status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    email_attempts INT NOT NULL DEFAULT 0,
+    next_attempt_at DATETIME2 NULL,
+    email_sent_at DATETIME2 NULL,
+    last_error NVARCHAR(1000) NULL,
+    created_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
+
+    CONSTRAINT PK_notifications PRIMARY KEY (id),
+    CONSTRAINT FK_notifications_users FOREIGN KEY (user_id) REFERENCES users(id),
+    CONSTRAINT UQ_notifications_event_key UNIQUE (event_key),
+    CONSTRAINT CHK_notifications_type CHECK (type IN (
+        'PAYMENT_PENDING',
+        'PAYMENT_SUCCESS',
+        'PAYMENT_FAILED',
+        'PAYMENT_EXPIRED',
+        'APPOINTMENT_CANCELLED',
+        'DOCTOR_CHANGED',
+        'APPOINTMENT_RESCHEDULED',
+        'APPOINTMENT_REMINDER'
+    )),
+    CONSTRAINT CHK_notifications_email_status CHECK (email_status IN (
+        'PENDING',
+        'SENDING',
+        'SENT',
+        'FAILED'
+    ))
+);
+
+CREATE TABLE notification_job_settings (
+    job_name VARCHAR(100) NOT NULL,
+    enabled_at DATETIME2 NOT NULL,
+    updated_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
+
+    CONSTRAINT PK_notification_job_settings PRIMARY KEY (job_name)
+);
+
+-- =========================================================
+-- 11. PATIENT ISSUE REPORTS
+-- =========================================================
+CREATE TABLE issue_reports (
+    id UNIQUEIDENTIFIER NOT NULL DEFAULT NEWSEQUENTIALID(),
+    report_code VARCHAR(20) NOT NULL,
+    reporter_user_id UNIQUEIDENTIFIER NOT NULL,
+    title NVARCHAR(150) NOT NULL,
+    category VARCHAR(20) NOT NULL,
+    description NVARCHAR(2000) NOT NULL,
+    image_url NVARCHAR(500) NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    admin_response NVARCHAR(2000) NULL,
+    handled_by_admin_id UNIQUEIDENTIFIER NULL,
+    created_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
+    updated_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
+    resolved_at DATETIME2 NULL,
+
+    CONSTRAINT PK_issue_reports PRIMARY KEY (id),
+    CONSTRAINT UQ_issue_reports_code UNIQUE (report_code),
+    CONSTRAINT FK_issue_reports_reporter FOREIGN KEY (reporter_user_id) REFERENCES users(id),
+    CONSTRAINT FK_issue_reports_admin FOREIGN KEY (handled_by_admin_id) REFERENCES users(id),
+    CONSTRAINT CHK_issue_reports_category CHECK (category IN ('APPOINTMENT', 'PAYMENT', 'ACCOUNT', 'SYSTEM', 'OTHER')),
+    CONSTRAINT CHK_issue_reports_status CHECK (status IN ('PENDING', 'IN_PROGRESS', 'RESOLVED', 'REJECTED'))
+);
+
+-- =========================================================
+-- 12. PATIENT FEEDBACK
+-- =========================================================
+CREATE TABLE feedbacks (
+    id UNIQUEIDENTIFIER NOT NULL DEFAULT NEWSEQUENTIALID(),
+    appointment_id UNIQUEIDENTIFIER NOT NULL,
+    patient_id UNIQUEIDENTIFIER NOT NULL,
+    rating INT NOT NULL,
+    category NVARCHAR(30) NOT NULL,
+    content NVARCHAR(1000) NOT NULL,
+    status NVARCHAR(20) NOT NULL DEFAULT N'Chưa xử lý',
+    admin_reply NVARCHAR(1000) NULL,
+    created_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
+    updated_at DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
+    replied_at DATETIME2 NULL,
+
+    CONSTRAINT PK_feedbacks PRIMARY KEY (id),
+    CONSTRAINT UQ_feedbacks_appointment UNIQUE (appointment_id),
+    CONSTRAINT FK_feedbacks_appointment FOREIGN KEY (appointment_id) REFERENCES appointments(id),
+    CONSTRAINT FK_feedbacks_patient FOREIGN KEY (patient_id) REFERENCES patients(id),
+    CONSTRAINT CHK_feedbacks_rating CHECK (rating BETWEEN 1 AND 5),
+    CONSTRAINT CHK_feedbacks_category CHECK (category IN (N'Khen', N'Góp ý', N'Khiếu nại')),
+    CONSTRAINT CHK_feedbacks_status CHECK (status IN (N'Chưa xử lý', N'Đang xử lý', N'Đã xử lý'))
+);
+
+-- =========================================================
 -- INDEXES & FILTERED UNIQUE CONSTRAINTS
 -- =========================================================
 CREATE UNIQUE NONCLUSTERED INDEX UX_users_google_id 
@@ -269,6 +375,11 @@ CREATE INDEX idx_pwd_tokens_token_expiry ON password_reset_tokens(token, expires
 CREATE UNIQUE NONCLUSTERED INDEX UX_account_appeals_pending_user ON account_appeals(user_id) WHERE status = 'PENDING';
 CREATE INDEX idx_account_appeals_status_created_at ON account_appeals(status, created_at DESC);
 CREATE INDEX idx_users_role_status ON users(role, status);
+CREATE INDEX idx_notifications_user_unread ON notifications(user_id, is_read, created_at DESC);
+CREATE INDEX idx_notifications_email_queue ON notifications(email_status, next_attempt_at, created_at);
+CREATE INDEX idx_issue_reports_status_created ON issue_reports(status, created_at DESC);
+CREATE INDEX idx_feedbacks_patient_created ON feedbacks(patient_id, created_at DESC);
+CREATE INDEX idx_feedbacks_status_created ON feedbacks(status, created_at DESC);
 GO
 
 -- =========================================================
@@ -296,6 +407,9 @@ DECLARE @Clinic3Id UNIQUEIDENTIFIER = NEWID();
 DECLARE @Report1Id UNIQUEIDENTIFIER = NEWID();
 DECLARE @Report2Id UNIQUEIDENTIFIER = NEWID();
 DECLARE @Report3Id UNIQUEIDENTIFIER = NEWID();
+
+INSERT INTO notification_job_settings (job_name, enabled_at)
+VALUES ('PAYMENT_SUCCESS_EMAIL', SYSDATETIME());
 
 -- Insert Users
 INSERT INTO users (id, google_id, username, email, phone, full_name, password_hash, role, status, lock_reason, locked_at, locked_by, last_login_at)

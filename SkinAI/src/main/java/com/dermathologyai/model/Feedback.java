@@ -109,6 +109,7 @@ public class Feedback {
 
     // Constants for status
     public static final String STATUS_PENDING = "Chưa xử lý";
+    public static final String STATUS_PROCESSING = "Đang xử lý"; 
     public static final String STATUS_COMPLETED = "Đã xử lý";
 
     // Helper methods

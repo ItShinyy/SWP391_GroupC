@@ -44,6 +44,24 @@ public class ClinicDAO extends DBContext {
         );
     }
 
+    /**
+     * Returns active clinics that have usable coordinates for the public locator.
+     * If an older database has not been migrated with the optional location
+     * columns yet, DBContext safely returns an empty list.
+     */
+    public List<Clinic> findActiveWithLocation() {
+        return queryList(
+            SELECT_COLS_FULL
+                + " WHERE is_active = 1"
+                + " AND latitude IS NOT NULL AND longitude IS NOT NULL"
+                + " AND latitude BETWEEN -90 AND 90"
+                + " AND longitude BETWEEN -180 AND 180"
+                + " AND NOT (latitude = 0 AND longitude = 0)"
+                + " ORDER BY clinic_name ASC",
+            ClinicDAO::mapFullRow
+        );
+    }
+
     public List<Clinic> findBySpecialty(String specialty) {
         return queryList(
             SELECT_COLS + " WHERE is_active = 1 ORDER BY clinic_name ASC",
@@ -102,6 +120,26 @@ public class ClinicDAO extends DBContext {
         c.setLongitude(0);
         c.setSpecialty(null);
         c.setRating(0);
+        return c;
+    }
+
+    private static Clinic mapFullRow(ResultSet rs) throws SQLException {
+        Clinic c = new Clinic();
+        c.setId(rs.getString("id"));
+        c.setGooglePlaceId(rs.getString("google_place_id"));
+        c.setClinicName(rs.getString("clinic_name"));
+        c.setAddress(rs.getString("address"));
+        c.setPhone(rs.getString("phone"));
+        c.setWebsite(rs.getString("website"));
+        c.setLatitude(rs.getDouble("latitude"));
+        c.setLongitude(rs.getDouble("longitude"));
+        c.setSpecialty(rs.getString("specialty"));
+        c.setRating(rs.getDouble("rating"));
+        c.setActive(rs.getInt("is_active") == 1);
+        Timestamp ca = rs.getTimestamp("created_at");
+        if (ca != null) c.setCreatedAt(ca.toLocalDateTime());
+        Timestamp ua = rs.getTimestamp("updated_at");
+        if (ua != null) c.setUpdatedAt(ua.toLocalDateTime());
         return c;
     }
 }

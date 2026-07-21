@@ -200,6 +200,9 @@
                             <a class="nav-link ${pageContext.request.requestURI.contains('feedback') ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/feedback">Quản Lý Đánh Giá</a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link ${pageContext.request.requestURI.contains('issue-reports') ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/issue-reports">Issue Reports</a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link ${pageContext.request.requestURI.contains('audit') ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/audit-logs">Nhật Ký Hoạt Động</a>
                         </li>
 

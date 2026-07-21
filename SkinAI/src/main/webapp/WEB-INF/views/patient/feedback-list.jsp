@@ -98,11 +98,6 @@
                                         <span class="badge ${feedback.rating >= 4 ? 'bg-success' : feedback.rating >= 3 ? 'bg-warning' : 'bg-danger'} px-3 py-2">
                                             ${feedback.ratingDescription}
                                         </span>
-                                        <%-- Anonymous badge removed - not in Feedback model 
-                                        <c:if test="${feedback.anonymous}">
-                                            <span class="badge bg-secondary ms-1">Ẩn danh</span>
-                                        </c:if>
-                                        --%>
                                     </div>
 
                                     <!-- Comment -->
@@ -111,7 +106,7 @@
                                             <h6 class="fw-bold text-primary">
                                                 <i class="fas fa-comment-dots me-2"></i>Nội dung:
                                             </h6>
-                                            <p class="text-muted mb-0">"${feedback.content}"</p>
+                                            <p class="text-muted mb-0">“<c:out value="${feedback.content}" />”</p>
                                         </div>
                                     </c:if>
 
@@ -119,7 +114,7 @@
                                     <c:if test="${not empty feedback.category}">
                                         <div class="mb-3">
                                             <span class="badge bg-info px-3 py-2">
-                                                <i class="fas fa-tag me-1"></i>${feedback.category}
+                                                <i class="fas fa-tag me-1"></i><c:out value="${feedback.category}" />
                                             </span>
                                         </div>
                                     </c:if>
@@ -131,7 +126,7 @@
                                                 <h6 class="fw-bold text-info">
                                                     <i class="fas fa-reply me-2"></i>Phản hồi từ Admin:
                                                 </h6>
-                                                <p class="mb-0">"${feedback.adminReply}"</p>
+                                                <p class="mb-0">“<c:out value="${feedback.adminReply}" />”</p>
                                                 <c:if test="${feedback.repliedAt != null}">
                                                     <small class="text-muted d-block mt-2">
                                                         <c:set var="repliedAtStr" value="${feedback.repliedAt.toString()}" />

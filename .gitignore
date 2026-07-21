@@ -1,0 +1,23 @@
+# Credentials and machine-specific configuration. Commit only the *.example templates.
+.env
+.env.*
+!.env.example
+**/application.properties
+!**/application.properties.example
+
+# Dependencies and generated output (recreated from package-lock.json / pom.xml)
+**/node_modules/
+**/.npm-cache/
+**/target/
+docx_qa_business_report/
+
+# IDE and local server state
+**/.idea/
+**/.smarttomcat/
+**/.vscode/
+
+# Logs and OS files
+*.log
+*.pid
+.DS_Store
+Thumbs.db

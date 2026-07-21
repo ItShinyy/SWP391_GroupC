@@ -79,14 +79,6 @@ public class DoctorDAO extends DBContext {
     public List<Doctor> searchDoctors(String doctorName, String fromDate, String toDate, String specialization, String timeSlot) {
         StringBuilder sql = new StringBuilder();
         sql.append(SELECT_COLS);
-        
-        // Add schedule join if we need to filter by date or time slot
-        if ((fromDate != null && !fromDate.trim().isEmpty()) || 
-            (toDate != null && !toDate.trim().isEmpty()) ||
-            (timeSlot != null && !timeSlot.trim().isEmpty())) {
-            sql.append(" JOIN doctor_schedules ds ON d.id = ds.doctor_id");
-        }
-        
         sql.append(" WHERE d.is_active = 1");
         
         // Build parameters list
@@ -103,31 +95,30 @@ public class DoctorDAO extends DBContext {
             sql.append(" AND d.specialization = ?");
             params.add(specialization.trim());
         }
-        
-        // Filter by date range
-        if (fromDate != null && !fromDate.trim().isEmpty()) {
-            sql.append(" AND ds.date >= ?");
-            params.add(fromDate);
+
+        boolean hasScheduleFilter = (fromDate != null && !fromDate.trim().isEmpty())
+                || (toDate != null && !toDate.trim().isEmpty())
+                || (timeSlot != null && !timeSlot.trim().isEmpty());
+        if (hasScheduleFilter) {
+            sql.append(" AND EXISTS (SELECT 1 FROM doctor_schedules ds")
+               .append(" WHERE ds.doctor_id = d.id")
+               .append(" AND ds.is_available = 1")
+               .append(" AND ds.booked_count < ds.max_patients");
+
+            if (fromDate != null && !fromDate.trim().isEmpty()) {
+                sql.append(" AND ds.schedule_date >= ?");
+                params.add(java.sql.Date.valueOf(fromDate.trim()));
+            }
+            if (toDate != null && !toDate.trim().isEmpty()) {
+                sql.append(" AND ds.schedule_date <= ?");
+                params.add(java.sql.Date.valueOf(toDate.trim()));
+            }
+            if (timeSlot != null && !timeSlot.trim().isEmpty()) {
+                sql.append(" AND ds.slot = ?");
+                params.add(timeSlot.trim());
+            }
+            sql.append(")");
         }
-        
-        if (toDate != null && !toDate.trim().isEmpty()) {
-            sql.append(" AND ds.date <= ?");
-            params.add(toDate);
-        }
-        
-        // Filter by time slot
-        if (timeSlot != null && !timeSlot.trim().isEmpty()) {
-            sql.append(" AND ds.slot = ?");
-            params.add(timeSlot);
-        }
-        
-        // Group by doctor and order by name
-        if ((fromDate != null && !fromDate.trim().isEmpty()) || 
-            (toDate != null && !toDate.trim().isEmpty()) ||
-            (timeSlot != null && !timeSlot.trim().isEmpty())) {
-            sql.append(" GROUP BY d.id, d.user_id, d.clinic_id, d.specialization, d.license_number, d.bio, d.is_active, d.created_at, d.updated_at, u.full_name, u.email, u.phone, c.clinic_name, c.address");
-        }
-        
         sql.append(" ORDER BY u.full_name");
         
         return queryList(sql.toString(), DoctorDAO::mapRow, params.toArray());

@@ -1,10 +1,13 @@
 package com.dermathologyai.controller.patient;
 
 import com.dermathologyai.dao.AppointmentDAO;
+import com.dermathologyai.dao.InvoiceDAO;
 import com.dermathologyai.dao.PatientDAO;
+import com.dermathologyai.dao.PaymentDAO;
 import com.dermathologyai.model.Appointment;
 import com.dermathologyai.model.Patient;
 import com.dermathologyai.model.User;
+import com.dermathologyai.service.NotificationService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,16 +18,24 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 public class AppointmentsController extends HttpServlet {
     private static final Logger logger = LoggerFactory.getLogger(AppointmentsController.class);
     private AppointmentDAO appointmentDAO;
     private PatientDAO patientDAO;
+    private PaymentDAO paymentDAO;
+    private InvoiceDAO invoiceDAO;
+    private NotificationService notificationService;
 
     @Override
     public void init() throws ServletException {
         appointmentDAO = new AppointmentDAO();
         patientDAO = new PatientDAO();
+        paymentDAO = new PaymentDAO();
+        invoiceDAO = new InvoiceDAO();
+        notificationService = new NotificationService();
     }
 
     @Override
@@ -49,12 +60,24 @@ public class AppointmentsController extends HttpServlet {
         
         logger.info("AppointmentsController - User: {}, Patient: {}", user.getId(), patient.getId());
         
+        // Automatically classify elapsed, unattended appointments before displaying the list.
+        appointmentDAO.markMissedAppointmentsAsNoShow(patient.getId());
+
         // Get all appointments for this patient
         List<Appointment> appointments = appointmentDAO.findByPatientId(patient.getId());
+        Map<String, Boolean> pendingCashPayments = new HashMap<>();
+        for (String appointmentId : paymentDAO.findPendingCashAppointmentIdsByPatientId(patient.getId())) {
+            pendingCashPayments.put(appointmentId, true);
+        }
+        Map<String, String> paymentStatuses = paymentDAO.findPaymentStatusesByPatientId(patient.getId());
+        Map<String, String> invoiceIds = invoiceDAO.findInvoiceIdsByPatientId(patient.getId());
         
         logger.info("AppointmentsController - Found {} appointments", appointments.size());
         
         req.setAttribute("appointments", appointments);
+        req.setAttribute("pendingCashPayments", pendingCashPayments);
+        req.setAttribute("paymentStatuses", paymentStatuses);
+        req.setAttribute("invoiceIds", invoiceIds);
         req.setAttribute("totalAppointments", appointments.size());
         
         req.getRequestDispatcher("/WEB-INF/views/patient/appointments.jsp").forward(req, resp);
@@ -69,15 +92,21 @@ public class AppointmentsController extends HttpServlet {
             return;
         }
 
+        User user = (User) session.getAttribute("user");
         String action = req.getParameter("action");
         String appointmentId = req.getParameter("appointmentId");
         
         if ("cancel".equals(action) && appointmentId != null) {
-            boolean success = appointmentDAO.updateStatus(appointmentId, "CANCELLED");
+            Patient patient = patientDAO.findByUserId(user.getId());
+            Appointment appointment = patient != null ? appointmentDAO.findById(appointmentId) : null;
+            boolean success = patient != null && appointmentDAO.cancelByPatientId(appointmentId, patient.getId());
             if (success) {
-                req.getSession().setAttribute("successMessage", "Appointment cancelled successfully.");
+                if (appointment != null) {
+                    notificationService.queueAppointmentCancelled(user.getId(), appointment);
+                }
+                req.getSession().setAttribute("successMessage", "Đã hủy lịch hẹn.");
             } else {
-                req.getSession().setAttribute("errorMessage", "Failed to cancel appointment.");
+                req.getSession().setAttribute("errorMessage", "Không thể hủy lịch hẹn này.");
             }
         }
         

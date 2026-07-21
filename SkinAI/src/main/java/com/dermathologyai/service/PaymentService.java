@@ -71,6 +71,13 @@ public class PaymentService {
             throw new IllegalStateException("Hóa đơn đã được thanh toán");
         }
 
+        for (Payment existingPayment : paymentDAO.findByInvoiceId(invoiceId)) {
+            if (Payment.METHOD_CASH.equals(existingPayment.getPaymentMethod())
+                    && Payment.STATUS_PENDING.equals(existingPayment.getStatus())) {
+                return existingPayment;
+            }
+        }
+
         // Generate transaction reference
         String txnRef = "CASH_" + System.currentTimeMillis() + "_" + UUID.randomUUID().toString().substring(0, 8);
 
@@ -79,28 +86,20 @@ public class PaymentService {
         payment.setInvoiceId(invoiceId);
         payment.setPaymentMethod(Payment.METHOD_CASH);
         payment.setAmount(invoice.getTotalAmount());
-        payment.setStatus(Payment.STATUS_SUCCESS);
+        payment.setStatus(Payment.STATUS_PENDING);
         payment.setTxnRef(txnRef);
         payment.setOrderInfo("Thanh toán tại quầy - " + invoice.getDescription());
         payment.setClientIp(clientIp);
-        payment.setSignatureVerified(true);
-        payment.setProcessedAt(LocalDateTime.now());
+        payment.setExpiresAt(LocalDateTime.now().plusSeconds(210));
+        payment.setSignatureVerified(false);
 
         String paymentId = paymentDAO.create(payment);
         if (paymentId != null) {
             payment.setId(paymentId);
             
-            // Update invoice status to PAID
-            invoiceDAO.updateStatus(invoiceId, Invoice.STATUS_PAID, LocalDateTime.now());
-            
-            // Update appointment status to COMPLETED after payment
-            if (invoice.getAppointmentId() != null) {
-                appointmentDAO.updateStatus(invoice.getAppointmentId(), "COMPLETED");
-            }
-            
             // Log audit
-            auditLogDAO.createLog(userId, "PAYMENT_OFFLINE_SUCCESS", "payments", paymentId, 
-                                null, "Thanh toán tại quầy thành công - Số tiền: " + invoice.getTotalAmount(), 
+            auditLogDAO.createLog(userId, "PAYMENT_OFFLINE_PENDING", "payments", paymentId,
+                                null, "Yêu cầu thanh toán tại quầy đang chờ xác nhận - Số tiền: " + invoice.getTotalAmount(),
                                 clientIp, userAgent);
             
             return payment;
@@ -135,7 +134,7 @@ public class PaymentService {
         payment.setTxnRef(txnRef);
         payment.setOrderInfo("Thanh toán online - " + invoice.getDescription());
         payment.setClientIp(clientIp);
-        payment.setExpiresAt(LocalDateTime.now().plusMinutes(15)); // 15 minutes expiry
+        payment.setExpiresAt(LocalDateTime.now().plusSeconds(210)); // 3 minutes 30 seconds
         payment.setSignatureVerified(false);
 
         // In real implementation, this would call VNPay API to get payment URL
@@ -181,12 +180,6 @@ public class PaymentService {
         if (updated) {
             // Update invoice status to PAID
             invoiceDAO.updateStatus(payment.getInvoiceId(), Invoice.STATUS_PAID, LocalDateTime.now());
-            
-            // Update appointment status to COMPLETED after payment
-            Invoice invoice = invoiceDAO.findById(payment.getInvoiceId());
-            if (invoice != null && invoice.getAppointmentId() != null) {
-                appointmentDAO.updateStatus(invoice.getAppointmentId(), "COMPLETED");
-            }
             
             // Log audit
             auditLogDAO.createLog(userId, "PAYMENT_ONLINE_SUCCESS", "payments", payment.getId(), 

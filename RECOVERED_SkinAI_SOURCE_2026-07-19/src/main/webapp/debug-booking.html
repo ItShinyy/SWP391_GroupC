@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Booking</title>
+</head>
+<body>
+    <h2>Debug Booking API</h2>
+    
+    <h3>1. Manual API Test</h3>
+    <p>Try these URLs manually:</p>
+    <ul>
+        <li><a href="/SkinAI/api/doctors?action=getByClinic&clinicId=9D17FA99-166E-F111-A889-C0B004FA495F" target="_blank">Test API with clinic ID</a></li>
+        <li><a href="/SkinAI/patient/booking" target="_blank">Booking Page</a></li>
+    </ul>
+    
+    <h3>2. JavaScript Test</h3>
+    <button onclick="testAPI()">Test API Call</button>
+    <div id="result"></div>
+    
+    <h3>3. Check Clinic Select</h3>
+    <button onclick="checkClinicSelect()">Check Clinic Options</button>
+    <div id="clinicResult"></div>
+    
+    <script>
+        function testAPI() {
+            const clinicId = '9D17FA99-166E-F111-A889-C0B004FA495F';
+            const url = `/SkinAI/api/doctors?action=getByClinic&clinicId=${clinicId}`;
+            
+            console.log('Testing URL:', url);
+            document.getElementById('result').innerHTML = 'Testing...';
+            
+            fetch(url)
+                .then(r => {
+                    console.log('Status:', r.status);
+                    return r.json();
+                })
+                .then(data => {
+                    console.log('Response:', data);
+                    document.getElementById('result').innerHTML = 
+                        '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                })
+                .catch(err => {
+                    console.error('Error:', err);
+                    document.getElementById('result').innerHTML = 'Error: ' + err.message;
+                });
+        }
+        
+        function checkClinicSelect() {
+            fetch('/SkinAI/patient/booking')
+                .then(r => r.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const select = doc.getElementById('clinicId');
+                    
+                    if (select) {
+                        const options = Array.from(select.options);
+                        const optionsHtml = options.map(opt => 
+                            `<li>Value: "${opt.value}" | Text: "${opt.textContent}"</li>`
+                        ).join('');
+                        
+                        document.getElementById('clinicResult').innerHTML = 
+                            `<p>Found ${options.length} options:</p><ul>${optionsHtml}</ul>`;
+                    } else {
+                        document.getElementById('clinicResult').innerHTML = 'Clinic select not found!';
+                    }
+                })
+                .catch(err => {
+                    document.getElementById('clinicResult').innerHTML = 'Error: ' + err.message;
+                });
+        }
+    </script>
+</body>
+</html>

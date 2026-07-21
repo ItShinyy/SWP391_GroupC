@@ -208,6 +208,11 @@
                                         <i class="fa-regular fa-id-badge fa-fw me-2 text-muted"></i> Hồ Sơ Cá Nhân
                                     </a>
                                 </li>
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center" href="${pageContext.request.contextPath}/doctor/issue-report">
+                                        <i class="fa-solid fa-bug fa-fw me-2 text-danger"></i> Báo lỗi / Hỗ trợ
+                                    </a>
+                                </li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <form action="${pageContext.request.contextPath}/auth/logout" method="post" class="m-0 p-0">

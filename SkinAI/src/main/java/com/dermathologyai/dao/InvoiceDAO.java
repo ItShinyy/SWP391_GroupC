@@ -6,7 +6,9 @@ import java.math.BigDecimal;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class InvoiceDAO extends DBContext {
 
@@ -113,6 +115,24 @@ public class InvoiceDAO extends DBContext {
                     "WHERE a.patient_id = ?";
         
         return queryScalar(sql, Integer.class, patientId);
+    }
+
+    /** Maps a patient's appointment IDs to their invoice IDs for read-only appointment details. */
+    public Map<String, String> findInvoiceIdsByPatientId(String patientId) {
+        String sql = "SELECT i.appointment_id, i.id FROM invoices i " +
+                     "INNER JOIN appointments a ON a.id = i.appointment_id " +
+                     "WHERE a.patient_id = ?";
+        Map<String, String> invoiceIds = new HashMap<>();
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, patientId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) invoiceIds.put(rs.getString("appointment_id"), rs.getString("id"));
+            }
+        } catch (SQLException ignored) {
+            // The appointment list can still render; legacy rows will use the create/view fallback.
+        }
+        return invoiceIds;
     }
 
     /**

@@ -3,12 +3,15 @@ package com.dermathologyai.dao;
 import com.dermathologyai.model.Payment;
 import com.dermathologyai.model.PaymentHistory;
 import com.dermathologyai.model.Invoice;
+import com.dermathologyai.model.PaymentNotificationData;
 
 import java.math.BigDecimal;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class PaymentDAO extends DBContext {
 
@@ -130,6 +133,42 @@ public class PaymentDAO extends DBContext {
         return queryList(sql, PaymentDAO::mapRow, patientId);
     }
 
+    public List<String> findPendingCashAppointmentIdsByPatientId(String patientId) {
+        String sql = "SELECT DISTINCT i.appointment_id " +
+                    "FROM payments p " +
+                    "INNER JOIN invoices i ON p.invoice_id = i.id " +
+                    "INNER JOIN appointments a ON i.appointment_id = a.id " +
+                    "WHERE a.patient_id = ? AND a.status <> 'CANCELLED' " +
+                    "AND p.payment_method = 'CASH' AND p.status = 'PENDING'";
+        return queryList(sql, rs -> rs.getString("appointment_id"), patientId);
+    }
+
+    /** Returns the payment state for every appointment displayed to one patient. */
+    public Map<String, String> findPaymentStatusesByPatientId(String patientId) {
+        String sql = "SELECT a.id AS appointment_id, " +
+                    "CASE " +
+                    " WHEN a.status = 'CANCELLED' THEN 'CANCELLED' " +
+                    " WHEN i.status = 'PAID' THEN 'PAID' " +
+                    " WHEN EXISTS (SELECT 1 FROM payments p WHERE p.invoice_id = i.id AND p.status = 'PENDING') THEN 'PENDING' " +
+                    " ELSE 'UNPAID' END AS payment_status " +
+                    "FROM appointments a " +
+                    "LEFT JOIN invoices i ON i.appointment_id = a.id " +
+                    "WHERE a.patient_id = ?";
+        Map<String, String> statuses = new HashMap<>();
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, patientId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    statuses.put(rs.getString("appointment_id"), rs.getString("payment_status"));
+                }
+            }
+        } catch (SQLException ignored) {
+            // The page can still render a safe UNPAID fallback if payment data is unavailable.
+        }
+        return statuses;
+    }
+
     public int countByPatientId(String patientId) {
         String sql = "SELECT COUNT(*) FROM payments p " +
                     "INNER JOIN invoices i ON p.invoice_id = i.id " +
@@ -159,6 +198,34 @@ public class PaymentDAO extends DBContext {
                     "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
         
         return queryList(sql, PaymentDAO::mapPaymentHistory, patientId, (page - 1) * pageSize, pageSize);
+    }
+
+    /**
+     * Finds invoices committed as PAID that have not produced a success notification.
+     * enabled_at prevents historical invoices from being emailed after first deploy.
+     */
+    public List<PaymentNotificationData> findPaidInvoicesWithoutSuccessNotification() {
+        String sql = "SELECT i.id AS invoice_id, i.appointment_id, i.total_amount, i.description, i.paid_at, " +
+            "u.id AS user_id, u.full_name AS patient_name, c.clinic_name, " +
+            "COALESCE(doctor_user.full_name, N'Bác sĩ chưa xác định') AS doctor_name, " +
+            "a.appointment_time, payment.payment_method, payment.txn_ref " +
+            "FROM dbo.invoices i " +
+            "INNER JOIN dbo.appointments a ON a.id = i.appointment_id " +
+            "INNER JOIN dbo.patients patient ON patient.id = a.patient_id " +
+            "INNER JOIN dbo.users u ON u.id = patient.user_id " +
+            "INNER JOIN dbo.clinics c ON c.id = a.clinic_id " +
+            "LEFT JOIN dbo.doctors d ON d.id = a.doctor_id " +
+            "LEFT JOIN dbo.users doctor_user ON doctor_user.id = d.user_id " +
+            "OUTER APPLY (SELECT TOP 1 p.payment_method, p.txn_ref " +
+            "FROM dbo.payments p WHERE p.invoice_id = i.id AND p.status = 'SUCCESS' " +
+            "ORDER BY p.processed_at DESC, p.created_at DESC) payment " +
+            "INNER JOIN dbo.notification_job_settings settings " +
+            "ON settings.job_name = 'PAYMENT_SUCCESS_EMAIL' " +
+            "LEFT JOIN dbo.notifications n ON n.event_key = CONCAT('payment:', i.id, ':success') " +
+            "WHERE i.status = 'PAID' AND i.paid_at IS NOT NULL " +
+            "AND i.paid_at >= settings.enabled_at AND n.id IS NULL " +
+            "ORDER BY i.paid_at ASC";
+        return queryList(sql, PaymentDAO::mapPaymentNotificationData);
     }
 
     public boolean delete(String id) {
@@ -282,5 +349,24 @@ public class PaymentDAO extends DBContext {
         LocalDateTime appointmentDateTime = appointmentTime != null ? appointmentTime.toLocalDateTime() : null;
 
         return new PaymentHistory(payment, invoice, clinicName, appointmentDateTime, invoice.getAppointmentId());
+    }
+
+    private static PaymentNotificationData mapPaymentNotificationData(ResultSet rs) throws SQLException {
+        PaymentNotificationData data = new PaymentNotificationData();
+        data.setInvoiceId(rs.getString("invoice_id"));
+        data.setAppointmentId(rs.getString("appointment_id"));
+        data.setUserId(rs.getString("user_id"));
+        data.setPatientName(rs.getString("patient_name"));
+        data.setClinicName(rs.getString("clinic_name"));
+        data.setDoctorName(rs.getString("doctor_name"));
+        data.setDescription(rs.getString("description"));
+        data.setPaymentMethod(rs.getString("payment_method"));
+        data.setTransactionReference(rs.getString("txn_ref"));
+        data.setAmount(rs.getBigDecimal("total_amount"));
+        Timestamp appointmentTime = rs.getTimestamp("appointment_time");
+        if (appointmentTime != null) data.setAppointmentTime(appointmentTime.toLocalDateTime());
+        Timestamp paidAt = rs.getTimestamp("paid_at");
+        if (paidAt != null) data.setPaidAt(paidAt.toLocalDateTime());
+        return data;
     }
 }

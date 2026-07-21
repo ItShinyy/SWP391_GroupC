@@ -140,6 +140,24 @@
     </servlet-mapping>
 
     <servlet>
+        <servlet-name>ClinicLocatorController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.guest.ClinicLocatorController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ClinicLocatorController</servlet-name>
+        <url-pattern>/clinics</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>ClinicFallbackController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.api.ClinicFallbackController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ClinicFallbackController</servlet-name>
+        <url-pattern>/api/clinic-fallback</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
         <servlet-name>ProfileController</servlet-name>
         <servlet-class>com.dermathologyai.controller.patient.ProfileController</servlet-class>
     </servlet>
@@ -150,6 +168,15 @@
     <servlet-mapping>
         <servlet-name>ProfileController</servlet-name>
         <url-pattern>/patient/verify-otp</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>FamilyMemberController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.patient.FamilyMemberController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>FamilyMemberController</servlet-name>
+        <url-pattern>/patient/family-members</url-pattern>
     </servlet-mapping>
 
     <!-- ==================== Patient Servlets ==================== -->
@@ -178,6 +205,15 @@
     <servlet-mapping>
         <servlet-name>AppointmentsController</servlet-name>
         <url-pattern>/patient/appointments</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>NotificationsController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.patient.NotificationsController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>NotificationsController</servlet-name>
+        <url-pattern>/patient/notifications</url-pattern>
     </servlet-mapping>
 
     <servlet>
@@ -212,12 +248,34 @@
     </servlet-mapping>
 
     <servlet>
+        <servlet-name>IssueReportController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.patient.IssueReportController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>IssueReportController</servlet-name>
+        <url-pattern>/patient/issue-report</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>IssueReportController</servlet-name>
+        <url-pattern>/doctor/issue-report</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
         <servlet-name>AdminFeedbackController</servlet-name>
         <servlet-class>com.dermathologyai.controller.admin.AdminFeedbackController</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>AdminFeedbackController</servlet-name>
         <url-pattern>/admin/feedback</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>AdminIssueReportController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.admin.AdminIssueReportController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AdminIssueReportController</servlet-name>
+        <url-pattern>/admin/issue-reports</url-pattern>
     </servlet-mapping>
 
     <servlet>
@@ -254,6 +312,15 @@
     <servlet-mapping>
         <servlet-name>PatientReportsController</servlet-name>
         <url-pattern>/patient/reports</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>MedicalRecordsController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.patient.MedicalRecordsController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>MedicalRecordsController</servlet-name>
+        <url-pattern>/patient/medical-records</url-pattern>
     </servlet-mapping>
 
     <!-- ==================== Admin Servlets ==================== -->

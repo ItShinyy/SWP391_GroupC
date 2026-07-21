@@ -10,10 +10,12 @@ public class Appointment {
     private String id;
     private String requestId;
     private String patientId;
+    private String familyMemberId; // null when the account owner is the person being examined
     private String clinicId;
     private String diagnosisReportId;
     private LocalDateTime appointmentTime;
     private String status; // CREATED, CONFIRMED, CHECKED_IN, COMPLETED, CANCELLED, NO_SHOW
+    private String attendanceStatus; // VISITED, NOT_VISITED, NO_SHOW, CANCELLED
     private String doctorStatus; // PENDING, ACCEPTED, REJECTED
     private String doctorNotes; // Doctor's notes
     private String notes;
@@ -64,6 +66,9 @@ public class Appointment {
     public String getPatientId() { return patientId; }
     public void setPatientId(String patientId) { this.patientId = patientId; }
 
+    public String getFamilyMemberId() { return familyMemberId; }
+    public void setFamilyMemberId(String familyMemberId) { this.familyMemberId = familyMemberId; }
+
     public String getClinicId() { return clinicId; }
     public void setClinicId(String clinicId) { this.clinicId = clinicId; }
 
@@ -75,6 +80,9 @@ public class Appointment {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public String getAttendanceStatus() { return attendanceStatus; }
+    public void setAttendanceStatus(String attendanceStatus) { this.attendanceStatus = attendanceStatus; }
 
     public String getDoctorStatus() { return doctorStatus; }
     public void setDoctorStatus(String doctorStatus) { this.doctorStatus = doctorStatus; }

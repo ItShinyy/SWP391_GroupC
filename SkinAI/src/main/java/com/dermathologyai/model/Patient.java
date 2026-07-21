@@ -13,6 +13,7 @@ public class Patient {
     private String gender; // MALE, FEMALE, OTHER
     private LocalDate dob;
     private String address;
+    private String allergies;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -47,6 +48,9 @@ public class Patient {
 
     public String getAddress() { return address; }
     public void setAddress(String address) { this.address = address; }
+
+    public String getAllergies() { return allergies; }
+    public void setAllergies(String allergies) { this.allergies = allergies; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

@@ -49,8 +49,7 @@ public class FeedbackController extends HttpServlet {
             }
         } catch (Exception e) {
             if (!resp.isCommitted()) {
-                req.setAttribute("errorMessage", "Lỗi: " + e.getMessage());
-                req.getRequestDispatcher("/WEB-INF/views/error.jsp").forward(req, resp);
+                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Không thể tải chức năng đánh giá");
             }
         }
     }
@@ -79,8 +78,7 @@ public class FeedbackController extends HttpServlet {
             }
         } catch (Exception e) {
             if (!resp.isCommitted()) {
-                req.setAttribute("errorMessage", "Lỗi: " + e.getMessage());
-                req.getRequestDispatcher("/WEB-INF/views/error.jsp").forward(req, resp);
+                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Không thể xử lý đánh giá");
             }
         }
     }
@@ -119,7 +117,8 @@ public class FeedbackController extends HttpServlet {
         }
 
         // Check if appointment is completed
-        if (!"COMPLETED".equals(appointment.getStatus())) {
+        if (!"COMPLETED".equals(appointment.getStatus())
+                || !"VISITED".equals(appointment.getAttendanceStatus())) {
             req.getSession().setAttribute("errorMessage", "Chỉ có thể đánh giá sau khi hoàn thành lịch hẹn");
             resp.sendRedirect(req.getContextPath() + "/patient/appointments");
             return;
@@ -270,6 +269,13 @@ public class FeedbackController extends HttpServlet {
             return;
         }
 
+        if (!"COMPLETED".equals(appointment.getStatus())
+                || !"VISITED".equals(appointment.getAttendanceStatus())) {
+            req.getSession().setAttribute("errorMessage", "Chỉ có thể đánh giá sau khi đã hoàn thành buổi khám");
+            resp.sendRedirect(req.getContextPath() + "/patient/appointments");
+            return;
+        }
+
         // Check if feedback already exists
         if (feedbackDAO.findByAppointmentId(appointmentId) != null) {
             req.getSession().setAttribute("errorMessage", "Bạn đã đánh giá lịch hẹn này rồi");
@@ -280,12 +286,19 @@ public class FeedbackController extends HttpServlet {
         // Get form data
         try {
             int rating = Integer.parseInt(req.getParameter("rating"));
-            String category = req.getParameter("category");
+            String category = normalizeCategory(req.getParameter("category"));
             String content = req.getParameter("content");
+            content = content == null ? "" : content.trim();
 
             // Validate rating
             if (rating < 1 || rating > 5) {
                 req.getSession().setAttribute("errorMessage", "Đánh giá phải từ 1 đến 5 sao");
+                resp.sendRedirect(req.getContextPath() + "/patient/feedback?action=create&appointmentId=" + appointmentId);
+                return;
+            }
+
+            if (category == null || content.isEmpty() || content.length() > 1000) {
+                req.getSession().setAttribute("errorMessage", "Loại hoặc nội dung đánh giá không hợp lệ");
                 resp.sendRedirect(req.getContextPath() + "/patient/feedback?action=create&appointmentId=" + appointmentId);
                 return;
             }
@@ -295,7 +308,7 @@ public class FeedbackController extends HttpServlet {
             feedback.setPatientId(patient.getId());
             feedback.setAppointmentId(appointmentId);
             feedback.setRating(rating);
-            feedback.setCategory(category != null ? category : "Góp ý");
+            feedback.setCategory(category);
             feedback.setContent(content);
             feedback.setStatus(Feedback.STATUS_PENDING);
 
@@ -343,8 +356,9 @@ public class FeedbackController extends HttpServlet {
         // Update feedback data
         try {
             int rating = Integer.parseInt(req.getParameter("rating"));
-            String category = req.getParameter("category");
+            String category = normalizeCategory(req.getParameter("category"));
             String content = req.getParameter("content");
+            content = content == null ? "" : content.trim();
 
             if (rating < 1 || rating > 5) {
                 req.getSession().setAttribute("errorMessage", "Đánh giá phải từ 1 đến 5 sao");
@@ -352,8 +366,15 @@ public class FeedbackController extends HttpServlet {
                 return;
             }
 
+
+            if (category == null || content.isEmpty() || content.length() > 1000) {
+                req.getSession().setAttribute("errorMessage", "Loại hoặc nội dung đánh giá không hợp lệ");
+                resp.sendRedirect(req.getContextPath() + "/patient/feedback?action=edit&id=" + feedbackId);
+                return;
+            }
+
             existingFeedback.setRating(rating);
-            existingFeedback.setCategory(category != null ? category : "Góp ý");
+            existingFeedback.setCategory(category);
             existingFeedback.setContent(content);
 
             boolean updated = feedbackDAO.update(existingFeedback);
@@ -374,5 +395,12 @@ public class FeedbackController extends HttpServlet {
         }
 
         resp.sendRedirect(req.getContextPath() + "/patient/feedback");
+    }
+
+    private static String normalizeCategory(String category) {
+        if ("Khen".equals(category) || "Góp ý".equals(category) || "Khiếu nại".equals(category)) {
+            return category;
+        }
+        return null;
     }
 }
