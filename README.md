@@ -55,13 +55,3 @@ Then open `http://localhost:8080/SkinAI`.
 ## Optional Nginx proxy
 
 `nginx-1.30.3\conf\nginx.conf` proxies `/` to Tomcat port 8080 and `/api/` plus `/payments/vnpay/` to Node port 3000. Run Nginx only after both services are reachable directly. For public VNPay IPN, configure a public HTTPS domain; localhost cannot receive VNPay callbacks from the internet.
-
-## One-command helper
-
-After completing configuration, this command installs Node dependencies, checks Node source, builds the WAR, starts the payment API, and deploys the WAR to the Tomcat folder supplied:
-
-```powershell
-.\run-local.ps1 -TomcatHome "C:\path\to\apache-tomcat-10.1"
-```
-
-The helper never creates real credentials. On a fresh clone it copies the two templates and stops so the developer can fill in local values first.
