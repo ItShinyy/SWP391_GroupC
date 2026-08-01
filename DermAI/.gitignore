@@ -37,3 +37,7 @@ service-account*.json
 catalina.base_IS_UNDEFINED/
 .agents/
 .cursor/
+.idea/
+.vscode/
+
+.gitignore
