@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- allowCasualMultipartParsing: CsrfFilter reads csrf_token via getParameter() before @MultipartConfig servlets run -->
+<Context path="/DermAI" allowCasualMultipartParsing="true"/>

@@ -1,0 +1,54 @@
+{
+    "schemaVersion":  "1",
+    "versions":  {
+                     "preprocessing":  "normalized-jpeg-v1",
+                     "storageLayout":  "diagnoses/v1",
+                     "eigencam":  "eigencam-v1"
+                 },
+    "releases":  [
+                     {
+                         "id":  "e731dab3-9e00-4c53-986d-b4ad4c03296c",
+                         "artifactType":  "YOLO_MODEL",
+                         "releaseCode":  "skinai-classifier",
+                         "version":  "yolo26s-v2",
+                         "relativePath":  "yolo26s-v2/skinai.onnx",
+                         "sha256":  "900d8488c878ac905cae02fa9803a7725ebf297f9516c3a76c49e4ad4b11f040",
+                         "compatibilityGroup":  "yolo26s-v2",
+                         "metadata":  {
+                                          "sourceModelSha256":  "f01a29ff1ffecb57b53a2d5c3ada67302c9b41181ff81fbfcd966ca7ecb63b4f",
+                                          "preprocessingVersion":  "normalized-jpeg-v1",
+                                          "preprocessingImplementation":  "ultralytics-classify-v8.3.0-legacy-rgb-input-v1",
+                                          "eigencamVersion":  "eigencam-v1"
+                                      }
+                     },
+                     {
+                         "id":  "6d4d2030-2d89-4eb1-abf5-b390440233c5",
+                         "artifactType":  "OOD_BASELINE",
+                         "releaseCode":  "skinai-ood-baseline",
+                         "version":  "yolo26s-v2",
+                         "relativePath":  "yolo26s-v2/reference_features.npz",
+                         "sha256":  "4fb6de19c6d45c6ff8c1ead5bcc27529eb8244e2e1a1f25e5e997bde306a9c49",
+                         "compatibilityGroup":  "yolo26s-v2",
+                         "metadata":  {
+                                          "modelCompatibility":  "yolo26s-v2"
+                                      }
+                     },
+                     {
+                         "id":  "8936d486-2b9e-4182-8bb8-1798efc89f05",
+                         "artifactType":  "LABEL_MAP",
+                         "releaseCode":  "skinai-label-map",
+                         "version":  "yolo26s-v2",
+                         "relativePath":  "yolo26s-v2/labels.json",
+                         "sha256":  "ab228b7854ffa34085191b2e672027755abaac5de2492b1d4deaa3da60181a41",
+                         "compatibilityGroup":  "yolo26s-v2",
+                         "metadata":  {
+                                          "canonicalClasses":  [
+                                                                   "ACNE",
+                                                                   "CHICKENPOX",
+                                                                   "ECZEMA",
+                                                                   "RINGWORM"
+                                                               ]
+                                      }
+                     }
+                 ]
+}

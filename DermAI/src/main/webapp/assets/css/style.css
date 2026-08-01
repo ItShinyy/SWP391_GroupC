@@ -1,0 +1,97 @@
+@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&family=Noto+Sans:wght@300;400;500;700&display=swap');
+
+:root {
+    /* Brand — green accent across login / headers / app */
+    --skin-primary: #198754;
+    --skin-secondary: #146c43;
+    --skin-bg: #F6F8FA;
+    --skin-border: #E5E7EB;
+    --skin-text: #111827;
+    --skin-muted: #6B7280;
+
+    /* Bootstrap Theme Overrides */
+    --bs-primary: #198754;
+    --bs-primary-rgb: 25, 135, 84;
+    --bs-success: #198754;
+    --bs-success-rgb: 25, 135, 84;
+    --bs-body-bg: #F6F8FA;
+    --bs-body-color: #111827;
+    --bs-border-color: #E5E7EB;
+    --bs-link-color: #198754;
+    --bs-focus-ring-color: rgba(25, 135, 84, 0.35);
+
+    --bs-font-sans-serif: 'Noto Sans', system-ui, -apple-system, sans-serif;
+    --bs-heading-font-family: 'Figtree', sans-serif;
+}
+
+body {
+    font-family: var(--bs-font-sans-serif);
+    background-color: var(--bs-body-bg);
+    color: var(--bs-body-color);
+}
+
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
+    font-family: var(--bs-heading-font-family);
+    font-weight: 600;
+}
+
+/* Phase 3: Accessibility Enhancements */
+:focus-visible {
+    outline: 3px solid #22D3EE !important;
+    outline-offset: 2px !important;
+}
+
+@media (max-width: 768px) {
+    /* 44x44px minimum touch target for interactive elements */
+    .btn, .form-control, .form-select, .nav-link {
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
+
+/* Phase 4: CSS Cleanup & Reusable Global Utilities */
+.card {
+    border: 1px solid var(--bs-border-color);
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.upload-dropzone {
+    border: 2px dashed var(--bs-primary);
+    border-radius: 1rem;
+    background-color: white;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+.upload-dropzone:hover {
+    background-color: #E8F1F6; /* Muted background from design system */
+    border-color: var(--bs-success);
+}
+
+.btn-skin {
+    background-color: var(--skin-primary);
+    border-color: var(--skin-primary);
+    color: #fff;
+}
+.btn-skin:hover,
+.btn-skin:focus {
+    background-color: var(--skin-secondary);
+    border-color: var(--skin-secondary);
+    color: #fff;
+}
+
+.brand-role-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--skin-primary), var(--skin-secondary));
+    color: #fff;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}

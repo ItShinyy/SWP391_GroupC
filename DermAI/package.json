@@ -1,0 +1,25 @@
+{
+  "name": "dermai",
+  "version": "1.0.0",
+  "description": "DermAI web application and VNPay payment service",
+  "private": true,
+  "main": "payment-service/server.js",
+  "scripts": {
+    "start": "node payment-service/server.js",
+    "start:dev": "nodemon payment-service/server.js",
+    "test": "node --check payment-service/db.js && node --check payment-service/payment-service.js && node --check payment-service/server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "dotenv": "^16.6.1",
+    "express": "^5.2.1",
+    "mssql": "^11.0.1",
+    "vnpay": "^2.5.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}

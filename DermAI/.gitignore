@@ -1,0 +1,30 @@
+# Build output
+target/
+
+# Local runtime configuration and credentials
+local.properties
+.env
+.env.*
+!local.properties.example
+ai-service/.env.local
+payment-service/.env.local
+node_modules/
+payment-service/node_modules/
+nginx/logs/
+nginx/*.pid
+service-account*.json
+*.pem
+*.key
+
+# Python inference runtime
+ai-service/.venv/
+ai-service/__pycache__/
+ai-service/**/__pycache__/
+ai-service/models/
+ai-service/release-registry.json
+
+catalina.base_IS_UNDEFINED/
+
+.agents/
+.cursor/
+Docs/AI_CONTEXT.md

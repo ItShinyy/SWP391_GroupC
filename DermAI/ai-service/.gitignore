@@ -1,0 +1,10 @@
+# Local-only inference configuration and private model artifacts.
+.env.local
+.venv/
+__pycache__/
+*.pyc
+artifacts/
+private-artifacts/
+*.onnx
+*.pt
+*.npz
