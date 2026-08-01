@@ -6,7 +6,10 @@ $ErrorActionPreference = "Stop"
 $dermAi = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 
 $paymentDir = Join-Path $dermAi "payment-service"
-$nginxRoot = "C:\Buh\SWP391tempo\SWP391_GroupC\DermAI\nginx-1.30.3"
+$nginxRoot = "D:\nginx-1.30.3"
+if (-not (Test-Path $nginxRoot)) {
+    $nginxRoot = "C:\Buh\SWP391tempo\SWP391_GroupC\DermAI\nginx-1.30.3"
+}
 $nginxExe = Join-Path $nginxRoot "nginx.exe"
 $dermaConf = Join-Path $dermAi "nginx\conf\nginx.conf"
 
