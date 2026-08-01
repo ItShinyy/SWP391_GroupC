@@ -27,4 +27,6 @@ catalina.base_IS_UNDEFINED/
 
 .agents/
 .cursor/
+.idea/
+.vscode/
 Docs/AI_CONTEXT.md
