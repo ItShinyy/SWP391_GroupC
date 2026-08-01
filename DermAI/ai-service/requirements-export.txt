@@ -1,0 +1,3 @@
+# Host export extras (install torch + ultralytics separately for your CUDA/CPU).
+onnx==1.17.0
+onnxruntime==1.27.0
