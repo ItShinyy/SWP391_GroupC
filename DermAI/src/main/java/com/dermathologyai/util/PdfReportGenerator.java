@@ -91,48 +91,26 @@ public class PdfReportGenerator {
             cell2.addElement(p2);
             infoTable.addCell(cell2);
             
-            // Row 2: DOB & Date
+            // Row 2: Date & Phone
             PdfPCell cell3 = new PdfPCell();
             cell3.setBorder(Rectangle.NO_BORDER);
             Paragraph p3 = new Paragraph();
-            p3.add(new Chunk("Ngày sinh: ", infoBoldFont));
-            p3.add(new Chunk(appt.getPatientDob() != null ? appt.getPatientDob() : "Chưa rõ", infoFont));
+            p3.add(new Chunk("Ngày khám: ", infoBoldFont));
+            String dateText = appt.getAppointmentTime() != null ? appt.getAppointmentTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) : "N/A";
+            p3.add(new Chunk(dateText, infoFont));
             cell3.addElement(p3);
             infoTable.addCell(cell3);
             
             PdfPCell cell4 = new PdfPCell();
             cell4.setBorder(Rectangle.NO_BORDER);
             Paragraph p4 = new Paragraph();
-            p4.add(new Chunk("Ngày khám: ", infoBoldFont));
-            String dateText = appt.getAppointmentTime() != null ? appt.getAppointmentTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) : "N/A";
-            p4.add(new Chunk(dateText, infoFont));
+            p4.add(new Chunk("Số điện thoại: ", infoBoldFont));
+            p4.add(new Chunk(appt.getPatientPhone() != null ? appt.getPatientPhone() : "N/A", infoFont));
             cell4.addElement(p4);
             infoTable.addCell(cell4);
             
-            // Row 3: Gender & Phone
-            String genderText = appt.getPatientGender();
-            if ("MALE".equalsIgnoreCase(genderText)) genderText = "Nam";
-            else if ("FEMALE".equalsIgnoreCase(genderText)) genderText = "Nữ";
-            else if ("OTHER".equalsIgnoreCase(genderText)) genderText = "Khác";
-            else genderText = "N/A";
-            
-            PdfPCell cell5 = new PdfPCell();
-            cell5.setBorder(Rectangle.NO_BORDER);
-            Paragraph p5 = new Paragraph();
-            p5.add(new Chunk("Giới tính: ", infoBoldFont));
-            p5.add(new Chunk(genderText, infoFont));
-            cell5.addElement(p5);
-            infoTable.addCell(cell5);
-            
-            PdfPCell cell6 = new PdfPCell();
-            cell6.setBorder(Rectangle.NO_BORDER);
-            Paragraph p6 = new Paragraph();
-            p6.add(new Chunk("Số điện thoại: ", infoBoldFont));
-            p6.add(new Chunk(appt.getPatientPhone() != null ? appt.getPatientPhone() : "N/A", infoFont));
-            cell6.addElement(p6);
-            infoTable.addCell(cell6);
-            
             document.add(infoTable);
+
             
             // Divider 2
             LineSeparator line2 = new LineSeparator(1f, 100f, java.awt.Color.LIGHT_GRAY, Element.ALIGN_CENTER, 0);
