@@ -68,6 +68,42 @@ public class NotificationService {
             "/patient/appointments");
     }
 
+    public void enqueueAppointmentCompleted(String userId, String appointmentId) {
+        enqueue(userId,
+            "appointment.completed." + appointmentId,
+            "APPOINTMENT_COMPLETED",
+            "Buổi khám đã hoàn tất",
+            "Buổi khám của bạn đã hoàn tất. Hãy xem hồ sơ bệnh án và đánh giá dịch vụ.",
+            "/patient/appointments");
+    }
+
+    public void enqueueScreeningResultVisible(String userId, String reportId) {
+        enqueue(userId,
+            "screening.visible." + reportId,
+            "SCREENING_RESULT_VISIBLE",
+            "Kết quả sàng lọc đã được chia sẻ",
+            "Bác sĩ đã xem xét và chia sẻ kết quả sàng lọc da liễu của bạn.",
+            "/patient/reports/view?id=" + reportId);
+    }
+
+    public void enqueueFeedbackReplied(String userId, String feedbackId) {
+        enqueue(userId,
+            "feedback.replied." + feedbackId,
+            "FEEDBACK_REPLIED",
+            "Đánh giá của bạn đã được phản hồi",
+            "Quản trị viên đã phản hồi đánh giá của bạn.",
+            "/patient/feedback");
+    }
+
+    public void enqueueIssueReportUpdated(String userId, String reportId, String newStatus) {
+        enqueue(userId,
+            "issue.updated." + reportId + "." + newStatus,
+            "ISSUE_REPORT_UPDATED",
+            "Báo cáo sự cố đã được cập nhật",
+            "Trạng thái báo cáo sự cố của bạn đã được cập nhật.",
+            "/patient/issue-report");
+    }
+
     /** Drain PENDING outbox rows; safe to call from a scheduler. */
     public int drainPendingEmails(int batchSize) {
         List<Notification> batch = notificationDAO.findPendingEmailBatch(batchSize);

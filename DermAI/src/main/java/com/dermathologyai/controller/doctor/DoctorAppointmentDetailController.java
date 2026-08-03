@@ -248,9 +248,12 @@ public class DoctorAppointmentDetailController extends HttpServlet {
                     medicalRecordService.ensureDraftFromAppointment(completed);
                     Invoice invoice = billingService.ensureUnpaidInvoiceForAppointment(appointmentId);
                     Patient patient = patientDAO.findById(ownedAppointment.getPatientId());
-                    if (patient != null && invoice != null && "UNPAID".equals(invoice.getStatus())) {
-                        notificationService.enqueuePaymentPending(patient.getUserId(), invoice.getId(),
-                            "Buổi khám đã hoàn tất. Bạn còn hóa đơn chưa thanh toán.");
+                    if (patient != null) {
+                        notificationService.enqueueAppointmentCompleted(patient.getUserId(), appointmentId);
+                        if (invoice != null && "UNPAID".equals(invoice.getStatus())) {
+                            notificationService.enqueuePaymentPending(patient.getUserId(), invoice.getId(),
+                                "Buổi khám đã hoàn tất. Bạn còn hóa đơn chưa thanh toán.");
+                        }
                     }
                     auditService.log(user.getId(), "DOCTOR_COMPLETE_APPT", "appointments", appointmentId, null, "{\"status\":\"COMPLETED\"}", null, RequestUtil.getClientIp(req), req.getHeader("User-Agent"));
                 }
@@ -433,6 +436,12 @@ public class DoctorAppointmentDetailController extends HttpServlet {
             resp.sendRedirect(req.getContextPath() + "/doctor/appointments/detail?id=" + appointment.getId()
                 + "&error=review_stale#ai-screening-card");
             return;
+        }
+        if (visible) {
+            Patient patient = patientDAO.findById(report.getPatientId());
+            if (patient != null) {
+                notificationService.enqueueScreeningResultVisible(patient.getUserId(), report.getId());
+            }
         }
         auditService.log(user.getId(), "AI_SCREENING_DOCTOR_" + status, "diagnosis_reports", report.getId(),
             null, null, null, RequestUtil.getClientIp(req), req.getHeader("User-Agent"));
