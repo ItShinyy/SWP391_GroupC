@@ -4,7 +4,6 @@ import com.dermathologyai.dao.DiagnosisReportDAO;
 import com.dermathologyai.dao.UserDAO;
 import com.dermathologyai.model.DiagnosisReport;
 import com.dermathologyai.service.BillingService;
-import com.dermathologyai.service.MedicalRecordService;
 import com.dermathologyai.util.FormatUtil;
 import com.google.gson.Gson;
 import jakarta.servlet.ServletException;
@@ -23,7 +22,6 @@ public class DashboardApiController extends HttpServlet {
     private UserDAO userDAO;
     private DiagnosisReportDAO reportDAO;
     private BillingService billingService;
-    private MedicalRecordService medicalRecordService;
     private static final Gson GSON = new Gson();
 
     @Override
@@ -31,7 +29,6 @@ public class DashboardApiController extends HttpServlet {
         userDAO = new UserDAO();
         reportDAO = new DiagnosisReportDAO();
         billingService = new BillingService();
-        medicalRecordService = new MedicalRecordService();
     }
 
     private static class RecentScanDTO {
@@ -62,8 +59,8 @@ public class DashboardApiController extends HttpServlet {
         List<RecentScanDTO> recentScans;
         int unpaidInvoices;
         int paidInvoices;
-        int successPayments;
-        int medicalReportsCompleted;
+        long collectedRevenue;    // PAID invoices total (VND)
+        long outstandingRevenue;  // UNPAID invoices total (VND)
         String error;
     }
 
@@ -72,21 +69,49 @@ public class DashboardApiController extends HttpServlet {
         resp.setContentType("application/json");
         resp.setCharacterEncoding("UTF-8");
 
+        String pageStr = req.getParameter("page");
+        String sizeStr = req.getParameter("size");
+        
+        String search = req.getParameter("search");
+        String startDate = req.getParameter("startDate");
+        String endDate = req.getParameter("endDate");
+        String doctorId = req.getParameter("doctorId");
+        String diseaseId = req.getParameter("diseaseId");
+        String risk = req.getParameter("risk");
+        
+        int page = 1;
+        int size = 10;
+        
+        if (pageStr != null && !pageStr.isEmpty()) {
+            try { page = Integer.parseInt(pageStr); } catch (NumberFormatException ignored) {}
+        }
+        if (sizeStr != null && !sizeStr.isEmpty()) {
+            try { size = Integer.parseInt(sizeStr); } catch (NumberFormatException ignored) {}
+        }
+
+        DiagnosisReportDAO.ReportFilter filter = new DiagnosisReportDAO.ReportFilter();
+        filter.search = search;
+        filter.startDate = startDate;
+        filter.endDate = endDate;
+        filter.doctorId = doctorId;
+        filter.diseaseId = diseaseId;
+        filter.riskLevel = risk;
+
         DashboardDataDTO data = new DashboardDataDTO();
 
         try {
             data.activePatients = userDAO.countActivePatients();
-            data.totalScans = reportDAO.countAll();
-            data.avgConfidence = FormatUtil.confidencePercentRounded(reportDAO.getAverageConfidenceScore());
+            data.totalScans = reportDAO.countAll(filter);
+            data.avgConfidence = FormatUtil.confidencePercentRounded(reportDAO.getAverageConfidenceScore(filter));
 
-            Map<String, Integer> riskLevels = reportDAO.getRiskLevelDistribution();
+            Map<String, Integer> riskLevels = reportDAO.getRiskLevelDistribution(filter);
             int highRiskScans = riskLevels.getOrDefault("HIGH", 0);
             data.highRiskRatio = data.totalScans > 0 ? Math.round((highRiskScans * 100.0) / data.totalScans) : 0;
 
-            data.topDiseases = reportDAO.getTopDiseases(5);
-            data.scansTrend = reportDAO.getScansTrend();
+            data.topDiseases = reportDAO.getTopDiseases(5, filter);
+            data.scansTrend = reportDAO.getScansTrend(filter);
 
-            List<DiagnosisReport> recentList = reportDAO.findAll(1, 5);
+            List<DiagnosisReport> recentList = reportDAO.findAll(filter, null, page, size);
             data.recentScans = new ArrayList<>();
             for (DiagnosisReport dr : recentList) {
                 data.recentScans.add(new RecentScanDTO(dr));
@@ -94,8 +119,8 @@ public class DashboardApiController extends HttpServlet {
 
             data.unpaidInvoices = billingService.countInvoicesByStatus("UNPAID");
             data.paidInvoices = billingService.countInvoicesByStatus("PAID");
-            data.successPayments = billingService.countPaymentsByStatus("SUCCESS");
-            data.medicalReportsCompleted = medicalRecordService.countByStatus("COMPLETED");
+            data.collectedRevenue = billingService.sumCollectedRevenue().longValue();
+            data.outstandingRevenue = billingService.sumOutstandingRevenue().longValue();
         } catch (Exception e) {
             e.printStackTrace();
             data = new DashboardDataDTO();

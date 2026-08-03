@@ -67,7 +67,7 @@ DECLARE @FamilyMemberId1 UNIQUEIDENTIFIER = '00000000-0000-0000-0000-00000000080
 -- Users
 IF NOT EXISTS (SELECT 1 FROM dbo.users WHERE id = @AdminUserId)
     INSERT INTO dbo.users (id, email, username, full_name, password_hash, role, status, avatar, password_changed_at)
-    VALUES (@AdminUserId, 'phongtd2006@gmail.com', 'admin', N'Administrator', @Pwd, 'ADMIN', 'ACTIVE', '/assets/images/admin.jpg', SYSUTCDATETIME());
+    VALUES (@AdminUserId, 'phongtd2006@gmail.com', 'admin', N'Administrator', @Pwd, 'ADMIN', 'ACTIVE', 'assets/images/admin.jpg', SYSUTCDATETIME());
 
 IF NOT EXISTS (SELECT 1 FROM dbo.users WHERE id = @PatientUserId1)
     INSERT INTO dbo.users (id, email, username, full_name, password_hash, role, status, failed_login_attempts)

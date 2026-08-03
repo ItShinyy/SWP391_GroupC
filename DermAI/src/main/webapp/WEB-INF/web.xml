@@ -443,6 +443,33 @@
         <url-pattern>/admin/ai-results/detail</url-pattern>
     </servlet-mapping>
 
+    <servlet>
+        <servlet-name>AdminInvoiceController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.admin.AdminInvoiceController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AdminInvoiceController</servlet-name>
+        <url-pattern>/admin/invoices</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>AdminInvoiceDetailController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.admin.AdminInvoiceDetailController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AdminInvoiceDetailController</servlet-name>
+        <url-pattern>/admin/invoices/detail</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>AdminNotificationsController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.admin.AdminNotificationsController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AdminNotificationsController</servlet-name>
+        <url-pattern>/admin/notifications</url-pattern>
+    </servlet-mapping>
+
     <!-- ==================== Doctor Servlets ==================== -->
     <servlet>
         <servlet-name>DoctorDashboardController</servlet-name>
