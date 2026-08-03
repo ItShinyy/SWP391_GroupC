@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 /**
@@ -15,6 +16,15 @@ import java.util.*;
  */
 public class DiagnosisReportDAO extends DBContext {
     private static final Logger logger = LoggerFactory.getLogger(DiagnosisReportDAO.class);
+
+    public static class ReportFilter {
+        public String search;
+        public String riskLevel;
+        public String startDate;
+        public String endDate;
+        public String doctorId;
+        public String diseaseId;
+    }
 
     private static final String SELECT_COLS =
         "SELECT dr.id, dr.patient_id, dr.disease_id, dr.clinic_id, dr.image_url, dr.heatmap_url," +
@@ -67,11 +77,20 @@ public class DiagnosisReportDAO extends DBContext {
 
     // ─── Filtered / paginated queries ─────────────────────────────────────────
 
+    // ─── Filtered / paginated queries ─────────────────────────────────────────
+
     public List<DiagnosisReport> findAll(String search, String riskLevel, String sort,
                                          int page, int pageSize) {
+        ReportFilter f = new ReportFilter();
+        f.search = search;
+        f.riskLevel = riskLevel;
+        return findAll(f, sort, page, pageSize);
+    }
+    
+    public List<DiagnosisReport> findAll(ReportFilter f, String sort, int page, int pageSize) {
         StringBuilder sql = new StringBuilder(SELECT_COLS + " WHERE 1=1");
         List<Object> params = new ArrayList<>();
-        appendFilters(sql, params, search, riskLevel);
+        appendFilters(sql, params, f);
 
         String order = "precision".equals(sort) ? "dr.confidence_score DESC" : "dr.created_at DESC";
         sql.append(" ORDER BY ").append(order).append(" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
@@ -86,6 +105,13 @@ public class DiagnosisReportDAO extends DBContext {
     }
 
     public int countAll(String search, String riskLevel) {
+        ReportFilter f = new ReportFilter();
+        f.search = search;
+        f.riskLevel = riskLevel;
+        return countAll(f);
+    }
+    
+    public int countAll(ReportFilter f) {
         StringBuilder sql = new StringBuilder(
             "SELECT COUNT(*) FROM diagnosis_reports dr" +
             " LEFT JOIN patients p ON dr.patient_id = p.id" +
@@ -93,62 +119,108 @@ public class DiagnosisReportDAO extends DBContext {
             " LEFT JOIN diseases d ON dr.disease_id = d.id WHERE 1=1"
         );
         List<Object> params = new ArrayList<>();
-        appendFilters(sql, params, search, riskLevel);
+        if (f != null) appendFilters(sql, params, f);
         return queryScalar(sql.toString(), params.toArray());
     }
 
     public int countAll() {
-        return countAll(null, null);
+        return countAll((ReportFilter) null);
     }
 
     // ─── Dashboard analytics ───────────────────────────────────────────────────
 
+    // ─── Dashboard analytics ───────────────────────────────────────────────────
+
     public Map<String, Integer> getRiskLevelDistribution() {
+        return getRiskLevelDistribution(null);
+    }
+
+    public Map<String, Integer> getRiskLevelDistribution(ReportFilter f) {
         Map<String, Integer> map = new HashMap<>();
-        queryList(
-            "SELECT COALESCE(risk_level, 'PENDING') AS risk_level, COUNT(*) AS cnt" +
-            " FROM diagnosis_reports GROUP BY risk_level",
-            rs -> { map.put(rs.getString("risk_level"), rs.getInt("cnt")); return null; }
+        StringBuilder sql = new StringBuilder(
+            "SELECT COALESCE(dr.risk_level, 'PENDING') AS risk_level, COUNT(*) AS cnt" +
+            " FROM diagnosis_reports dr" +
+            " LEFT JOIN patients p ON dr.patient_id = p.id" +
+            " LEFT JOIN users u ON p.user_id = u.id" +
+            " LEFT JOIN diseases d ON dr.disease_id = d.id WHERE 1=1"
         );
+        List<Object> params = new ArrayList<>();
+        if (f != null) appendFilters(sql, params, f);
+        sql.append(" GROUP BY dr.risk_level");
+
+        queryList(sql.toString(), rs -> { map.put(rs.getString("risk_level"), rs.getInt("cnt")); return null; }, params.toArray());
         return map;
     }
 
     public Map<String, Integer> getTopDiseases(int limit) {
+        return getTopDiseases(limit, null);
+    }
+
+    public Map<String, Integer> getTopDiseases(int limit, ReportFilter f) {
         Map<String, Integer> map = new LinkedHashMap<>();
-        // limit is not user input — safe to embed in SQL
-        queryList(
+        StringBuilder sql = new StringBuilder(
             "SELECT TOP " + limit + " d.disease_name, COUNT(*) AS cnt" +
-            " FROM diagnosis_reports dr JOIN diseases d ON dr.disease_id = d.id" +
-            " GROUP BY d.disease_name ORDER BY cnt DESC, d.disease_name ASC",
-            rs -> { map.put(rs.getString("disease_name"), rs.getInt("cnt")); return null; }
+            " FROM diagnosis_reports dr" +
+            " LEFT JOIN patients p ON dr.patient_id = p.id" +
+            " LEFT JOIN users u ON p.user_id = u.id" +
+            " JOIN diseases d ON dr.disease_id = d.id WHERE 1=1"
         );
+        List<Object> params = new ArrayList<>();
+        if (f != null) appendFilters(sql, params, f);
+        sql.append(" GROUP BY d.disease_name ORDER BY cnt DESC, d.disease_name ASC");
+
+        queryList(sql.toString(), rs -> { map.put(rs.getString("disease_name"), rs.getInt("cnt")); return null; }, params.toArray());
         return map;
     }
 
     public Map<String, Integer> getScansTrend() {
+        return getScansTrend(null);
+    }
+
+    public Map<String, Integer> getScansTrend(ReportFilter f) {
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         LocalDate today = LocalDate.now();
-        // Pre-fill 30 days with zeros so missing dates show up as 0 in the chart
         Map<String, Integer> map = new LinkedHashMap<>();
         for (int i = 29; i >= 0; i--) map.put(today.minusDays(i).format(fmt), 0);
 
-        queryList(
-            "SELECT CAST(created_at AS DATE) AS scan_date, COUNT(*) AS cnt" +
-            " FROM diagnosis_reports WHERE created_at >= DATEADD(day, -30, GETDATE())" +
-            " GROUP BY CAST(created_at AS DATE) ORDER BY scan_date ASC",
-            rs -> {
-                String date = rs.getString("scan_date");
-                if (map.containsKey(date)) map.put(date, rs.getInt("cnt"));
-                return null;
-            }
+        StringBuilder sql = new StringBuilder(
+            "SELECT CAST(dr.created_at AS DATE) AS scan_date, COUNT(*) AS cnt" +
+            " FROM diagnosis_reports dr" +
+            " LEFT JOIN patients p ON dr.patient_id = p.id" +
+            " LEFT JOIN users u ON p.user_id = u.id" +
+            " LEFT JOIN diseases d ON dr.disease_id = d.id" +
+            " WHERE dr.created_at >= DATEADD(day, -30, GETDATE())"
         );
+        List<Object> params = new ArrayList<>();
+        if (f != null) appendFilters(sql, params, f);
+        sql.append(" GROUP BY CAST(dr.created_at AS DATE) ORDER BY scan_date ASC");
+
+        queryList(sql.toString(), rs -> {
+            String date = rs.getString("scan_date");
+            if (map.containsKey(date)) map.put(date, rs.getInt("cnt"));
+            return null;
+        }, params.toArray());
         return map;
     }
 
     public double getAverageConfidenceScore() {
+        return getAverageConfidenceScore(null);
+    }
+
+    public double getAverageConfidenceScore(ReportFilter f) {
+        StringBuilder sql = new StringBuilder(
+            "SELECT COALESCE(AVG(dr.confidence_score), 0.0) FROM diagnosis_reports dr" +
+            " LEFT JOIN patients p ON dr.patient_id = p.id" +
+            " LEFT JOIN users u ON p.user_id = u.id" +
+            " LEFT JOIN diseases d ON dr.disease_id = d.id WHERE 1=1"
+        );
+        List<Object> params = new ArrayList<>();
+        if (f != null) appendFilters(sql, params, f);
+
         try (Connection conn = getConnection();
-             java.sql.PreparedStatement ps = conn.prepareStatement(
-                 "SELECT COALESCE(AVG(confidence_score), 0.0) FROM diagnosis_reports")) {
+             java.sql.PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            Object[] arr = params.toArray();
+            for (int i = 0; i < arr.length; i++) ps.setObject(i + 1, arr[i]);
             try (java.sql.ResultSet rs = ps.executeQuery()) {
                 return rs.next() ? rs.getDouble(1) : 0.0;
             }
@@ -157,6 +229,7 @@ public class DiagnosisReportDAO extends DBContext {
             return 0.0;
         }
     }
+
 
     // ─── Mutations ─────────────────────────────────────────────────────────────
 
@@ -192,16 +265,39 @@ public class DiagnosisReportDAO extends DBContext {
 
     // ─── Internal helpers ──────────────────────────────────────────────────────
 
-    private static void appendFilters(StringBuilder sql, List<Object> params,
-                                      String search, String riskLevel) {
-        if (search != null && !search.isBlank()) {
+    private static void appendFilters(StringBuilder sql, List<Object> params, String search, String riskLevel) {
+        ReportFilter f = new ReportFilter();
+        f.search = search;
+        f.riskLevel = riskLevel;
+        appendFilters(sql, params, f);
+    }
+
+    private static void appendFilters(StringBuilder sql, List<Object> params, ReportFilter f) {
+        if (f == null) return;
+        if (f.search != null && !f.search.isBlank()) {
             sql.append(" AND (u.full_name LIKE ? OR d.disease_name LIKE ?)");
-            String p = "%" + search.trim() + "%";
+            String p = "%" + f.search.trim() + "%";
             params.add(p); params.add(p);
         }
-        if (riskLevel != null && !riskLevel.isBlank()) {
+        if (f.riskLevel != null && !f.riskLevel.isBlank()) {
             sql.append(" AND dr.risk_level = ?");
-            params.add(riskLevel.trim());
+            params.add(f.riskLevel.trim());
+        }
+        if (f.startDate != null && !f.startDate.isBlank()) {
+            sql.append(" AND dr.created_at >= ?");
+            params.add(f.startDate.trim() + " 00:00:00");
+        }
+        if (f.endDate != null && !f.endDate.isBlank()) {
+            sql.append(" AND dr.created_at <= ?");
+            params.add(f.endDate.trim() + " 23:59:59");
+        }
+        if (f.doctorId != null && !f.doctorId.isBlank()) {
+            sql.append(" AND dr.reviewed_by_doctor_id = ?");
+            params.add(f.doctorId.trim());
+        }
+        if (f.diseaseId != null && !f.diseaseId.isBlank()) {
+            sql.append(" AND dr.disease_id = ?");
+            params.add(f.diseaseId.trim());
         }
     }
 

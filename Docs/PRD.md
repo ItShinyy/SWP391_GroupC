@@ -1,8 +1,8 @@
-# SkinAI — Product Requirements (reverse-engineered)
+# DermAI — Product Requirements (reverse-engineered)
 
 Requirements inferred from **implemented** code and schema.  
 Not a wishlist. Planned gaps are called out explicitly.  
-Companion: [ARCHITECTURE.md](ARCHITECTURE.md) · [DESIGN.md](DESIGN.md) · [SCHEMA.md](SCHEMA.md)
+Companion: [ARCHITECTURE.md](ARCHITECTURE.md) · [DESIGN.md](DESIGN.md) · [SCHEMA.md](SCHEMA.md) · [API_REFERENCE.md](API_REFERENCE.md)
 
 ---
 

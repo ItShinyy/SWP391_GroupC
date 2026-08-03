@@ -90,7 +90,6 @@ public class LoginController extends HttpServlet {
             String ip = RequestUtil.getClientIp(req);
             String ua = req.getHeader("User-Agent");
             auditService.log(user.getId(), "LOGIN_SUCCESS", "users", user.getId(), null, "{\"method\":\"local\"}", null, ip, ua);
-            notificationService.sendNewLoginAlert(user.getEmail(), ip, ua);
 
             req.changeSessionId();
             session = req.getSession(true);

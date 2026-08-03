@@ -2,6 +2,7 @@ package com.dermathologyai.controller.admin;
 
 import com.dermathologyai.dao.*;
 import com.dermathologyai.model.*;
+import com.dermathologyai.service.NotificationService;
 import com.dermathologyai.util.PageUtil;
 import com.dermathologyai.util.RequestUtil;
 
@@ -21,6 +22,7 @@ public class AdminFeedbackController extends HttpServlet {
     private PatientDAO patientDAO;
     private UserDAO userDAO;
     private AuditLogDAO auditLogDAO;
+    private NotificationService notificationService;
 
     @Override
     public void init() throws ServletException {
@@ -29,6 +31,7 @@ public class AdminFeedbackController extends HttpServlet {
         patientDAO = new PatientDAO();
         userDAO = new UserDAO();
         auditLogDAO = new AuditLogDAO();
+        notificationService = new NotificationService();
     }
 
     @Override
@@ -196,7 +199,11 @@ public class AdminFeedbackController extends HttpServlet {
             String userAgent = req.getHeader("User-Agent");
             auditLogDAO.createLog(user.getId(), "FEEDBACK_REPLY", "feedbacks", feedbackId,
                                 null, "Admin phản hồi feedback", null, clientIp, userAgent);
-
+            // Notify the patient in-app
+            Patient patient = patientDAO.findById(feedback.getPatientId());
+            if (patient != null) {
+                notificationService.enqueueFeedbackReplied(patient.getUserId(), feedbackId);
+            }
             req.getSession().setAttribute("successMessage", "Đã gửi phản hồi thành công");
         } else {
             req.getSession().setAttribute("errorMessage", "Không thể gửi phản hồi. Vui lòng thử lại");

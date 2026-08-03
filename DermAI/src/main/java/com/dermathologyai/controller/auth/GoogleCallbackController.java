@@ -181,7 +181,6 @@ public class GoogleCallbackController extends HttpServlet {
         String userAgent = req.getHeader("User-Agent");
         auditService.log(user.getId(), "LOGIN_SUCCESS", "users", user.getId(), null,
                 "{\"method\":\"google\"}", null, ip, userAgent);
-        notificationService.sendNewLoginAlert(user.getEmail(), ip, userAgent);
 
         AuthRedirect.afterLogin(req, resp, user);
     }

@@ -1,17 +1,17 @@
-# SkinAI — Architecture
+# DermAI — Architecture
 
-Implementation-driven architecture for the Derma workspace (`SkinAI/`).  
-Companion docs: [DESIGN.md](DESIGN.md) · [PRD.md](PRD.md) · [RULES.md](RULES.md) · [SCHEMA.md](SCHEMA.md)
+Implementation-driven architecture for the Derma workspace (`DermAI/`).  
+Companion docs: [DESIGN.md](DESIGN.md) · [PRD.md](PRD.md) · [RULES.md](RULES.md) · [SCHEMA.md](SCHEMA.md) · [API_REFERENCE.md](API_REFERENCE.md)
 
 ---
 
 ## 1. System overview
 
-SkinAI is a multi-process dermatology screening product:
+DermAI is a multi-process dermatology screening product:
 
 | Process | Tech | Default local |
 |---------|------|----------------|
-| Web app | Java 17, Jakarta Servlet/JSP, Tomcat 10+ | `http://localhost:9999/SkinAI` |
+| Web app | Java 17, Jakarta Servlet/JSP, Tomcat 10+ | `http://localhost:9999/DermAI` |
 | AI inference | FastAPI + ONNX (`ai-service/`), uvicorn | `http://127.0.0.1:8000` |
 | Payments | Node Express (`payment-service/`) | `http://127.0.0.1:3000` |
 | Edge (optional) | Nginx | `:80` → Tomcat + Node |
@@ -20,7 +20,7 @@ SkinAI is a multi-process dermatology screening product:
 ```mermaid
 flowchart LR
   Browser --> Nginx
-  Nginx -->|/SkinAI| Tomcat
+  Nginx -->|/DermAI| Tomcat
   Nginx -->|/api /payments/vnpay| Node
   Tomcat --> SQL[(SQL Server)]
   Tomcat -->|signed screenings| FastAPI
@@ -218,7 +218,7 @@ Object keys HMAC’d with `media.object.key.secret`. Prefixes: `media.diagnosis.
 
 1. JVM system property  
 2. Environment variable (`DOTTED_KEY` → `DOTTED_KEY` with `_`)  
-3. `SkinAI/local.properties` (gitignored)  
+3. `DermAI/local.properties` (gitignored)  
 4. `application.properties` (safe defaults)
 
 AI secrets also in `ai-service/.env.local`. Payment secrets in `payment-service/.env.local`.

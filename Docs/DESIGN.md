@@ -1,7 +1,7 @@
-# SkinAI — Design
+# DermAI — Design
 
 Why the UI and workflows are structured the way they are.  
-Companion: [ARCHITECTURE.md](ARCHITECTURE.md) · [PRD.md](PRD.md) · [SCHEMA.md](SCHEMA.md)
+Companion: [ARCHITECTURE.md](ARCHITECTURE.md) · [PRD.md](PRD.md) · [SCHEMA.md](SCHEMA.md) · [API_REFERENCE.md](API_REFERENCE.md)
 
 ---
 

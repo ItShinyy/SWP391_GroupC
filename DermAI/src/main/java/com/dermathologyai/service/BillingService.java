@@ -58,6 +58,16 @@ public class BillingService {
         return paymentDAO.countByStatus(status);
     }
 
+    /** Total collected (PAID invoices). */
+    public java.math.BigDecimal sumCollectedRevenue() {
+        return invoiceDAO.sumCollectedRevenue();
+    }
+
+    /** Total outstanding (UNPAID invoices). */
+    public java.math.BigDecimal sumOutstandingRevenue() {
+        return invoiceDAO.sumOutstandingRevenue();
+    }
+
     private BigDecimal defaultFee() {
         String raw = AppConfig.get("billing.default.consultation.fee", "200000");
         try {

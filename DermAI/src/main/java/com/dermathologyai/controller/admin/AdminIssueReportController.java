@@ -5,6 +5,7 @@ import com.dermathologyai.dao.IssueReportDAO;
 import com.dermathologyai.model.IssueReport;
 import com.dermathologyai.model.User;
 import com.dermathologyai.notification.MailService;
+import com.dermathologyai.service.NotificationService;
 import com.dermathologyai.util.PageUtil;
 import com.dermathologyai.util.RequestUtil;
 import jakarta.servlet.ServletException;
@@ -23,11 +24,13 @@ public class AdminIssueReportController extends HttpServlet {
 
     private IssueReportDAO issueReportDAO;
     private AuditLogDAO auditLogDAO;
+    private NotificationService notificationService;
 
     @Override
     public void init() {
         issueReportDAO = new IssueReportDAO();
         auditLogDAO = new AuditLogDAO();
+        notificationService = new NotificationService();
     }
 
     @Override
@@ -86,6 +89,12 @@ public class AdminIssueReportController extends HttpServlet {
                         report.getReporterEmail(),
                         "DermAI - Cập nhật báo cáo sự cố " + report.getReportCode(),
                         buildEmail(report, update));
+
+        // In-app notification alongside email
+        if (report.getReporterUserId() != null) {
+            notificationService.enqueueIssueReportUpdated(
+                report.getReporterUserId(), reportId, update.status());
+        }
 
         auditLogDAO.createLog(admin.getId(), "ISSUE_REPORT_" + update.status(), "issue_reports", reportId,
                 "Trạng thái cũ: " + report.getStatus(), "Trạng thái mới: " + update.status(), null, RequestUtil.getClientIp(request), request.getHeader("User-Agent"));

@@ -1,0 +1,70 @@
+# ==================== Runtime Configuration ====================
+app.env=development
+app.base.url=http://localhost:9999/DermAI
+
+db.url=jdbc:sqlserver://localhost:1433;databaseName=SWP391;encrypt=true;trustServerCertificate=true
+db.username=sa
+db.password=YOUR_DB_PASSWORD_HERE
+
+# ==================== Google OAuth2 Configuration ====================
+google.client.id=YOUR_GOOGLE_CLIENT_ID_HERE
+google.client.secret=YOUR_GOOGLE_CLIENT_SECRET_HERE
+google.redirect.uri=http://localhost:9999/DermAI/auth/google/callback
+google.scope=openid email profile
+
+# ==================== Mail Configuration ====================
+mail.username=dermathologyai@gmail.com
+mail.password=YOUR_MAIL_PASSWORD_HERE
+
+# ==================== AI Service Configuration ====================
+ai.service.enabled=true
+ai.service.base.url=http://127.0.0.1:8000
+ai.service.api.key=YOUR_AI_SERVICE_API_KEY_HERE
+ai.connect.timeout.ms=3000
+ai.read.timeout.ms=60000
+ai.max.response.bytes=15728640
+orphan.minimum.age.hours=24
+
+# Shared with FastAPI AI_MODELS_ROOT. Contains models/{id}/ and active/.
+ai.models.root=C:\\Users\\phong\\Downloads\\SWP391\\DemAI-private-artifacts
+
+ai.screening.max.requests.per.window=3
+ai.screening.rate.window.seconds=60
+ai.processing.timeout.minutes=10
+ai.recovery.interval.minutes=5
+
+# ==================== Cloudinary Diagnosis Media ====================
+cloudinary.cloud.name=YOUR_CLOUDINARY_CLOUD_NAME_HERE
+cloudinary.api.key=YOUR_CLOUDINARY_API_KEY_HERE
+cloudinary.api.secret=YOUR_CLOUDINARY_API_SECRET_HERE
+media.object.key.secret=YOUR_MEDIA_SECRET_HERE
+media.signed.url.ttl.seconds=600
+media.diagnosis.prefix=diagnoses/v1
+
+# ==================== Upload Constraints ====================
+hard.max.upload.bytes=10485760
+hard.max.image.width=8192
+hard.max.image.height=8192
+hard.max.image.pixels=32000000
+hard.min.confidence.threshold=0.90
+
+# ==================== Streamlit Configuration ====================
+streamlit.base.url=
+streamlit.cors.origin=*
+streamlit.launch.ttl.seconds=600
+
+# ==================== Booking / Application Settings ====================
+booking.slot.morning=09:00
+booking.slot.afternoon=14:00
+booking.slot.evening=18:00
+
+# ==================== Billing / External Payment API ====================
+billing.default.consultation.fee=200000
+payment.api.base.url=http://localhost
+payment.expire.minutes=4
+notification.drain.interval.minutes=1
+
+# ==================== Medicine Search External API ====================
+medicine.api.base.url=https://rxnav.nlm.nih.gov/REST
+medicine.api.key=YOUR_MEDICINE_API_KEY_HERE
+medicine.api.timeout.ms=4000
