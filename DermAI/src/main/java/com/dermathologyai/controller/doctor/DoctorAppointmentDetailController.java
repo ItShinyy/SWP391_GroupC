@@ -284,6 +284,10 @@ public class DoctorAppointmentDetailController extends HttpServlet {
                 break;
 
             case "checkIn":
+                if (!"ACCEPTED".equalsIgnoreCase(ownedAppointment.getDoctorStatus())) {
+                    resp.sendRedirect(req.getContextPath() + "/doctor/appointments/detail?id=" + appointmentId + "&error=not_accepted#notes-card");
+                    break;
+                }
                 success = appointmentDAO.checkIn(appointmentId);
                 if (success) {
                     auditService.log(user.getId(), "DOCTOR_CHECK_IN", "appointments", appointmentId, null, "{\"status\":\"CHECKED_IN\",\"attendance\":\"VISITED\"}", null, RequestUtil.getClientIp(req), req.getHeader("User-Agent"));

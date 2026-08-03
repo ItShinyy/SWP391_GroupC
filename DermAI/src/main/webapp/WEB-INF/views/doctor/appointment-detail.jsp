@@ -33,6 +33,12 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     </c:if>
+    <c:if test="${param.error == 'not_accepted'}">
+        <div class="alert alert-warning alert-dismissible fade show rounded-3 border-0 shadow-sm" role="alert">
+            <i class="fa-solid fa-triangle-exclamation me-2"></i><strong>Yêu cầu nhận khám:</strong> Bác sĩ phải nhấn "Nhận khám" trước khi thực hiện Check-in cho bệnh nhân.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    </c:if>
     <c:if test="${param.screeningReviewed == '1'}">
         <div class="alert alert-success alert-dismissible fade show rounded-3 border-0 shadow-sm" role="alert">
             <i class="fa-solid fa-stethoscope me-2"></i>Đã lưu duyệt sàng lọc AI.
@@ -713,6 +719,10 @@
     }
 
     function submitCheckIn() {
+        <c:if test="${appointment.doctorStatus != 'ACCEPTED'}">
+            alert("Vui lòng nhấn \"Nhận khám\" trước khi thực hiện Check-in cho bệnh nhân!");
+            return;
+        </c:if>
         if (confirm("Xác nhận bệnh nhân đã check-in?")) {
             document.getElementById('checkInForm').submit();
         }
