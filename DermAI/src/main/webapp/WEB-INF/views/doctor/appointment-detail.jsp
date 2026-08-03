@@ -353,21 +353,22 @@
                                 <input type="hidden" name="appointmentId" value="${appointment.id}">
                                 <input type="hidden" name="action" value="addPrescription">
                                 
-                                <div class="col-md-4">
+                                <div class="col-md-4 position-relative">
                                     <label class="form-label small fw-bold text-muted mb-1">Tên thuốc <span class="text-danger">*</span></label>
-                                    <select class="form-select rounded-3" name="drugName" id="drugNameSelect" required onchange="fillPrescriptionPreset(this.value)" style="height: 38px; font-size: 0.85rem;">
-                                        <option value="" disabled selected>-- Chọn tên thuốc --</option>
-                                        <option value="Thuốc A">Thuốc A</option>
-                                        <option value="Thuốc B">Thuốc B</option>
-                                        <option value="Thuốc C">Thuốc C</option>
-                                        <option value="custom">-- Nhập tên thuốc khác --</option>
-                                    </select>
-                                    <input type="text" class="form-control rounded-3 mt-2 d-none" name="customDrugName" id="customDrugNameInput" placeholder="Nhập tên thuốc tự do..." style="height: 38px; font-size: 0.85rem;">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white border-end-0 text-muted" style="height: 38px;"><i class="fa-solid fa-magnifying-glass"></i></span>
+                                        <input type="text" class="form-control border-start-0 rounded-end-3" name="drugName" id="drugNameInput" 
+                                               placeholder="Gõ tên thuốc để tìm kiếm (vd: amox, hydro...)" required autocomplete="off" style="height: 38px; font-size: 0.85rem;">
+                                    </div>
+                                    <!-- Searchable Autocomplete Dropdown -->
+                                    <div id="medicineSuggestionsDropdown" class="dropdown-menu shadow w-100 mt-1 overflow-auto" 
+                                         style="max-height: 250px; display: none; z-index: 1050; font-size: 0.85rem;">
+                                    </div>
                                 </div>
 
                                 <div class="col-md-2">
                                     <label class="form-label small fw-bold text-muted mb-1">Số lượng <span class="text-danger">*</span></label>
-                                    <input type="number" class="form-control rounded-3" name="quantity" min="1" max="100" value="10" required style="height: 38px; font-size: 0.85rem;">
+                                    <input type="number" class="form-control rounded-3" name="quantity" id="quantityInput" min="1" max="100" value="10" required style="height: 38px; font-size: 0.85rem;">
                                 </div>
 
                                 <div class="col-md-4">
@@ -382,6 +383,7 @@
                                 </div>
                             </form>
                         </div>
+
                     </c:when>
                     <c:when test="${appointment.status == 'CONFIRMED'}">
                         <div class="alert alert-info border border-info-subtle rounded-3 p-3 mb-0 small">
@@ -514,29 +516,195 @@
 </div>
 
 <script>
-    function fillPrescriptionPreset(val) {
-        const customInput = document.getElementById('customDrugNameInput');
-        const dosageInput = document.getElementById('dosageInput');
-        
-        if (val === 'custom') {
-            customInput.classList.remove('d-none');
-            customInput.setAttribute('required', 'required');
-            customInput.focus();
-        } else {
-            customInput.classList.add('d-none');
-            customInput.removeAttribute('required');
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const drugInput = document.getElementById("drugNameInput");
+        const dropdown = document.getElementById("medicineSuggestionsDropdown");
+        const dosageInput = document.getElementById("dosageInput");
+        const quantityInput = document.getElementById("quantityInput");
+
+        if (!drugInput || !dropdown) return;
+
+        let debounceTimer = null;
+        let selectedIndex = -1;
+        const searchCache = new Map();
+
+        // 1. Debounced Input Listener (300ms, min 2 chars)
+        drugInput.addEventListener("input", function () {
+            const query = drugInput.value.trim();
+
+            clearTimeout(debounceTimer);
+            selectedIndex = -1;
+
+            if (query.length < 2) {
+                hideDropdown();
+                return;
+            }
+
+            // Check Client-Side Cache
+            if (searchCache.has(query.toLowerCase())) {
+                renderSuggestions(searchCache.get(query.toLowerCase()), query);
+                return;
+            }
+
+            // Debounce AJAX Call
+            debounceTimer = setTimeout(() => {
+                fetchMedicineSuggestions(query);
+            }, 300);
+        });
+
+        // 2. Fetch Medicine Suggestions via Backend API Endpoint
+        function fetchMedicineSuggestions(query) {
+            const contextPath = "${pageContext.request.contextPath}";
+            const url = contextPath + "/doctor/medicine/search?q=" + encodeURIComponent(query);
+
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("HTTP error " + response.status);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data && data.success && Array.isArray(data.items)) {
+                        searchCache.set(query.toLowerCase(), data.items);
+                        renderSuggestions(data.items, query);
+                    } else if (data && data.error) {
+                        renderError(data.error);
+                    } else {
+                        renderSuggestions([], query);
+                    }
+                })
+                .catch(error => {
+                    console.warn("Medicine API lookup failed:", error);
+                    renderError("Unable to retrieve medicine data.");
+                });
         }
 
-        const presets = {
-            'Thuốc A': 'Uống 2 lần/ngày, mỗi lần 1 viên sau ăn sáng và tối. Dùng liên tục trong 7 ngày.',
-            'Thuốc B': 'Thoa một lớp mỏng lên vùng da tổn thương 1 lần/ngày vào buổi tối trước khi đi ngủ.',
-            'Thuốc C': 'Uống 1 lần/ngày vào buổi sáng sau ăn. Tránh ánh nắng mặt trời trực tiếp khi đang dùng thuốc.'
-        };
+        // 3. Render Suggestions List
+        function renderSuggestions(items, query) {
+            dropdown.innerHTML = "";
 
-        if (presets[val]) {
-            dosageInput.value = presets[val];
+            if (!items || items.length === 0) {
+                dropdown.innerHTML = '<div class="dropdown-item disabled text-muted py-2 px-3"><i class="fa-solid fa-info-circle me-2"></i>Không tìm thấy thuốc phù hợp</div>';
+                showDropdown();
+                return;
+            }
+
+            items.forEach((item, index) => {
+                const a = document.createElement("a");
+                a.className = "dropdown-item py-2 px-3 border-bottom text-wrap";
+                a.href = "#";
+                a.dataset.index = index;
+
+                const nameText = highlightMatch(item.name || "", query);
+                const categoryBadge = item.category ? '<span class="badge bg-light text-dark border ms-2">' + escapeHtml(item.category) + '</span>' : '';
+                const dosageText = item.dosage ? '<div class="small text-muted mt-1"><i class="fa-solid fa-pills me-1"></i>' + escapeHtml(item.dosage) + '</div>' : '';
+
+                a.innerHTML = '<div class="d-flex justify-content-between align-items-center"><strong>' + nameText + '</strong>' + categoryBadge + '</div>' + dosageText;
+
+                a.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    selectMedicine(item);
+                });
+
+                dropdown.appendChild(a);
+            });
+
+            showDropdown();
         }
-    }
+
+        // 4. Render Error Message
+        function renderError(message) {
+            dropdown.innerHTML = '<div class="dropdown-item disabled text-danger py-2 px-3"><i class="fa-solid fa-circle-exclamation me-2"></i>' + escapeHtml(message) + '</div>';
+            showDropdown();
+        }
+
+        // 5. Select Medicine Action
+        function selectMedicine(item) {
+            if (!item) return;
+
+            drugInput.value = item.name || "";
+            if (dosageInput && item.dosage) {
+                dosageInput.value = item.dosage;
+            } else if (dosageInput && item.usageInstructions) {
+                dosageInput.value = item.usageInstructions;
+            }
+
+            hideDropdown();
+            if (quantityInput) {
+                quantityInput.focus();
+            }
+        }
+
+        // 6. Keyboard Navigation (Up, Down, Enter, Escape)
+        drugInput.addEventListener("keydown", function (e) {
+            const items = dropdown.querySelectorAll(".dropdown-item:not(.disabled)");
+            if (!items || items.length === 0 || dropdown.style.display === "none") {
+                return;
+            }
+
+            if (e.key === "ArrowDown") {
+                e.preventDefault();
+                selectedIndex = (selectedIndex + 1) % items.length;
+                updateSelection(items);
+            } else if (e.key === "ArrowUp") {
+                e.preventDefault();
+                selectedIndex = (selectedIndex - 1 + items.length) % items.length;
+                updateSelection(items);
+            } else if (e.key === "Enter") {
+                if (selectedIndex >= 0 && selectedIndex < items.length) {
+                    e.preventDefault();
+                    items[selectedIndex].click();
+                }
+            } else if (e.key === "Escape") {
+                hideDropdown();
+            }
+        });
+
+        function updateSelection(items) {
+            items.forEach((el, idx) => {
+                if (idx === selectedIndex) {
+                    el.classList.add("active");
+                    el.scrollIntoView({ block: "nearest" });
+                } else {
+                    el.classList.remove("active");
+                }
+            });
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener("click", function (e) {
+            if (!drugInput.contains(e.target) && !dropdown.contains(e.target)) {
+                hideDropdown();
+            }
+        });
+
+        function showDropdown() {
+            dropdown.style.display = "block";
+        }
+
+        function hideDropdown() {
+            dropdown.style.display = "none";
+            selectedIndex = -1;
+        }
+
+        function highlightMatch(text, query) {
+            if (!query) return escapeHtml(text);
+            const regex = new RegExp("(" + escapeRegExp(query) + ")", "gi");
+            return escapeHtml(text).replace(regex, "<mark class='p-0 bg-warning-subtle fw-bold'>$1</mark>");
+        }
+
+        function escapeHtml(str) {
+            if (!str) return "";
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        }
+
+        function escapeRegExp(str) {
+            return str.replace(/[.*+?^\$\{\}()|[\]\\]/g, "\\$&");
+        }
+
+    });
 
     function submitComplete() {
         if (confirm("Bạn có chắc chắn muốn hoàn thành ca khám này không?\nSau khi hoàn thành, hồ sơ bệnh án sẽ được khóa lại và lưu trữ lịch sử.")) {

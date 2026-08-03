@@ -52,7 +52,13 @@ PAYMENT_API_BASE_URL=http://localhost
 PAYMENT_EXPIRE_MINUTES=4
 NOTIFICATION_DRAIN_INTERVAL_MINUTES=1
 
+# External Medicine API Configuration
+MEDICINE_API_BASE_URL=https://rxnav.nlm.nih.gov/REST
+MEDICINE_API_KEY=
+MEDICINE_API_TIMEOUT_MS=4000
+
 # VNPay secrets: DermAI/payment-service/.env.local (never commit)
 # APP_BASE_URL / GOOGLE_REDIRECT_URI should match Nginx UI base when using port 80:
 # APP_BASE_URL=http://localhost/DermAI
 # GOOGLE_REDIRECT_URI=http://localhost/DermAI/auth/google/callback
+

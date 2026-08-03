@@ -507,6 +507,16 @@
         <url-pattern>/doctor/guidelines</url-pattern>
     </servlet-mapping>
 
+    <servlet>
+        <servlet-name>MedicineController</servlet-name>
+        <servlet-class>com.dermathologyai.controller.doctor.MedicineController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>MedicineController</servlet-name>
+        <url-pattern>/doctor/medicine/search</url-pattern>
+    </servlet-mapping>
+
+
     <!-- ==================== Welcome File ==================== -->
     <welcome-file-list>
         <welcome-file>index.jsp</welcome-file>
