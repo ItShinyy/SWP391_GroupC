@@ -1,9 +1,9 @@
-# SkinAI — Database Schema
+# DermAI — Database Schema
 
 Implementation SoT: baseline scripts under  
-`SkinAI/src/main/resources/database/` (`02_Tables`, `03_Constraints`, SPs, seeds, `Master_Deploy.sql`, `WipeData.sql`).  
-Deploy ops detail: `SkinAI/src/main/resources/database/docs/`.  
-Companion: [ARCHITECTURE.md](ARCHITECTURE.md) · [RULES.md](RULES.md)
+`DermAI/src/main/resources/database/` (`02_Tables`, `03_Constraints`, SPs, seeds, `Master_Deploy.sql`, `WipeData.sql`).  
+Deploy ops detail: `DermAI/src/main/resources/database/docs/`.  
+Companion: [ARCHITECTURE.md](ARCHITECTURE.md) · [RULES.md](RULES.md) · [API_REFERENCE.md](API_REFERENCE.md)
 
 **Policy:** baseline-first — edit scripts in place; do not add new `08_Migrations/V*.sql` for normal development. Existing `08_Migrations/*` are historical leftovers.
 

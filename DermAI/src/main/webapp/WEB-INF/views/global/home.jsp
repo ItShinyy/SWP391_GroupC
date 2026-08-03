@@ -7,14 +7,14 @@
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-lg-8">
-                <h1 class="display-4 fw-bold mb-4" style="color: var(--skin-primary); font-family: 'Fragment Mono', sans-serif;">Sàng lọc Da liễu AI</h1>
+                <h1 class="display-4 fw-bold mb-4" style="color: var(--skin-primary, #198754); font-family: 'Fragment Mono', sans-serif;">Sàng lọc Da liễu AI</h1>
                 <p class="lead mb-5 text-muted" style="font-size: 1.25rem;">Hệ thống phân tích hình ảnh sử dụng Trí tuệ Nhân tạo giúp phát hiện các bệnh lý về da trong vài giây, an toàn và chính xác.</p>
                 <a href="${pageContext.request.contextPath}/patient/diagnose" class="btn btn-skin btn-lg fw-bold px-5 py-3 shadow-sm" style="font-size: 1.1rem;">
                     Bắt đầu Sàng lọc <i class="fa-solid fa-arrow-right ms-2"></i>
                 </a>
                 <c:if test="${not empty sessionScope.user}">
                     <div class="mt-3">
-                        <a href="${pageContext.request.contextPath}/patient/reports" class="fw-semibold text-decoration-none" style="color: var(--skin-primary);">
+                        <a href="${pageContext.request.contextPath}/patient/reports" class="fw-semibold text-decoration-none" style="color: var(--skin-primary, #198754);">
                             Xem kết quả sàng lọc <i class="fa-solid fa-arrow-right ms-1"></i>
                         </a>
                     </div>
@@ -28,7 +28,7 @@
 <section class="how-it-works py-5 bg-white">
     <div class="container py-5">
         <div class="text-center mb-5">
-            <h2 class="fw-bold mb-3" style="color: var(--skin-primary); font-family: 'Fragment Mono', sans-serif;">Cách Hoạt Động</h2>
+            <h2 class="fw-bold mb-3" style="color: var(--skin-primary, #198754); font-family: 'Fragment Mono', sans-serif;">Cách Hoạt Động</h2>
             <p class="text-muted">Đơn giản, Nhanh chóng và Hoàn toàn Bảo mật</p>
         </div>
         
@@ -40,7 +40,7 @@
                         <div class="icon-wrapper mb-4 d-inline-flex align-items-center justify-content-center rounded-circle" style="width: 80px; height: 80px; background-color: #eff6ff;">
                             <i class="fa-solid fa-camera fa-2x text-primary"></i>
                         </div>
-                        <h4 class="fw-bold mb-3" style="color: var(--skin-primary);">1. Tải Ảnh Lên</h4>
+                        <h4 class="fw-bold mb-3" style="color: var(--skin-primary, #198754);">1. Tải Ảnh Lên</h4>
                         <p class="text-muted small mb-0">Chụp một bức ảnh rõ nét về tình trạng da của bạn bằng điện thoại hoặc máy ảnh.</p>
                     </div>
                 </div>
@@ -53,7 +53,7 @@
                         <div class="icon-wrapper mb-4 d-inline-flex align-items-center justify-content-center rounded-circle" style="width: 80px; height: 80px; background-color: #eff6ff;">
                             <i class="fa-solid fa-microchip fa-2x text-primary"></i>
                         </div>
-                        <h4 class="fw-bold mb-3" style="color: var(--skin-primary);">2. AI Phân Tích</h4>
+                        <h4 class="fw-bold mb-3" style="color: var(--skin-primary, #198754);">2. AI Phân Tích</h4>
                         <p class="text-muted small mb-0">Hệ thống xử lý hình ảnh của bạn sử dụng mô hình Học Sâu tiên tiến.</p>
                     </div>
                 </div>
@@ -66,7 +66,7 @@
                         <div class="icon-wrapper mb-4 d-inline-flex align-items-center justify-content-center rounded-circle" style="width: 80px; height: 80px; background-color: #eff6ff;">
                             <i class="fa-solid fa-file-medical fa-2x text-primary"></i>
                         </div>
-                        <h4 class="fw-bold mb-3" style="color: var(--skin-primary);">3. Nhận Kết Quả</h4>
+                        <h4 class="fw-bold mb-3" style="color: var(--skin-primary, #198754);">3. Nhận Kết Quả</h4>
                         <p class="text-muted small mb-0">Xem dự đoán bệnh lý, mức độ tự tin của AI và đánh giá mức độ rủi ro.</p>
                     </div>
                 </div>
@@ -79,7 +79,7 @@
                         <div class="icon-wrapper mb-4 d-inline-flex align-items-center justify-content-center rounded-circle" style="width: 80px; height: 80px; background-color: #eff6ff;">
                             <i class="fa-solid fa-hospital-user fa-2x text-primary"></i>
                         </div>
-                        <h4 class="fw-bold mb-3" style="color: var(--skin-primary);">4. Khám Chuyên Khoa</h4>
+                        <h4 class="fw-bold mb-3" style="color: var(--skin-primary, #198754);">4. Khám Chuyên Khoa</h4>
                         <p class="text-muted small mb-0">Nhận đề xuất và đặt lịch khám tại các phòng khám da liễu gần nhất.</p>
                     </div>
                 </div>
@@ -89,7 +89,7 @@
 </section>
 
 <!-- Call to action -->
-<section class="cta-section py-5" style="background-color: var(--skin-primary);">
+<section class="cta-section py-5" style="background-color: var(--skin-primary, #198754);">
     <div class="container text-center py-4">
         <h2 class="text-white fw-bold mb-4">Bạn có vấn đề về da cần kiểm tra?</h2>
         <a href="${pageContext.request.contextPath}/patient/diagnose" class="btn btn-light btn-lg rounded-pill px-5 fw-bold text-primary">Tải Ảnh Lên Ngay</a>

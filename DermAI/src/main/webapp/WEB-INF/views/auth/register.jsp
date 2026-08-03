@@ -13,22 +13,23 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/style.css">
 </head>
-<body class="d-flex align-items-center justify-content-center vh-100 bg-light">
+<body class="bg-light min-vh-100 d-flex flex-column justify-content-center py-5">
 
     <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-6 col-lg-4">
-                
-                <!-- Logo -->
-                <div class="text-center mb-4">
-                    <a href="${pageContext.request.contextPath}/home" class="text-decoration-none">
-                        <h1 class="fw-bold m-0" style="color: var(--skin-primary); font-family: 'Fragment Mono', sans-serif;">Skin<span class="text-dark">AI</span></h1>
-                    </a>
-                    <p class="text-muted mt-2">Tạo tài khoản hồ sơ y tế</p>
-                </div>
+        <!-- Logo -->
+        <div class="row justify-content-center mb-4">
+            <div class="col-12 text-center">
+                <a href="${pageContext.request.contextPath}/home" class="text-decoration-none">
+                    <h1 class="fw-bold m-0" style="color: var(--skin-primary); font-family: 'Fragment Mono', sans-serif;">Skin<span class="text-dark">AI</span></h1>
+                </a>
+                <p class="text-muted mt-2">Tạo tài khoản hồ sơ y tế</p>
+            </div>
+        </div>
 
-                <!-- Card -->
-                <div class="card shadow-sm border-0 rounded-4 p-4 p-md-5">
+        <div class="row justify-content-center align-items-stretch g-4">
+            <!-- Form Column -->
+            <div class="col-md-7 col-lg-5">
+                <div class="card shadow-sm border-0 rounded-4 p-4 p-md-5 h-100">
                     
                     <c:if test="${not empty errorMessage}">
                         <div class="alert alert-danger d-flex align-items-center rounded-3 mb-4 py-2" role="alert">
@@ -46,7 +47,6 @@
                                 <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-at"></i></span>
                                 <input type="text" name="username" class="form-control border-start-0 ps-0" placeholder="nguyenvana123" value="${reg_username}" required>
                             </div>
-                            <div class="form-text small text-danger">* Tên đăng nhập không thể thay đổi sau khi tạo.</div>
                         </div>
 
                         <!-- Full Name -->
@@ -56,7 +56,6 @@
                                 <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-regular fa-user"></i></span>
                                 <input type="text" name="fullName" class="form-control border-start-0 ps-0" placeholder="Nguyen Van A" value="${reg_fullName}" required>
                             </div>
-                            <div class="form-text small text-danger">* Họ và tên không thể thay đổi sau khi tạo.</div>
                         </div>
 
                         <!-- Email -->
@@ -66,7 +65,6 @@
                                 <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-regular fa-envelope"></i></span>
                                 <input type="email" name="email" class="form-control border-start-0 ps-0" placeholder="name@example.com" value="${reg_email}" required>
                             </div>
-                            <div class="form-text small text-danger">* Email bắt buộc — dùng để đăng nhập và nhận mã OTP.</div>
                         </div>
 
                         <!-- Phone (contact only) -->
@@ -83,9 +81,8 @@
                             <label class="form-label text-muted fw-semibold small">Mật khẩu</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-lock"></i></span>
-                                <input type="password" name="password" class="form-control border-start-0 ps-0" placeholder="Nhập mật khẩu" required autocomplete="new-password" minlength="${passwordMinLength}" data-password-pattern="${passwordPattern}" data-password-message="${passwordMessage}">
+                                <input type="password" name="password" class="form-control border-start-0 ps-0" placeholder="Nhập mật khẩu" required autocomplete="new-password">
                             </div>
-                            <div class="form-text small">${passwordRequirements}</div>
                         </div>
 
                         <!-- Submit -->
@@ -103,17 +100,31 @@
                     </form>
 
                 </div>
+            </div>
 
-                <!-- Footer Text -->
-                <div class="text-center mt-4 text-muted small">
-                    Đã có tài khoản? <a href="${pageContext.request.contextPath}/auth/login" class="text-decoration-none fw-bold" style="color: var(--skin-secondary);">Đăng nhập</a>
+            <!-- Notes Column -->
+            <div class="col-md-5 col-lg-4">
+                <div class="card shadow-sm border-0 rounded-4 p-4 p-md-5 h-100" style="background-color: #f8f9fa;">
+                    <h5 class="fw-bold mb-4" style="color: var(--skin-primary, #198754);">Lưu ý khi đăng ký</h5>
+                    <ul class="text-muted small ps-3 mb-0" style="line-height: 1.8;">
+                        <li class="mb-3"><strong>Tên đăng nhập</strong> không thể thay đổi sau khi tạo tài khoản.</li>
+                        <li class="mb-3"><strong>Họ và tên</strong> không thể thay đổi sau khi tạo tài khoản.</li>
+                        <li class="mb-3"><strong>Email</strong> là bắt buộc, được sử dụng để đăng nhập và nhận mã xác thực OTP.</li>
+                        <li class="mb-0"><strong>Mật khẩu:</strong> ${passwordRequirements}</li>
+                    </ul>
                 </div>
-
             </div>
         </div>
+
+        <!-- Footer Text -->
+        <div class="row justify-content-center mt-4">
+            <div class="col-12 text-center text-muted small">
+                Đã có tài khoản? <a href="${pageContext.request.contextPath}/auth/login" class="text-decoration-none fw-bold" style="color: var(--skin-secondary);">Đăng nhập</a>
+            </div>
+        </div>
+
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="${pageContext.request.contextPath}/assets/js/password-policy.js"></script>
 </body>
 </html>

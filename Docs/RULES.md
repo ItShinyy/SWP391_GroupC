@@ -1,7 +1,7 @@
-# SkinAI — Engineering Rules
+# DermAI — Engineering Rules
 
 Conventions enforced by constitution, code review, and this repo’s history.  
-Companion: [ARCHITECTURE.md](ARCHITECTURE.md) · [PRD.md](PRD.md) · [SCHEMA.md](SCHEMA.md)  
+Companion: [ARCHITECTURE.md](ARCHITECTURE.md) · [PRD.md](PRD.md) · [SCHEMA.md](SCHEMA.md) · [API_REFERENCE.md](API_REFERENCE.md)  
 Formal Spec Kit SoT: [`.specify/memory/constitution.md`](../.specify/memory/constitution.md)
 
 ---
