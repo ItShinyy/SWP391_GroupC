@@ -215,10 +215,10 @@
                   <div class="d-flex align-items-center gap-2">
                     <i class="fa-solid fa-network-wired" style="color:#16A34A;"></i>
                     <div class="progress flex-grow-1" style="height:6px;">
-                      <div class="progress-bar" style="background:#16A34A;width:92%"></div>
+                      <div class="progress-bar" style="background:#16A34A;width:98%"></div>
                     </div>
                   </div>
-                  <div class="text-end mt-1 small fw-bold" style="font-size:0.75rem;">92%</div>
+                  <div class="text-end mt-1 small fw-bold" style="font-size:0.75rem;">98%</div>
                 </div>
 
                 <!-- Floating Card Right -->
@@ -227,7 +227,7 @@
                   <div class="fw-bold" style="color:#0F172A;">Khả năng cao</div>
                   <div style="color:#16A34A;font-weight:700;font-size:0.9rem;">Là mụn trứng cá</div>
                   <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top">
-                    <span class="text-muted" style="font-size:0.7rem;">Độ tin cậy: 92%</span>
+                    <span class="text-muted" style="font-size:0.7rem;">Độ tin cậy cao</span>
                     <i class="fa-solid fa-circle-check text-success"></i>
                   </div>
                 </div>
